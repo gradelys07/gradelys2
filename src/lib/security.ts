@@ -1,5 +1,3 @@
-import DOMPurify from "isomorphic-dompurify";
-
 // ═══════════════════════════════════════════════════════════════
 // RATE LIMITING — in-memory sliding window (per Partie 8.3 of CDC)
 // In production, swap this for Upstash Redis (see README) — the
@@ -55,17 +53,6 @@ export const RATE_LIMITS = {
 // ═══════════════════════════════════════════════════════════════
 // INPUT SANITIZATION
 // ═══════════════════════════════════════════════════════════════
-
-export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: [
-      "b", "i", "em", "strong", "a", "p", "br", "ul", "ol", "li",
-      "h1", "h2", "h3", "h4", "blockquote", "code", "pre", "span",
-      "table", "thead", "tbody", "tr", "th", "td", "hr",
-    ],
-    ALLOWED_ATTR: ["href", "target", "rel", "class"],
-  });
-}
 
 export function sanitizePromptInput(input: string, maxLength = 10000): string {
   return input.slice(0, maxLength).trim();
