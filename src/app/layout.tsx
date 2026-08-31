@@ -4,8 +4,19 @@ import { Providers } from "@/components/providers";
 import { getMissingRequiredVars } from "@/lib/config";
 import { SetupRequired } from "@/components/setup-required";
 
+function getBaseUrl() {
+  const url = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || "http://localhost:3000";
+  const urlWithProtocol = url.startsWith("http") ? url : `https://${url}`;
+  try {
+    return new URL(urlWithProtocol);
+  } catch (e) {
+    console.error("Invalid NEXT_PUBLIC_APP_URL:", url);
+    return new URL("http://localhost:3000");
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: getBaseUrl(),
   title: {
     default: "Gradelys — Your AI-powered learning workspace",
     template: "%s · Gradelys",
@@ -14,10 +25,14 @@ export const metadata: Metadata = {
     "Chat, scan your homework, generate flashcards, visualize concepts, and study smarter with Gradelys — the all-in-one AI learning workspace for students.",
   keywords: ["AI study app", "flashcards", "spaced repetition", "AI tutor", "exam prep", "study workspace"],
   authors: [{ name: "Gradelys" }],
-  manifest: "/manifest.json",
+  manifest: "/site.webmanifest",
   icons: {
-    icon: "/icons/icon-192.png",
-    apple: "/icons/icon-192.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" }
+    ],
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     type: "website",
