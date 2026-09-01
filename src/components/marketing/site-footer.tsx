@@ -26,8 +26,8 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-purple">
-                <GraduationCap className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+                <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
               </div>
               <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
             </Link>

@@ -17,6 +17,7 @@ import { useRecordActivity } from "@/hooks/use-gamification";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown";
+import { trackChatSent, trackFlashcardsCreated, trackShare, trackHitLimit } from "@/lib/whop/tracking";
 
 const MODELS = [
   { id: "auto", label: "Auto", description: "Best model for the task" },
@@ -143,10 +144,13 @@ export function ChatThread({
       setLocalMessages((prev) =>
         prev.map((m) => (m.id === assistantMsgId ? { ...m, content: fullText, sources, pending: false } : m))
       );
+      trackChatSent(model);
       recordActivity.mutate();
       qc.invalidateQueries({ queryKey: ["conversations"] });
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      const msg = err.message || "Something went wrong";
+      if (msg.includes("Upgrade")) trackHitLimit("chat");
+      toast.error(msg);
       setLocalMessages((prev) => prev.filter((m) => m.id !== assistantMsgId));
     } finally {
       setSending(false);
@@ -378,6 +382,7 @@ function MessageBubble({
             <button
               onClick={() => {
                 navigator.clipboard.writeText(message.content);
+                trackShare("chat_message");
                 toast.success("Copied to clipboard");
               }}
               className="rounded-md p-1.5 text-text-muted hover:bg-hover hover:text-text-primary"

@@ -22,6 +22,7 @@ import { useRecordActivity } from "@/hooks/use-gamification";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/locale-provider";
+import { trackVisualizationCreated, trackStudioDocCreated, trackQuizCompleted, trackFlashcardsCreated } from "@/lib/whop/tracking";
 import type { QuizQuestion } from "@/types";
 
 export type ToolKind = "visualize" | "studio" | "practice";
@@ -148,6 +149,10 @@ export function ToolChatThread({
         prev.map((m) => (m.id === assistantMsgId ? { id: res.message.id, role: "assistant", content: res.message.content, structured: res.message.structured } : m))
       );
       recordActivity.mutate();
+      // Track feature engagement based on tool kind
+      if (kind === "visualize") trackVisualizationCreated(preset?.visualType || "auto");
+      else if (kind === "studio") trackStudioDocCreated(preset?.visualType || "notes");
+      else if (kind === "practice" && preset?.subKind === "flashcards") trackFlashcardsCreated();
       qc.invalidateQueries({ queryKey: ["conversations", kind] });
     } catch (err: any) {
       toast.error(err.message || "Generation failed");
@@ -172,6 +177,7 @@ export function ToolChatThread({
       correctAnswers: correct,
       timeTakenSeconds: timeSeconds,
     } as any);
+    trackQuizCompleted(Math.round((correct / total) * 100));
     toast.success("Session saved to Progress");
   }
 

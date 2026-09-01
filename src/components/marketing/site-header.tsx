@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth-store";
+import { trackLead } from "@/lib/whop/tracking";
 
 const NAV_LINKS = [
   { href: "/#features", label: "Features" },
@@ -20,8 +21,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border-subtle bg-void/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-purple">
-            <GraduationCap className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+            <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
           </div>
           <span className="text-heading-sm font-bold tracking-tight text-text-primary">Gradelys</span>
         </Link>
@@ -48,7 +49,7 @@ export function SiteHeader() {
               <Link href="/login" className="text-body-md text-text-secondary hover:text-text-primary">
                 Log in
               </Link>
-              <Link href="/signup">
+              <Link href="/signup" onClick={() => trackLead("header_cta")}>
                 <Button variant="primary" size="sm">Get started free</Button>
               </Link>
             </>
@@ -74,7 +75,7 @@ export function SiteHeader() {
               ) : (
                 <>
                   <Link href="/login" className="text-body-lg text-text-secondary">Log in</Link>
-                  <Link href="/signup" className="text-body-lg font-medium text-primary">Get started free →</Link>
+                  <Link href="/signup" className="text-body-lg font-medium text-primary" onClick={() => { trackLead("mobile_header_cta"); setOpen(false); }}>Get started free →</Link>
                 </>
               )}
             </div>

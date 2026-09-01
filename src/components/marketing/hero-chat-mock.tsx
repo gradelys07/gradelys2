@@ -15,8 +15,8 @@ export function HeroChatMock() {
         {/* Fake sidebar */}
         <div className="hidden border-r border-border-subtle bg-base p-4 md:block">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary to-purple">
-              <GraduationCap className="h-3.5 w-3.5 text-white" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-md overflow-hidden">
+              <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
             </div>
             <span className="text-body-sm font-semibold text-text-primary">Gradelys</span>
           </div>

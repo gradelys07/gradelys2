@@ -10,8 +10,8 @@ export function SetupRequired({
     <div className="flex min-h-screen items-center justify-center bg-white px-5 py-12">
       <div className="w-full max-w-2xl">
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#0EA5E9] to-[#8b5cf6]">
-            <GraduationCap className="h-5 w-5 text-white" strokeWidth={2.5} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden">
+            <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
           </div>
           <span className="text-xl font-bold text-[#334155]">Gradelys</span>
         </div>

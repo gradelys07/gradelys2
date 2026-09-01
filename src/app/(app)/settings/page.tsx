@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { validatePassword } from "@/lib/security";
 import { rechargePacks } from "@/lib/config";
 import { getCheckoutUrl } from "@/lib/whop/client";
+import { trackClickUpgrade, trackInitiateCheckout } from "@/lib/whop/tracking";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/locale-provider";
 
@@ -126,7 +127,7 @@ function SubscriptionTab() {
           <Badge variant={subscription?.plan === "free" ? "default" : "primary"}>{subscription?.status}</Badge>
         </div>
         {subscription?.plan === "free" && (
-          <Link href="/pricing">
+          <Link href="/pricing" onClick={() => trackClickUpgrade("settings_subscription")}>
             <Button className="mt-4">Upgrade plan</Button>
           </Link>
         )}
@@ -143,6 +144,7 @@ function SubscriptionTab() {
                 href={url || "/pricing"}
                 target={url ? "_blank" : undefined}
                 rel="noopener noreferrer"
+                onClick={() => trackInitiateCheckout(pack.id, "one-time")}
                 className="rounded-lg border border-border bg-surface p-4 text-center transition-colors hover:border-border-strong"
               >
                 <p className="text-heading-sm text-text-primary">{pack.label}</p>

@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCheckoutUrl } from "@/lib/whop/client";
+import { trackViewContent, trackViewPricing, trackInitiateCheckout, trackClickUpgrade } from "@/lib/whop/tracking";
 import { useAuthStore } from "@/stores/auth-store";
 
 const FEATURES = [
@@ -26,6 +27,11 @@ const FEATURES = [
 export default function PricingPage() {
   const [annual, setAnnual] = React.useState(true);
   const user = useAuthStore((s) => s.user);
+
+  React.useEffect(() => {
+    trackViewContent("pricing");
+    trackViewPricing();
+  }, []);
 
   const plans = [
     {
@@ -101,7 +107,18 @@ export default function PricingPage() {
                 <span className="text-display-lg text-text-primary">${plan.price}</span>
                 <span className="text-body-sm text-text-muted">/month</span>
               </div>
-              <a href={plan.href} target={plan.id !== "free" ? "_blank" : undefined} rel="noopener noreferrer">
+              <a
+                href={plan.href}
+                target={plan.id !== "free" ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                onClick={() => {
+                  if (plan.id !== "free") {
+                    trackInitiateCheckout(plan.id, annual ? "annual" : "monthly");
+                  } else if (!user) {
+                    trackClickUpgrade("pricing-free-cta");
+                  }
+                }}
+              >
                 <Button className="mt-6 w-full" variant={plan.highlighted ? "primary" : "secondary"} size="lg">
                   {plan.cta}
                 </Button>

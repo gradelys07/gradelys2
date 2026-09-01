@@ -8,6 +8,8 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { Button } from "@/components/ui/button";
 import { FaqAccordion } from "@/components/marketing/faq-accordion";
 import { HeroChatMock } from "@/components/marketing/hero-chat-mock";
+import { TrackPageView } from "@/components/track-page-view";
+import { TrackingCTA } from "@/components/tracking-cta";
 
 const FEATURES = [
   {
@@ -135,6 +137,7 @@ export default function LandingPage() {
   return (
     <>
       <SiteHeader />
+      <TrackPageView page="landing" />
       <main>
         {/* ── HERO ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden">
@@ -163,11 +166,7 @@ export default function LandingPage() {
                 that adapt to your memory, and turn any topic into a visual you'll actually remember.
               </p>
               <div className="mt-8 flex animate-slide-up flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link href="/signup">
-                  <Button size="lg" icon={<Zap className="h-4.5 w-4.5" />}>
-                    Get started free
-                  </Button>
-                </Link>
+                <TrackingCTA href="/signup" label="Get started free" source="hero_cta" />
                 <Link href="/pricing">
                   <Button variant="secondary" size="lg">
                     View pricing
@@ -320,11 +319,7 @@ export default function LandingPage() {
                 Join Gradelys today — it takes less than a minute to get started.
               </p>
               <div className="mt-8 flex justify-center">
-                <Link href="/signup">
-                  <Button size="lg" icon={<Zap className="h-4.5 w-4.5" />}>
-                    Get started free
-                  </Button>
-                </Link>
+                <TrackingCTA href="/signup" label="Get started free" source="final_cta" />
               </div>
             </div>
           </div>

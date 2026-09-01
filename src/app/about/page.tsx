@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { GraduationCap } from "lucide-react";
+import { TrackPageView } from "@/components/track-page-view";
 
 export const metadata = { title: "About" };
 
@@ -8,8 +9,11 @@ export default function AboutPage() {
   return (
     <>
       <SiteHeader />
+      <TrackPageView page="about" />
       <main className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
-        <GraduationCap className="h-8 w-8 text-primary" />
+        <div className="h-8 w-8 rounded-lg overflow-hidden">
+          <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+        </div>
         <h1 className="mt-4 text-display-lg text-text-primary">About Gradelys</h1>
         <p className="mt-6 text-body-lg leading-relaxed text-text-secondary">
           Gradelys is an AI-powered learning workspace built for students who want to study smarter, not

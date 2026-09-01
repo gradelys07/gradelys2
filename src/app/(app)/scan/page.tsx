@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useRecordActivity } from "@/hooks/use-gamification";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn, formatRelativeDate } from "@/lib/utils";
+import { trackScanUploaded, trackViewContent } from "@/lib/whop/tracking";
 
 export default function ScanPage() {
   const { data: scans, isLoading } = useScans();
@@ -48,6 +49,7 @@ export default function ScanPage() {
       setFile(null);
       setSubject("");
       setChapter("");
+      trackScanUploaded(subject);
       recordActivity.mutate();
     } catch (err: any) {
       toast.error(err.message);

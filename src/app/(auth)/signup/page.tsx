@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/input";
 import { passwordStrength, validatePassword } from "@/lib/security";
+import { trackLead, trackCompleteRegistration } from "@/lib/whop/tracking";
 import { cn } from "@/lib/utils";
 
 const STRENGTH_LABELS = ["Weak", "Fair", "Good", "Strong", "Excellent"];
@@ -24,6 +26,10 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  React.useEffect(() => {
+    trackLead("signup_page");
+  }, []);
 
   const strength = passwordStrength(password);
 
@@ -56,9 +62,11 @@ export default function SignupPage() {
     }
 
     if (data.session) {
+      trackCompleteRegistration("email");
       router.push("/chat");
       router.refresh();
     } else {
+      trackCompleteRegistration("email_confirmation");
       setDone(true);
     }
   }

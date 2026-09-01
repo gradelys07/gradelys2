@@ -112,8 +112,8 @@ export function AppSidebar() {
   if (collapsed) {
     return (
       <aside className="hidden h-screen w-[68px] shrink-0 flex-col items-center border-r border-border-subtle bg-base py-4 lg:flex">
-        <Link href="/chat" className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-primary to-purple">
-          <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.5} />
+        <Link href="/chat" className="flex h-8 w-8 items-center justify-center rounded-md overflow-hidden">
+          <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
         </Link>
         <button onClick={handleNewChat} className="mt-4 flex h-9 w-9 items-center justify-center rounded-md border border-border-strong bg-elevated text-text-secondary hover:bg-hover">
           <Plus className="h-4 w-4" />
@@ -143,8 +143,8 @@ export function AppSidebar() {
     <aside className="hidden h-screen w-[260px] shrink-0 flex-col border-r border-border-subtle bg-base lg:flex">
       <div className="flex h-16 items-center justify-between px-4">
         <Link href="/chat" className="flex items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-purple">
-            <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.5} />
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md overflow-hidden">
+            <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
           </div>
           <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
         </Link>

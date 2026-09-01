@@ -38,8 +38,8 @@ export function MobileNav() {
       <div className="absolute inset-y-0 left-0 w-72 animate-slide-in-right overflow-y-auto bg-base p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary to-purple">
-              <GraduationCap className="h-4 w-4 text-white" strokeWidth={2.5} />
+            <div className="flex h-7 w-7 items-center justify-center rounded-md overflow-hidden">
+              <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
             </div>
             <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
           </div>

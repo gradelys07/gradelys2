@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/input";
+import { trackViewContent, trackLead } from "@/lib/whop/tracking";
 
 function LoginContent() {
   const router = useRouter();
@@ -17,6 +19,11 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    trackViewContent("login");
+    trackLead("login_page");
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
