@@ -19,14 +19,61 @@ export function getCheckoutUrl(planKey: string): string | null {
   return map[planKey] || null;
 }
 
-/** Verifies the X-Whop-Signature header on incoming webhooks (HMAC-SHA256). */
-export function verifyWhopSignature(rawBody: string, signature: string | null): boolean {
+export function verifyWhopSignature(rawBody: string, headers: Headers): boolean {
   const secret = process.env.WHOP_WEBHOOK_SECRET;
-  if (!secret || !signature) return false;
-  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+  if (!secret) {
+    console.error("[Whop Webhook] Missing WHOP_WEBHOOK_SECRET in environment variables.");
+    return false;
+  }
+
   try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
-  } catch {
+    // 1. Check for Standard Webhooks (Whop V3)
+    const webhookId = headers.get("webhook-id");
+    const webhookTimestamp = headers.get("webhook-timestamp");
+    const webhookSignature = headers.get("webhook-signature");
+
+    if (webhookId && webhookTimestamp && webhookSignature) {
+      // payload = msgId . timestamp . body
+      const payload = `${webhookId}.${webhookTimestamp}.${rawBody}`;
+      
+      // Compute HMAC-SHA256, but Standard Webhooks often use base64 encoding.
+      // We will compute both base64 and hex just to be safe.
+      const hmacBase64 = crypto.createHmac("sha256", secret).update(payload).digest("base64");
+      const hmacHex = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+
+      const signatures = webhookSignature.split(" ").map(s => s.split(",")[1]); // extract signatures without v1, prefix
+      
+      if (signatures.includes(hmacBase64) || signatures.includes(hmacHex)) {
+        return true;
+      } else {
+        console.error("[Whop Webhook] Standard Webhooks signature mismatch.", {
+          expectedBase64: hmacBase64,
+          expectedHex: hmacHex,
+          received: webhookSignature
+        });
+        return false;
+      }
+    }
+
+    // 2. Check for legacy Whop Webhooks (V2)
+    const legacySignature = headers.get("x-whop-signature");
+    if (legacySignature) {
+      const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+      if (crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(legacySignature))) {
+        return true;
+      } else {
+        console.error("[Whop Webhook] Legacy X-Whop-Signature mismatch.", {
+          expected,
+          received: legacySignature
+        });
+        return false;
+      }
+    }
+
+    console.error("[Whop Webhook] No signature headers found. Received headers:", Object.fromEntries(headers.entries()));
+    return false;
+  } catch (err) {
+    console.error("[Whop Webhook] Verification error:", err);
     return false;
   }
 }

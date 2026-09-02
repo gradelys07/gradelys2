@@ -8,9 +8,8 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
-  const signature = req.headers.get("x-whop-signature");
 
-  if (!verifyWhopSignature(rawBody, signature)) {
+  if (!verifyWhopSignature(rawBody, req.headers)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
