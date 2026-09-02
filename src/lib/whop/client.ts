@@ -33,8 +33,8 @@ export function verifyWhopSignature(rawBody: string, signature: string | null): 
 
 export interface WhopWebhookEvent {
   type:
-    | "membership.went_valid"
-    | "membership.went_invalid"
+    | "membership.activated"
+    | "membership.deactivated"
     | "payment.succeeded"
     | "payment.failed"
     | string;

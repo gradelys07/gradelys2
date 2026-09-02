@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const supabase = createServiceClient();
 
   switch (event.type) {
-    case "membership.went_valid": {
+    case "membership.activated": {
       const { user_id: whopUserId, plan: planKey, email } = event.data;
       const plan = planKey?.includes("pro") ? "pro" : "plus";
       const creditsMax = plan === "pro" ? planLimits.pro.creditsMax : planLimits.plus.creditsMax;
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       break;
     }
 
-    case "membership.went_invalid": {
+    case "membership.deactivated": {
       const { email } = event.data;
       const { data: profile } = await supabase.from("profiles").select("id").eq("email", email).single();
       if (profile) {

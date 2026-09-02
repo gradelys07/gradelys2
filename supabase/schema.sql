@@ -292,6 +292,7 @@ alter table streaks enable row level security;
 alter table badges enable row level security;
 alter table audit_log enable row level security;
 alter table security_events enable row level security;
+alter table exams enable row level security;
 
 create or replace function is_admin()
 returns boolean as $$
@@ -362,6 +363,9 @@ create policy "streaks_all" on streaks for all using (auth.uid() = user_id or is
 
 drop policy if exists "badges_all" on badges;
 create policy "badges_all" on badges for all using (auth.uid() = user_id or is_admin()) with check (auth.uid() = user_id);
+
+drop policy if exists "exams_all" on exams;
+create policy "exams_all" on exams for all using (auth.uid() = user_id or is_admin()) with check (auth.uid() = user_id);
 
 -- Admin-only tables
 drop policy if exists "audit_log_admin" on audit_log;
