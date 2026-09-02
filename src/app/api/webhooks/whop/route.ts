@@ -21,8 +21,19 @@ export async function POST(req: NextRequest) {
       case "membership.activated": {
         if (!event.data) throw new Error("Webhook event.data is missing.");
         
-        const { user_id: whopUserId, plan: planKey, email } = event.data;
-        const plan = planKey?.includes("pro") ? "pro" : "plus";
+        // In Whop V3, user data might be nested inside 'user' object
+        const whopUserId = event.data.user_id || event.data.user?.id;
+        const email = event.data.email || event.data.user?.email;
+
+        if (!email) {
+          throw new Error("Webhook event is missing the user's email.");
+        }
+
+        // The plan field might be an object (Whop V3) or a string. Safely check for "pro".
+        const planRaw = event.data.plan || event.data.product || event.data.experience || "";
+        const planStr = typeof planRaw === 'string' ? planRaw : JSON.stringify(planRaw);
+        
+        const plan = planStr.toLowerCase().includes("pro") ? "pro" : "plus";
         const creditsMax = plan === "pro" ? planLimits.pro.creditsMax : planLimits.plus.creditsMax;
 
         const { data: profile, error: profileError } = await supabase
@@ -61,7 +72,12 @@ export async function POST(req: NextRequest) {
 
       case "membership.deactivated": {
         if (!event.data) throw new Error("Webhook event.data is missing.");
-        const { email } = event.data;
+        
+        const email = event.data.email || event.data.user?.email;
+        if (!email) {
+          throw new Error("Webhook event is missing the user's email.");
+        }
+
         const { data: profile } = await supabase.from("profiles").select("id").eq("email", email).single();
         if (profile) {
           await supabase
