@@ -42,7 +42,7 @@ export function AppTopbar({ title }: { title?: string }) {
       </button>
 
       {/* Desktop view floating bar (full width) */}
-      <div className="hidden lg:flex w-full items-center justify-between rounded-[2rem] border border-border/60 bg-surface/50 backdrop-blur-2xl px-4 py-2 shadow-xl">
+      <div className="hidden lg:flex w-full items-center justify-between rounded-xl border border-border/40 bg-surface/40 backdrop-blur-xl px-4 py-2 shadow-lg">
         <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
           {MAIN_NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/chat" && pathname.startsWith(item.href));
@@ -51,9 +51,9 @@ export function AppTopbar({ title }: { title?: string }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 rounded-full px-4 py-2 text-body-sm transition-all whitespace-nowrap",
+                  "flex items-center gap-2 rounded-lg px-4 py-2 text-body-sm transition-all whitespace-nowrap",
                   isActive 
-                    ? "bg-primary text-white shadow-md font-medium" 
+                    ? "bg-primary text-white shadow-sm font-medium" 
                     : "text-text-secondary hover:bg-hover hover:text-text-primary"
                 )}
               >
@@ -68,7 +68,7 @@ export function AppTopbar({ title }: { title?: string }) {
           <div className="h-6 w-px bg-border-subtle" />
           <button
             onClick={() => setCommandPaletteOpen(true)}
-            className="flex items-center gap-2 rounded-full border border-transparent bg-transparent px-3 py-2 text-body-sm text-text-muted transition-colors hover:bg-hover hover:text-text-primary group"
+            className="flex items-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-2 text-body-sm text-text-muted transition-colors hover:bg-hover hover:text-text-primary group"
           >
             <Search className="h-4 w-4 group-hover:text-primary transition-colors" />
             <span className="hidden xl:inline">Search...</span>

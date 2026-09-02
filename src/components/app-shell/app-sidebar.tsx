@@ -111,7 +111,7 @@ export function AppSidebar() {
 
   if (collapsed) {
     return (
-      <aside className="hidden h-[calc(100vh-2rem)] w-[68px] shrink-0 flex-col items-center border border-border/60 bg-surface/40 backdrop-blur-xl rounded-[2rem] my-4 ml-4 py-4 lg:flex shadow-xl">
+      <aside className="hidden h-[calc(100vh-1rem)] w-[68px] shrink-0 flex-col items-center border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 ml-2 py-4 lg:flex shadow-lg">
         <Link href="/chat" className="flex h-8 w-8 items-center justify-center rounded-md overflow-hidden">
           <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
         </Link>
@@ -127,7 +127,7 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="hidden h-[calc(100vh-2rem)] w-[260px] shrink-0 flex-col border border-border/60 bg-surface/40 backdrop-blur-xl rounded-[2rem] my-4 ml-4 lg:flex shadow-xl">
+    <aside className="hidden h-[calc(100vh-1rem)] w-[260px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 ml-2 lg:flex shadow-lg">
       <div className="flex h-16 items-center justify-between px-5 pt-2">
         <Link href="/chat" className="flex items-center gap-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md overflow-hidden">
