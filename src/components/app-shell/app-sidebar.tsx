@@ -111,28 +111,15 @@ export function AppSidebar() {
 
   if (collapsed) {
     return (
-      <aside className="hidden h-screen w-[68px] shrink-0 flex-col items-center border-r border-border-subtle bg-base py-4 lg:flex">
+      <aside className="hidden h-[calc(100vh-2rem)] w-[68px] shrink-0 flex-col items-center border border-border/60 bg-surface/40 backdrop-blur-xl rounded-[2rem] my-4 ml-4 py-4 lg:flex shadow-xl">
         <Link href="/chat" className="flex h-8 w-8 items-center justify-center rounded-md overflow-hidden">
           <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
         </Link>
-        <button onClick={handleNewChat} className="mt-4 flex h-9 w-9 items-center justify-center rounded-md border border-border-strong bg-elevated text-text-secondary hover:bg-hover">
+        <button onClick={handleNewChat} className="mt-4 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm hover:bg-primary-hover">
           <Plus className="h-4 w-4" />
         </button>
-        <nav className="mt-4 flex flex-1 flex-col items-center gap-1">
-          {[{ href: "/progress", icon: TrendingUp }, { href: "/notes", icon: NotebookPen }, ...EXPLORE_ITEMS].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-md",
-                pathname.startsWith(item.href) ? "bg-[var(--primary-subtle)] text-primary" : "text-text-secondary hover:bg-hover"
-              )}
-            >
-              <item.icon className="h-4.5 w-4.5" />
-            </Link>
-          ))}
-        </nav>
-        <button onClick={toggleSidebar} className="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover">
+        <div className="flex-1" />
+        <button onClick={toggleSidebar} className="mb-4 flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover">
           <ChevronsRight className="h-4 w-4" />
         </button>
       </aside>
@@ -140,8 +127,8 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="hidden h-screen w-[260px] shrink-0 flex-col border-r border-border-subtle bg-base lg:flex">
-      <div className="flex h-16 items-center justify-between px-4">
+    <aside className="hidden h-[calc(100vh-2rem)] w-[260px] shrink-0 flex-col border border-border/60 bg-surface/40 backdrop-blur-xl rounded-[2rem] my-4 ml-4 lg:flex shadow-xl">
+      <div className="flex h-16 items-center justify-between px-5 pt-2">
         <Link href="/chat" className="flex items-center gap-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md overflow-hidden">
             <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
@@ -153,57 +140,13 @@ export function AppSidebar() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-3">
+      <div className="flex-1 overflow-y-auto px-4 pb-4 mt-2">
         <button
           onClick={handleNewChat}
-          className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-body-sm font-medium bg-primary text-white shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5"
         >
           <Plus className="h-4.5 w-4.5" /> {t("nav.newChat")}
         </button>
-        <button
-          onClick={() => setCommandPaletteOpen(true)}
-          className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
-        >
-          <Search className="h-4.5 w-4.5" /> {t("nav.searchChats")}
-        </button>
-        <Link
-          href="/progress"
-          className={cn(
-            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm transition-colors",
-            pathname.startsWith("/progress") ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
-          )}
-        >
-          <TrendingUp className="h-4.5 w-4.5" /> {t("nav.progress")}
-        </Link>
-        <Link
-          href="/notes"
-          className={cn(
-            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm transition-colors",
-            pathname.startsWith("/notes") ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
-          )}
-        >
-          <NotebookPen className="h-4.5 w-4.5" /> {t("nav.notes")}
-        </Link>
-
-        <div className="mt-5 px-2.5 text-label-sm uppercase text-text-muted">{t("nav.explore")}</div>
-        <nav className="mt-1 space-y-0.5">
-          {EXPLORE_ITEMS.map((item) => {
-            const active = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm transition-colors",
-                  active ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
-                )}
-              >
-                <item.icon className="h-4.5 w-4.5" />
-                {t(item.key)}
-              </Link>
-            );
-          })}
-        </nav>
 
         {/* SPACES */}
         <button
@@ -315,7 +258,7 @@ export function AppSidebar() {
         </div>
       )}
 
-      <div className="border-t border-border-subtle p-3">
+      <div className="p-3">
         <DropdownMenu>
           <DropdownMenuTrigger>
             <div className="flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover">

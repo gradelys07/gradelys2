@@ -19,12 +19,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-void">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-void via-surface to-primary-subtle/10 relative">
       <AppSidebar />
       <MobileNav />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col relative p-4 gap-4 z-10 h-full">
         <AppTopbar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto rounded-[2rem] border border-border/60 bg-base shadow-xl relative isolate">
+          {children}
+        </main>
       </div>
       <CommandPalette />
     </div>
