@@ -37,10 +37,14 @@ export function ChatThread({
   conversationId,
   spaceId,
   placeholder,
+  renderInputToolbar,
+  onMessageSent,
 }: {
   conversationId: string;
   spaceId?: string | null;
   placeholder?: string;
+  renderInputToolbar?: () => React.ReactNode;
+  onMessageSent?: () => void;
 }) {
   const user = useAuthStore((s) => s.user);
   const { data: serverMessages } = useMessages(conversationId);
@@ -87,6 +91,7 @@ export function ChatThread({
 
   async function send(text: string) {
     if (!text.trim() || sending) return;
+    if (onMessageSent) onMessageSent();
     setSending(true);
     setInput("");
     const userMsgId = `local-${Date.now()}`;
@@ -182,7 +187,7 @@ export function ChatThread({
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-4 py-6">
+        <div className="mx-auto max-w-4xl px-4 py-6">
           {localMessages.length === 0 && (
             <div className="py-10 text-center text-body-sm text-text-muted">
               {spaceId ? "Ask a question — answers are grounded in this space's sources." : "Start the conversation below."}
@@ -200,7 +205,7 @@ export function ChatThread({
       </div>
 
       <div className="border-t border-border-subtle bg-void px-4 py-4">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-4xl">
           {attachedImage && (
             <div className="mb-2 flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-body-sm text-text-secondary">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -253,6 +258,7 @@ export function ChatThread({
                     <Globe className="h-4 w-4" /> Web search
                   </button>
                 )}
+                {renderInputToolbar && renderInputToolbar()}
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary">

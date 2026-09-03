@@ -1,0 +1,1 @@
+sed -i '' 's/Globe className="h-4 w-4" \/> Web search/Globe className="h-4 w-4" \/> Web search\n                  <\/button>\n                )}\n                {renderInputToolbar \&\& renderInputToolbar()}/' src/components/chat/chat-thread.tsx

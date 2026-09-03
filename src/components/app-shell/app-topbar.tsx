@@ -6,6 +6,7 @@ import { Search, Menu, MessageSquare, TrendingUp, NotebookPen, Brain, Sparkles, 
 import { useUIStore } from "@/stores/ui-store";
 import { useTranslation } from "@/i18n/locale-provider";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const MAIN_NAV_ITEMS = [
   { href: "/chat", key: "nav.chat", label: "Chat", icon: MessageSquare },
@@ -20,11 +21,12 @@ const MAIN_NAV_ITEMS = [
 export function AppTopbar({ title }: { title?: string }) {
   const setCommandPaletteOpen = useUIStore((s) => s.setCommandPaletteOpen);
   const setMobileNavOpen = useUIStore((s) => s.setMobileNavOpen);
+  const toolsMode = useUIStore((s) => s.toolsMode);
   const pathname = usePathname();
   const { t } = useTranslation();
 
   return (
-    <header className="flex min-h-[3.5rem] w-full shrink-0 items-center justify-between relative z-20">
+    <header className={cn("flex w-full shrink-0 items-center justify-between z-40 transition-all duration-300", toolsMode ? "h-0 opacity-0 pointer-events-none -translate-y-full overflow-hidden" : "h-14 opacity-100 translate-y-0")}>
       {/* Mobile view topbar content (left aligned) */}
       <div className="flex items-center gap-3 lg:hidden">
         <button onClick={() => setMobileNavOpen(true)} className="text-text-secondary">
@@ -42,7 +44,9 @@ export function AppTopbar({ title }: { title?: string }) {
       </button>
 
       {/* Desktop view floating bar (full width) */}
-      <div className="hidden lg:flex w-full items-center justify-between rounded-xl border border-border/40 bg-surface/40 backdrop-blur-xl px-4 py-2 shadow-lg">
+      <div 
+        className="hidden lg:flex items-center justify-between rounded-xl border border-border/40 bg-surface/80 backdrop-blur-xl px-4 py-2 shadow-sm w-full relative"
+      >
         <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
           {MAIN_NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/chat" && pathname.startsWith(item.href));

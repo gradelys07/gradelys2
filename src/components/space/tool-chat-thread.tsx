@@ -193,7 +193,7 @@ export function ToolChatThread({
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl px-4 py-6">
+        <div className="mx-auto max-w-4xl px-4 py-6">
           {localMessages.length === 0 && (
             <div className="py-10 text-center">
               <p className="text-body-md text-text-secondary">
@@ -239,7 +239,7 @@ export function ToolChatThread({
       </div>
 
       <div className="border-t border-border-subtle bg-void px-4 py-4">
-        <div className="relative mx-auto max-w-2xl">
+        <div className="relative mx-auto max-w-4xl">
           {attachOpen && (
             <div className="absolute bottom-full left-0 mb-2 w-full max-w-sm rounded-lg border border-border-strong bg-elevated p-3 shadow-l3">
               {!lockSpace && (
