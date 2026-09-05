@@ -1,4 +1,20 @@
-export const metadata = { title: "Cookie Policy" };
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Politique relative aux cookies | Gradelys",
+  description:
+    "Découvrez l'utilisation des cookies techniques et de préférences sur la plateforme Gradelys : gestion de session, sécurité et respect de votre vie privée.",
+  alternates: {
+    canonical: "/cookies",
+  },
+  openGraph: {
+    title: "Politique relative aux cookies | Gradelys",
+    description:
+      "Découvrez l'utilisation des cookies techniques et de préférences sur la plateforme Gradelys : gestion de session, sécurité et respect de votre vie privée.",
+    url: "https://gradelys.com/cookies",
+    type: "article",
+  },
+};
 
 export default function CookiesPage() {
   return (
@@ -27,7 +43,7 @@ export default function CookiesPage() {
       </p>
 
       <h2>4. Contact</h2>
-      <p>Questions? Email <a href="mailto:privacy@gradelys.app">privacy@gradelys.app</a>.</p>
+      <p>Questions? Email <a href="mailto:privacy@gradelys.com">privacy@gradelys.com</a>.</p>
     </>
   );
 }

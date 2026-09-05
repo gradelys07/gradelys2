@@ -1,4 +1,20 @@
-export const metadata = { title: "Refund Policy" };
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Politique de remboursement | Gradelys",
+  description:
+    "Prenez connaissance des conditions de remboursement de Gradelys : garantie 7 jours sur les abonnements, packs de recharge et gestion simplifiée.",
+  alternates: {
+    canonical: "/refund",
+  },
+  openGraph: {
+    title: "Politique de remboursement | Gradelys",
+    description:
+      "Prenez connaissance des conditions de remboursement de Gradelys : garantie 7 jours sur les abonnements, packs de recharge et gestion simplifiée.",
+    url: "https://gradelys.com/refund",
+    type: "article",
+  },
+};
 
 export default function RefundPage() {
   return (
@@ -9,7 +25,7 @@ export default function RefundPage() {
       <h2>1. Subscriptions</h2>
       <p>
         If you're not satisfied with a paid plan, contact us within 7 days of your initial purchase at{" "}
-        <a href="mailto:support@gradelys.app">support@gradelys.app</a> for a full refund. After 7 days,
+        <a href="mailto:support@gradelys.com">support@gradelys.com</a> for a full refund. After 7 days,
         subscription payments are non-refundable, but you can cancel anytime to stop future billing — you'll
         keep access through the end of your current billing period.
       </p>
@@ -33,7 +49,7 @@ export default function RefundPage() {
       </p>
 
       <h2>5. Contact</h2>
-      <p>Billing questions? Email <a href="mailto:support@gradelys.app">support@gradelys.app</a>.</p>
+      <p>Billing questions? Email <a href="mailto:support@gradelys.com">support@gradelys.com</a>.</p>
     </>
   );
 }

@@ -71,7 +71,13 @@ function ResetPasswordContent() {
       <div className="w-full max-w-sm">
         <Link href="/" className="mb-10 flex items-center justify-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
-            <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+            <img
+              src="/favicon.svg"
+              alt="Logo Gradelys"
+              width={32}
+              height={32}
+              className="h-full w-full object-contain"
+            />
           </div>
           <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
         </Link>

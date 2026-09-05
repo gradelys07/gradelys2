@@ -1,35 +1,97 @@
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
-import { GraduationCap } from "lucide-react";
 import { TrackPageView } from "@/components/track-page-view";
+import { JsonLd } from "@/components/seo/json-ld";
 
-export const metadata = { title: "About" };
+export const metadata: Metadata = {
+  title: "À propos de Gradelys | Notre Mission Éducative",
+  description:
+    "Découvrez la mission de Gradelys : un espace d'apprentissage conçu pour aider chaque étudiant à réviser avec méthode grâce à la mémorisation espacée et au rappel actif.",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "À propos de Gradelys | Notre Mission Éducative",
+    description:
+      "Découvrez la mission de Gradelys : un espace d'apprentissage conçu pour aider chaque étudiant à réviser avec méthode grâce à la mémorisation espacée et au rappel actif.",
+    url: "https://gradelys.com/about",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "À propos de Gradelys | Notre Mission Éducative",
+    description:
+      "Découvrez la mission de Gradelys : un espace d'apprentissage conçu pour aider chaque étudiant à réviser avec méthode grâce à la mémorisation espacée et au rappel actif.",
+  },
+};
+
+const aboutSchema = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  name: "À propos de Gradelys",
+  url: "https://gradelys.com/about",
+  description:
+    "Mission, méthode et vision de Gradelys pour l'apprentissage et la réussite scolaire et universitaire.",
+  publisher: {
+    "@type": "Organization",
+    name: "Gradelys",
+    url: "https://gradelys.com",
+    logo: "https://gradelys.com/favicon.svg",
+  },
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Accueil",
+      item: "https://gradelys.com",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "À propos",
+      item: "https://gradelys.com/about",
+    },
+  ],
+};
 
 export default function AboutPage() {
   return (
     <>
+      <JsonLd schema={[aboutSchema, breadcrumbSchema]} />
       <SiteHeader />
       <TrackPageView page="about" />
       <main className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
         <div className="h-8 w-8 rounded-lg overflow-hidden">
-          <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+          <img
+            src="/favicon.svg"
+            alt="Logo officiel Gradelys"
+            width={32}
+            height={32}
+            className="h-full w-full object-contain"
+          />
         </div>
         <h1 className="mt-4 text-display-lg text-text-primary">About Gradelys</h1>
         <p className="mt-6 text-body-lg leading-relaxed text-text-secondary">
-          Gradelys is an AI-powered learning workspace built for students who want to study smarter, not
-          longer. We bring chat, notes, spaced-repetition flashcards, practice exams, and visual learning
-          tools together in one place — so you spend less time juggling apps and more time actually
-          learning.
+          Gradelys is a dedicated learning workspace designed for students and learners who aim to master
+          their subjects thoroughly. We bring together notes, spaced-repetition flashcards, practice exams,
+          and visual conceptualization tools into one cohesive environment — helping you focus on understanding
+          and long-term retention.
         </p>
         <p className="mt-4 text-body-lg leading-relaxed text-text-secondary">
-          The product is built around a simple idea: active recall and spaced repetition work, and AI can
-          make them effortless to set up. Scan a graded exam and get a diagnostic of exactly what to review.
-          Turn a dense chapter into a mind map in seconds. Ask a question and get an answer grounded in your
-          own material.
+          Our platform is built upon proven cognitive science principles: active recall and spaced repetition
+          consistently outperform passive rereading. By diagnosing errors on homework and exams, structuring dense
+          syllabi into intuitive visual maps, and scheduling timely reviews, Gradelys transforms revision into
+          a calm, structured, and rewarding process.
         </p>
         <p className="mt-4 text-body-lg leading-relaxed text-text-secondary">
-          We're just getting started, and we're building Gradelys for students everywhere — starting with a
-          focus on clarity, honesty, and genuinely useful AI, not gimmicks.
+          We are committed to delivering clarity, educational rigor, and reliable tools that empower students
+          worldwide to achieve academic excellence.
         </p>
       </main>
       <SiteFooter />

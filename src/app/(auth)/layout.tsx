@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { GraduationCap, MessageSquare, Brain, ScanLine } from "lucide-react";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,7 +15,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20">
         <Link href="/" className="mb-10 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
-            <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+            <img
+              src="/favicon.svg"
+              alt="Logo officiel Gradelys"
+              width={32}
+              height={32}
+              className="h-full w-full object-contain"
+            />
           </div>
           <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
         </Link>

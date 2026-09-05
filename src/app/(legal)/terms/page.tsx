@@ -1,4 +1,20 @@
-export const metadata = { title: "Terms of Service" };
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Conditions Générales d'Utilisation | Gradelys",
+  description:
+    "Prenez connaissance des conditions générales d'utilisation de Gradelys : règles d'accès, intégrité académique, abonnements et responsabilités.",
+  alternates: {
+    canonical: "/terms",
+  },
+  openGraph: {
+    title: "Conditions Générales d'Utilisation | Gradelys",
+    description:
+      "Prenez connaissance des conditions générales d'utilisation de Gradelys : règles d'accès, intégrité académique, abonnements et responsabilités.",
+    url: "https://gradelys.com/terms",
+    type: "article",
+  },
+};
 
 export default function TermsPage() {
   return (
@@ -77,7 +93,7 @@ export default function TermsPage() {
       <p>We may update these terms periodically. Continued use after changes constitutes acceptance.</p>
 
       <h2>11. Contact</h2>
-      <p>Questions about these terms? Email <a href="mailto:support@gradelys.app">support@gradelys.app</a>.</p>
+      <p>Questions about these terms? Email <a href="mailto:support@gradelys.com">support@gradelys.com</a>.</p>
     </>
   );
 }

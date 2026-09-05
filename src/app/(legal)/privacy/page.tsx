@@ -1,4 +1,20 @@
-export const metadata = { title: "Privacy Policy" };
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Politique de confidentialité | Gradelys",
+  description:
+    "Consultez la politique de confidentialité de Gradelys : protection de vos données personnelles, sécurité du chiffrement et respect des droits des utilisateurs.",
+  alternates: {
+    canonical: "/privacy",
+  },
+  openGraph: {
+    title: "Politique de confidentialité | Gradelys",
+    description:
+      "Consultez la politique de confidentialité de Gradelys : protection de vos données personnelles, sécurité du chiffrement et respect des droits des utilisateurs.",
+    url: "https://gradelys.com/privacy",
+    type: "article",
+  },
+};
 
 export default function PrivacyPage() {
   return (
@@ -48,7 +64,7 @@ export default function PrivacyPage() {
       <p>
         Depending on your location, you may have the right to access, correct, export, or delete your
         personal data. You can exercise these rights directly in Settings, or by contacting us at{" "}
-        <a href="mailto:privacy@gradelys.app">privacy@gradelys.app</a>.
+        <a href="mailto:privacy@gradelys.com">privacy@gradelys.com</a>.
       </p>
 
       <h2>7. Security</h2>
@@ -69,7 +85,7 @@ export default function PrivacyPage() {
       <p>We may update this policy from time to time. We'll notify you of material changes by email or in-app notice.</p>
 
       <h2>10. Contact</h2>
-      <p>Questions? Reach us at <a href="mailto:privacy@gradelys.app">privacy@gradelys.app</a>.</p>
+      <p>Questions? Reach us at <a href="mailto:privacy@gradelys.com">privacy@gradelys.com</a>.</p>
     </>
   );
 }

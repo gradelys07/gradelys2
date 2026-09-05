@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight, MessageSquare, NotebookPen, Brain, Sparkles, FileStack,
@@ -10,6 +11,23 @@ import { FaqAccordion } from "@/components/marketing/faq-accordion";
 import { HeroChatMock } from "@/components/marketing/hero-chat-mock";
 import { TrackPageView } from "@/components/track-page-view";
 import { TrackingCTA } from "@/components/tracking-cta";
+import { JsonLd } from "@/components/seo/json-ld";
+
+export const metadata: Metadata = {
+  title: "Gradelys | Espace d'apprentissage & de révision interactif",
+  description:
+    "Chat d'étude, fiches de révision à répétition espacée (SM-2), diagnostic immédiat d'exercices et schémas visuels : tout pour réussir vos examens avec Gradelys.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Gradelys | Espace d'apprentissage & de révision interactif",
+    description:
+      "Chat d'étude, fiches de révision à répétition espacée (SM-2), diagnostic immédiat d'exercices et schémas visuels : tout pour réussir vos examens avec Gradelys.",
+    url: "https://gradelys.com",
+    type: "website",
+  },
+};
 
 const FEATURES = [
   {
@@ -133,9 +151,65 @@ const STATS = [
   { value: "24/7", label: "AI study support, always on" },
 ];
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Gradelys",
+  url: "https://gradelys.com",
+  logo: "https://gradelys.com/favicon.svg",
+  description: "Plateforme éducative d'apprentissage et de révision avec mémorisation espacée (SM-2), diagnostics d'exercices et synthèses.",
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "support@gradelys.com",
+    contactType: "customer service",
+  },
+};
+
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Gradelys",
+  url: "https://gradelys.com",
+};
+
+const webAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Gradelys",
+  url: "https://gradelys.com",
+  applicationCategory: "EducationalApplication",
+  operatingSystem: "All",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "EUR",
+  },
+  featureList: [
+    "Fiches de révision et mémorisation espacée (SM-2)",
+    "Diagnostics de devoirs et examens",
+    "Synthèses de cours et cartes conceptuelles",
+    "Quiz personnalisés et examens blancs",
+    "Espaces d'étude organisés par matière",
+  ],
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
+
 export default function LandingPage() {
   return (
     <>
+      <JsonLd schema={[organizationSchema, webSiteSchema, webAppSchema, faqSchema]} />
       <SiteHeader />
       <TrackPageView page="landing" />
       <main>
@@ -152,7 +226,7 @@ export default function LandingPage() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex animate-fade-in items-center gap-2 rounded-full border border-border-strong bg-surface px-3.5 py-1.5 text-label-lg text-text-secondary">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Your entire study workflow, powered by AI
+                Your complete interactive study workspace
               </div>
               <h1 className="mt-6 animate-slide-up text-display-md text-text-primary sm:text-display-lg lg:text-display-xl">
                 Learn smarter.

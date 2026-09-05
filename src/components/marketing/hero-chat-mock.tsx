@@ -8,7 +8,7 @@ export function HeroChatMock() {
         <div className="h-2.5 w-2.5 rounded-full bg-red/70" />
         <div className="h-2.5 w-2.5 rounded-full bg-yellow/70" />
         <div className="h-2.5 w-2.5 rounded-full bg-green/70" />
-        <span className="ml-3 text-label-md text-text-muted">gradelys.app/chat</span>
+        <span className="ml-3 text-label-md text-text-muted">gradelys.com/chat</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]">
@@ -16,7 +16,13 @@ export function HeroChatMock() {
         <div className="hidden border-r border-border-subtle bg-base p-4 md:block">
           <div className="flex items-center gap-2 px-1">
             <div className="flex h-6 w-6 items-center justify-center rounded-md overflow-hidden">
-              <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+              <img
+                src="/favicon.svg"
+                alt="Logo Gradelys"
+                width={24}
+                height={24}
+                className="h-full w-full object-contain"
+              />
             </div>
             <span className="text-body-sm font-semibold text-text-primary">Gradelys</span>
           </div>

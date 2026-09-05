@@ -8,7 +8,7 @@ function getClient() {
 }
 
 const FROM = `${process.env.RESEND_FROM_NAME || "Gradelys"} <${
-  process.env.RESEND_FROM_EMAIL || "noreply@gradelys.app"
+  process.env.RESEND_FROM_EMAIL || "noreply@gradelys.com"
 }>`;
 
 async function send(to: string, subject: string, html: string) {
