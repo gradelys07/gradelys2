@@ -1,11 +1,11 @@
 import { MetadataRoute } from "next";
 
 function getBaseUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-  if (!envUrl || envUrl.includes("localhost")) {
-    return "https://gradelys.com";
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("vercel.app")) {
+    return envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
   }
-  return envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+  return "https://gradelys.com";
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {

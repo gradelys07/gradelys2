@@ -6,16 +6,16 @@ import { getMissingRequiredVars } from "@/lib/config";
 import { SetupRequired } from "@/components/setup-required";
 
 function getBaseUrl(): URL {
-  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
-  if (!envUrl || envUrl.includes("localhost")) {
-    return new URL("https://gradelys.com");
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("vercel.app")) {
+    const urlWithProtocol = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+    try {
+      return new URL(urlWithProtocol);
+    } catch (e) {
+      return new URL("https://gradelys.com");
+    }
   }
-  const urlWithProtocol = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
-  try {
-    return new URL(urlWithProtocol);
-  } catch (e) {
-    return new URL("https://gradelys.com");
-  }
+  return new URL("https://gradelys.com");
 }
 
 export const metadata: Metadata = {

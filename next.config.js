@@ -57,6 +57,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/sitmap.xml",
+        destination: "/sitemap.xml",
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
