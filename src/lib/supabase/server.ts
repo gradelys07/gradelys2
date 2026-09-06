@@ -21,14 +21,14 @@ export function createClient() {
         },
         set(name: string, value: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value, ...options });
+            cookieStore.set({ name, value, ...options, maxAge: options.maxAge ?? 31536000 });
           } catch {
             // Called from a Server Component — ignored, middleware refreshes sessions.
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value: "", ...options });
+            cookieStore.set({ name, value: "", ...options, maxAge: 0 });
           } catch {
             // Called from a Server Component — ignored, middleware refreshes sessions.
           }

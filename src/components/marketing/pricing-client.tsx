@@ -43,7 +43,7 @@ export function PricingClient() {
     {
       id: "plus",
       name: "Plus",
-      price: annual ? 6.99 : 9.99,
+      price: annual ? 69 : 9.99,
       description: "For students who study year-round.",
       cta: "Upgrade to Plus",
       href: getCheckoutUrl(annual ? "plus-annual" : "plus-monthly") || "/signup",
@@ -52,7 +52,7 @@ export function PricingClient() {
     {
       id: "pro",
       name: "Pro",
-      price: annual ? 13.99 : 19.99,
+      price: annual ? 139 : 19.99,
       description: "Unlimited everything, priority model.",
       cta: "Upgrade to Pro",
       href: getCheckoutUrl(annual ? "pro-annual" : "pro-monthly") || "/signup",
@@ -103,7 +103,7 @@ export function PricingClient() {
             <p className="mt-1 text-body-sm text-text-muted">{plan.description}</p>
             <div className="mt-5 flex items-baseline gap-1">
               <span className="text-display-lg text-text-primary">${plan.price}</span>
-              <span className="text-body-sm text-text-muted">/month</span>
+              <span className="text-body-sm text-text-muted">{annual ? "/year" : "/month"}</span>
             </div>
             <a
               href={plan.href}
