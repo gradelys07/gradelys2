@@ -4,14 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
-  const redirect = searchParams.get("redirect") || "/chat";
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get("code");
+  const redirectPath = requestUrl.searchParams.get("redirect") || "/chat";
 
   if (code) {
     const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      console.error("Auth session exchange error:", error);
+      return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url));
+    }
   }
 
-  return NextResponse.redirect(`${origin}${redirect}`);
+  return NextResponse.redirect(new URL(redirectPath, request.url));
 }
