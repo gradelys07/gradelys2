@@ -88,6 +88,7 @@ export function ToolChatThread({
   conversationId: string;
   initialSpaceId?: string;
   lockSpace?: boolean;
+  renderInputToolbar?: () => React.ReactNode;
 }) {
   const { t } = useTranslation();
   const { data: spaces } = useSpaces();
@@ -316,16 +317,19 @@ export function ToolChatThread({
               className="max-h-32 w-full resize-none bg-transparent px-2 py-1.5 text-body-md text-text-primary placeholder:text-text-muted focus:outline-none"
             />
             <div className="flex items-center justify-between px-1">
-              <button
-                type="button"
-                onClick={() => setAttachOpen(!attachOpen)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm transition-colors",
-                  attachOpen ? "bg-[var(--primary-subtle)] text-primary" : "text-text-muted hover:bg-hover hover:text-text-primary"
-                )}
-              >
-                <Paperclip className="h-4 w-4" /> {t("action.attach")}
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setAttachOpen(!attachOpen)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm transition-colors",
+                    attachOpen ? "bg-[var(--primary-subtle)] text-primary" : "text-text-muted hover:bg-hover hover:text-text-primary"
+                  )}
+                >
+                  <Paperclip className="h-4 w-4" /> {t("action.attach")}
+                </button>
+                {renderInputToolbar && renderInputToolbar()}
+              </div>
               <button
                 type="submit"
                 disabled={!input.trim() || sending}

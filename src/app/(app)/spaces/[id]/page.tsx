@@ -4,7 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
   ArrowLeft, Plus, FileText, Link2, Youtube, Type, Trash2, NotebookPen, Upload, Loader2,
-  ChevronUp, Sparkles, PenTool, LayoutDashboard, MessageSquare, Wrench
+  ChevronUp, Sparkles, PenTool, LayoutDashboard, MessageSquare, Wrench, Brain, Check
 } from "lucide-react";
 import {
   useAddSource, useDeleteSource, useDeleteSpace, useSources, useSpaces, useUploadSource,
@@ -13,6 +13,9 @@ import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from "@/hooks/u
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown";
 import { ChatThread } from "@/components/chat/chat-thread";
 import { ToolChatThread } from "@/components/space/tool-chat-thread";
 import { useOrCreateToolConversation } from "@/hooks/use-or-create-tool-conversation";
@@ -22,6 +25,14 @@ import { toast } from "sonner";
 import type { SourceType } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/stores/ui-store";
+
+const SPACE_TOOLS = [
+  { id: "chat", label: "Chat", icon: MessageSquare },
+  { id: "practice", label: "Practice", icon: Brain },
+  { id: "visualize", label: "Visualize", icon: Sparkles },
+  { id: "studio", label: "Studio", icon: PenTool },
+  { id: "notes", label: "Notes", icon: NotebookPen },
+];
 
 const SOURCE_ICONS: Record<SourceType, React.ComponentType<{ className?: string }>> = {
   pdf: FileText, url: Link2, youtube: Youtube, text: Type, spreadsheet: FileText, image: FileText,
@@ -44,8 +55,6 @@ export default function SpaceDetailPage() {
   const { data: messages } = useMessages(chatConvoId);
   const hasMessages = messages && messages.length > 0;
 
-  const toolsMode = useUIStore((s) => s.toolsMode);
-  const setToolsMode = useUIStore((s) => s.setToolsMode);
   const [activeTab, setActiveTab] = React.useState(searchParams.get("tab") || "chat");
   const [tabKey, setTabKey] = React.useState(0);
   const [startedChatting, setStartedChatting] = React.useState(false);
@@ -60,14 +69,8 @@ export default function SpaceDetailPage() {
   const isFullScreen = hasMessages || startedChatting || activeTab !== "chat";
 
   React.useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    if (toolsMode) {
-      timeout = setTimeout(() => {
-        setToolsMode(false);
-      }, 8000);
-    }
-    return () => clearTimeout(timeout);
-  }, [toolsMode, setToolsMode]);
+    // Intentionally left blank as toolsMode is removed
+  }, []);
 
   const handleTabChange = (tab: string) => {
     if (tab === activeTab) {
@@ -118,57 +121,14 @@ export default function SpaceDetailPage() {
     }
   }
 
-  const renderOutilsMenu = () => {
-    return (
-      <button 
-        type="button" 
-        onClick={() => setToolsMode(!toolsMode)}
-        className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
-      >
-        <Wrench className="h-4 w-4" />
-        {toolsMode ? "Fermer" : "Outils"}
-      </button>
-    );
-  };
+
 
   return (
     <div className={cn(
       "flex h-full flex-col bg-background p-4 sm:p-6 mx-auto w-full relative overflow-hidden transition-all duration-300",
       isFullScreen ? "max-w-full px-4 sm:px-8" : "max-w-5xl"
     )}>
-      <AnimatePresence>
-        {toolsMode && (
-          <motion.div
-            key="tools"
-            className="fixed z-[60] left-1/2 bottom-32 -translate-x-1/2 flex items-center justify-center gap-2 bg-surface/90 backdrop-blur-xl p-3 rounded-2xl border border-border-subtle shadow-2xl"
-            initial={{ opacity: 0, y: -400, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -400, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <button onClick={() => { handleTabChange("chat"); setToolsMode(false); }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-hover min-w-[80px] transition-colors">
-              <div className="bg-primary/10 p-2.5 rounded-lg text-primary"><MessageSquare className="h-5 w-5" /></div>
-              <span className="text-label-sm font-medium">Chat</span>
-            </button>
-            <button onClick={() => { handleTabChange("visualize"); setToolsMode(false); }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-hover min-w-[80px] transition-colors">
-              <div className="bg-blue/10 p-2.5 rounded-lg text-blue"><LayoutDashboard className="h-5 w-5" /></div>
-              <span className="text-label-sm font-medium">Visualize</span>
-            </button>
-            <button onClick={() => { handleTabChange("studio"); setToolsMode(false); }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-hover min-w-[80px] transition-colors">
-              <div className="bg-orange/10 p-2.5 rounded-lg text-orange"><PenTool className="h-5 w-5" /></div>
-              <span className="text-label-sm font-medium">Studio</span>
-            </button>
-            <button onClick={() => { handleTabChange("practice"); setToolsMode(false); }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-hover min-w-[80px] transition-colors">
-              <div className="bg-purple/10 p-2.5 rounded-lg text-purple"><Sparkles className="h-5 w-5" /></div>
-              <span className="text-label-sm font-medium">Practice</span>
-            </button>
-            <button onClick={() => { handleTabChange("notes"); setToolsMode(false); }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-hover min-w-[80px] transition-colors">
-              <div className="bg-green/10 p-2.5 rounded-lg text-green"><NotebookPen className="h-5 w-5" /></div>
-              <span className="text-label-sm font-medium">Notes</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       {/* En-tête de l'espace */}
       <div className={cn("flex items-center justify-between w-full max-w-3xl mx-auto z-10 relative transition-all duration-500", isFullScreen ? "h-0 mb-0 opacity-0 overflow-hidden" : "h-14 mb-4 opacity-100")}>
@@ -181,8 +141,12 @@ export default function SpaceDetailPage() {
               {space?.emoji}
             </div>
             <div>
-              <h1 className="text-body-lg font-semibold text-text-primary">{space?.name}</h1>
-              <p className="text-label-sm text-text-muted capitalize">{space?.template.replace("-", " ")}</p>
+              <h1 className="text-heading-md text-text-primary flex items-center gap-2">
+                {space?.name}
+              </h1>
+              <div className="text-label-sm text-text-muted mt-0.5">
+                {sources?.length || 0} sources • Mis à jour {formatRelativeDate(new Date())}
+              </div>
             </div>
           </div>
         </div>
@@ -202,20 +166,47 @@ export default function SpaceDetailPage() {
       </div>
 
       {/* Zone centrale du Chat / Outils */}
-      <div className="flex-1 flex flex-col items-center min-h-0 mb-6 relative z-10 w-full transition-all duration-500">
+      <div className="flex-1 min-h-0 flex flex-col relative w-full mx-auto">
         <div className={cn(
-          "w-full bg-surface rounded-2xl border border-border-subtle shadow-sm overflow-hidden relative transition-all duration-500",
+          "w-full mx-auto transition-all duration-300 flex flex-col relative",
           isFullScreen ? "max-w-full flex-1 h-full" : "max-w-3xl h-[500px]"
         )}>
-          {activeTab === "chat" && (
-            <div className="absolute inset-0">
+          
+          <div className="flex-1 relative min-h-0">
+            {activeTab === "chat" && (
+              <div className="absolute inset-0">
               {chatConvoId ? (
                 <ChatThread 
                   conversationId={chatConvoId} 
                   spaceId={spaceId} 
                   placeholder={`Que voulez-vous savoir sur ${space?.name || "cet espace"}…`} 
-                  renderInputToolbar={renderOutilsMenu}
                   onMessageSent={() => setStartedChatting(true)}
+                  renderInputToolbar={() => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
+                        >
+                          <Wrench className="h-4 w-4" />
+                          <span>Outils</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {SPACE_TOOLS.map(tool => (
+                          <DropdownMenuItem key={tool.id} onClick={() => handleTabChange(tool.id)}>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <tool.icon className="h-4 w-4" />
+                                <span>{tool.label}</span>
+                              </div>
+                              {activeTab === tool.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-body-sm text-text-muted">
@@ -227,36 +218,117 @@ export default function SpaceDetailPage() {
 
           {activeTab === "practice" && (
             <div className="absolute inset-0 flex flex-col">
-              <div className="px-4 py-2 border-b border-border-subtle bg-surface flex items-center justify-between">
-                 <span className="text-body-sm font-medium text-text-muted">Outil: Practice</span>
-                 {renderOutilsMenu()}
-              </div>
               <div className="flex-1 overflow-hidden">
-                 <SpaceToolTab key={`practice-${tabKey}`} kind="practice" spaceId={spaceId} spaceName={space?.name} />
+                 <SpaceToolTab 
+                  key={`practice-${tabKey}`} 
+                  kind="practice" 
+                  spaceId={spaceId} 
+                  spaceName={space?.name}
+                  renderInputToolbar={() => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
+                        >
+                          <Wrench className="h-4 w-4" />
+                          <span>Outils</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {SPACE_TOOLS.map(tool => (
+                          <DropdownMenuItem key={tool.id} onClick={() => handleTabChange(tool.id)}>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <tool.icon className="h-4 w-4" />
+                                <span>{tool.label}</span>
+                              </div>
+                              {activeTab === tool.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                 />
               </div>
             </div>
           )}
           
           {activeTab === "visualize" && (
             <div className="absolute inset-0 flex flex-col">
-              <div className="px-4 py-2 border-b border-border-subtle bg-surface flex items-center justify-between">
-                 <span className="text-body-sm font-medium text-text-muted">Outil: Visualize</span>
-                 {renderOutilsMenu()}
-              </div>
               <div className="flex-1 overflow-hidden">
-                <SpaceToolTab key={`visualize-${tabKey}`} kind="visualize" spaceId={spaceId} spaceName={space?.name} />
+                <SpaceToolTab 
+                  key={`visualize-${tabKey}`} 
+                  kind="visualize" 
+                  spaceId={spaceId} 
+                  spaceName={space?.name}
+                  renderInputToolbar={() => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
+                        >
+                          <Wrench className="h-4 w-4" />
+                          <span>Outils</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {SPACE_TOOLS.map(tool => (
+                          <DropdownMenuItem key={tool.id} onClick={() => handleTabChange(tool.id)}>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <tool.icon className="h-4 w-4" />
+                                <span>{tool.label}</span>
+                              </div>
+                              {activeTab === tool.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                />
               </div>
             </div>
           )}
           
           {activeTab === "studio" && (
             <div className="absolute inset-0 flex flex-col">
-              <div className="px-4 py-2 border-b border-border-subtle bg-surface flex items-center justify-between">
-                 <span className="text-body-sm font-medium text-text-muted">Outil: Studio</span>
-                 {renderOutilsMenu()}
-              </div>
               <div className="flex-1 overflow-hidden">
-                <SpaceToolTab key={`studio-${tabKey}`} kind="studio" spaceId={spaceId} spaceName={space?.name} />
+                <SpaceToolTab 
+                  key={`studio-${tabKey}`} 
+                  kind="studio" 
+                  spaceId={spaceId} 
+                  spaceName={space?.name}
+                  renderInputToolbar={() => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
+                        >
+                          <Wrench className="h-4 w-4" />
+                          <span>Outils</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {SPACE_TOOLS.map(tool => (
+                          <DropdownMenuItem key={tool.id} onClick={() => handleTabChange(tool.id)}>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <tool.icon className="h-4 w-4" />
+                                <span>{tool.label}</span>
+                              </div>
+                              {activeTab === tool.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                />
               </div>
             </div>
           )}
@@ -266,12 +338,12 @@ export default function SpaceDetailPage() {
               <div className="mx-auto max-w-4xl">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-heading-lg text-text-primary">Notes de l'espace</h2>
-                  {renderOutilsMenu()}
                 </div>
                 <SpaceNotesTab spaceId={spaceId} />
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
 

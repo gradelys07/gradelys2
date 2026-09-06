@@ -6,7 +6,7 @@ import * as React from "react";
 import {
   NotebookPen, Brain, Sparkles, FileStack, ScanLine,
   ChevronsLeft, ChevronsRight, ChevronDown, Plus, GraduationCap, LogOut,
-  CreditCard, Search, Settings, TrendingUp, Shield, Trash2, Pin, PinOff,
+  CreditCard, Search, Settings, TrendingUp, Shield, Trash2, Pin, PinOff, LayoutGrid, MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
@@ -25,11 +25,16 @@ import { SPACE_TEMPLATES, type SpaceTemplateOption } from "@/lib/space-templates
 import { useTranslation } from "@/i18n/locale-provider";
 import { toast } from "sonner";
 
-const EXPLORE_ITEMS = [
+const TOP_ITEMS = [
+  { href: "/scan", key: "nav.scan", icon: ScanLine },
+  { href: "/notes", key: "nav.notes", icon: NotebookPen },
+  { href: "/progress", key: "nav.progress", icon: TrendingUp },
+];
+
+const STUDIO_ITEMS = [
   { href: "/practice", key: "nav.practice", icon: Brain },
   { href: "/visualize", key: "nav.visualize", icon: Sparkles },
   { href: "/studio", key: "nav.studio", icon: FileStack },
-  { href: "/scan", key: "nav.scan", icon: ScanLine },
 ];
 
 export function AppSidebar() {
@@ -54,6 +59,7 @@ export function AppSidebar() {
   const [newSpaceOpen, setNewSpaceOpen] = React.useState(false);
   const [spaceName, setSpaceName] = React.useState("");
   const [template, setTemplate] = React.useState<SpaceTemplateOption>(SPACE_TEMPLATES[0]);
+  const [activeTab, setActiveTab] = React.useState<"browse" | "chat">("browse");
 
   async function handleLogout() {
     const supabase = createClient();
@@ -127,7 +133,7 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="hidden h-[calc(100vh-1rem)] w-[260px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 ml-2 lg:flex shadow-lg">
+    <aside className="hidden h-[calc(100vh-1rem)] w-[230px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 ml-2 lg:flex shadow-lg">
       <div className="flex h-16 items-center justify-between px-5 pt-2">
         <Link href="/chat" className="flex items-center gap-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md overflow-hidden">
@@ -140,98 +146,172 @@ export function AppSidebar() {
         </button>
       </div>
 
+      <div className="px-4 mt-4">
+        <button
+          onClick={() => setCommandPaletteOpen(true)}
+          className="flex w-full items-center justify-between rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-label-sm text-text-muted transition-colors hover:border-border hover:text-text-primary"
+        >
+          <div className="flex items-center gap-2">
+            <Search className="h-3.5 w-3.5" />
+            <span>Search</span>
+          </div>
+          <kbd className="inline-flex h-4 items-center gap-1 rounded bg-surface-subtle px-1.5 font-mono text-[9px] font-medium text-text-secondary">
+            <span className="text-[10px]">⌘</span>K
+          </kbd>
+        </button>
+      </div>
+
+      {/* Segmented Control */}
+      <div className="px-4 mt-5 mb-4 shrink-0">
+        <div className="flex bg-surface p-1 rounded-md border border-border-subtle/50">
+          <button
+            onClick={() => setActiveTab("browse")}
+            className={cn("flex-1 flex items-center justify-center gap-2 py-1.5 rounded-sm text-[12px] font-medium transition-all", activeTab === "browse" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:bg-hover hover:text-text-primary")}
+          >
+            <LayoutGrid className="h-4 w-4" /> Parcourir
+          </button>
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={cn("flex-1 flex items-center justify-center gap-2 py-1.5 rounded-sm text-[12px] font-medium transition-all", activeTab === "chat" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:bg-hover hover:text-text-primary")}
+          >
+            <MessageSquare className="h-4 w-4" /> Chat
+          </button>
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto px-4 pb-4 mt-2">
-        <button
-          onClick={handleNewChat}
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-body-sm font-medium bg-primary text-white shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5"
-        >
-          <Plus className="h-4.5 w-4.5" /> {t("nav.newChat")}
-        </button>
-
-        {/* SPACES */}
-        <button
-          onClick={() => setSpacesOpen(!spacesOpen)}
-          className="mt-5 flex w-full items-center justify-between px-2.5 text-label-sm uppercase text-text-muted"
-        >
-          {t("nav.spaces")}
-          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !spacesOpen && "-rotate-90")} />
-        </button>
-        {spacesOpen && (
-          <nav className="mt-1 space-y-0.5">
+        {activeTab === "chat" ? (
+          <>
             <button
-              onClick={() => setNewSpaceOpen(true)}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
+              onClick={handleNewChat}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium bg-primary text-white shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5"
             >
-              <Plus className="h-4.5 w-4.5" /> {t("nav.newSpace")}
+              <Plus className="h-4.5 w-4.5" /> {t("nav.newChat")}
             </button>
-            {spaces?.map((space: any) => (
-              <Link
-                key={space.id}
-                href={`/spaces/${space.id}`}
-                className={cn(
-                  "group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-body-sm transition-colors",
-                  pathname === `/spaces/${space.id}` ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
-                )}
-              >
-                <span className="shrink-0">{space.emoji}</span>
-                <span className="min-w-0 flex-1 truncate">{space.name}</span>
-                <button
-                  onClick={(e) => handleDeleteSpace(e, space.id)}
-                  className="shrink-0 rounded p-1 text-text-muted opacity-0 hover:bg-hover hover:text-red group-hover:opacity-100"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </Link>
-            ))}
-            {(!spaces || spaces.length === 0) && (
-              <p className="px-2.5 py-1 text-label-md text-text-muted">No spaces yet</p>
-            )}
-          </nav>
-        )}
 
-        {/* RECENT CHATS */}
-        <button
-          onClick={() => setChatsOpen(!chatsOpen)}
-          className="mt-5 flex w-full items-center justify-between px-2.5 text-label-sm uppercase text-text-muted"
-        >
-          {t("nav.recentChats")}
-          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !chatsOpen && "-rotate-90")} />
-        </button>
-        {chatsOpen && (
-          <nav className="mt-1 space-y-0.5">
-            {recentChats.map((c) => (
-              <Link
-                key={c.id}
-                href={`/chat/${c.id}`}
-                className={cn(
-                  "group flex items-center gap-2 rounded-md px-2.5 py-2 text-body-sm transition-colors",
-                  pathname === `/chat/${c.id}` ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+            {/* RECENT CHATS */}
+            <div className="mt-5 px-2.5 text-label-sm uppercase text-text-muted flex items-center justify-between">
+              {t("nav.recentChats")}
+            </div>
+            <nav className="mt-2 space-y-0.5">
+              {recentChats.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/chat/${c.id}`}
+                  className={cn(
+                    "group flex items-center gap-2 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                    pathname === `/chat/${c.id}` ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+                  )}
+                >
+                  {c.pinned && <Pin className="h-3 w-3 shrink-0 text-primary" />}
+                  <span className="min-w-0 flex-1 truncate">{c.title}</span>
+                  <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
+                    <button
+                      onClick={(e) => handleTogglePin(e, c.id, c.pinned)}
+                      className="rounded p-1 text-text-muted hover:bg-hover hover:text-primary"
+                      title={c.pinned ? "Unpin" : "Pin"}
+                    >
+                      {c.pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteChat(e, c.id)}
+                      className="rounded p-1 text-text-muted hover:bg-hover hover:text-red"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </span>
+                </Link>
+              ))}
+              {recentChats.length === 0 && (
+                <p className="px-2.5 py-1 text-label-md text-text-muted">No chats yet</p>
+              )}
+            </nav>
+          </>
+        ) : (
+          <>
+            <nav className="space-y-0.5">
+              {TOP_ITEMS.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                      isActive ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {t(item.key) === item.key ? item.key.split(".")[1] : t(item.key)}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-6 px-2.5 text-label-sm uppercase text-text-muted flex items-center justify-between">
+              Studio
+            </div>
+            <nav className="mt-1 space-y-0.5">
+              {STUDIO_ITEMS.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                      isActive ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {t(item.key) === item.key ? item.key.split(".")[1] : t(item.key)}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* SPACES */}
+            <button
+              onClick={() => setSpacesOpen(!spacesOpen)}
+              className="mt-6 flex w-full items-center justify-between px-2.5 text-label-sm uppercase text-text-muted"
+            >
+              {t("nav.spaces")}
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !spacesOpen && "-rotate-90")} />
+            </button>
+            {spacesOpen && (
+              <nav className="mt-1 space-y-0.5">
+                <button
+                  onClick={() => setNewSpaceOpen(true)}
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
+                >
+                  <Plus className="h-4.5 w-4.5" /> {t("nav.newSpace")}
+                </button>
+                {spaces?.map((space: any) => (
+                  <Link
+                    key={space.id}
+                    href={`/spaces/${space.id}`}
+                    className={cn(
+                      "group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                      pathname === `/spaces/${space.id}` ? "bg-[var(--primary-subtle)] font-medium text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+                    )}
+                  >
+                    <span className="shrink-0">{space.emoji}</span>
+                    <span className="min-w-0 flex-1 truncate">{space.name}</span>
+                    <button
+                      onClick={(e) => handleDeleteSpace(e, space.id)}
+                      className="shrink-0 rounded p-1 text-text-muted opacity-0 hover:bg-hover hover:text-red group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </Link>
+                ))}
+                {(!spaces || spaces.length === 0) && (
+                  <p className="px-2.5 py-1 text-label-md text-text-muted">No spaces yet</p>
                 )}
-              >
-                {c.pinned && <Pin className="h-3 w-3 shrink-0 text-primary" />}
-                <span className="min-w-0 flex-1 truncate">{c.title}</span>
-                <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                  <button
-                    onClick={(e) => handleTogglePin(e, c.id, c.pinned)}
-                    className="rounded p-1 text-text-muted hover:bg-hover hover:text-primary"
-                    title={c.pinned ? "Unpin" : "Pin"}
-                  >
-                    {c.pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteChat(e, c.id)}
-                    className="rounded p-1 text-text-muted hover:bg-hover hover:text-red"
-                    title="Delete"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              </Link>
-            ))}
-            {recentChats.length === 0 && (
-              <p className="px-2.5 py-1 text-label-md text-text-muted">No chats yet</p>
+              </nav>
             )}
-          </nav>
+          </>
         )}
       </div>
 
@@ -264,7 +344,7 @@ export function AppSidebar() {
             <div className="flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover">
               <Avatar name={user?.name || "?"} src={user?.avatarUrl} size="sm" />
               <div className="min-w-0 flex-1 text-left">
-                <div className="truncate text-body-sm font-medium text-text-primary">{user?.name}</div>
+                <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
                 <div className="truncate text-label-md text-text-muted">{user?.email}</div>
               </div>
             </div>
@@ -304,7 +384,7 @@ export function AppSidebar() {
                   type="button"
                   onClick={() => setTemplate(t)}
                   className={cn(
-                    "rounded-md border px-3 py-2.5 text-left text-body-sm transition-colors",
+                    "rounded-md border px-3 py-2.5 text-left text-[13px] transition-colors",
                     template.id === t.id ? "border-primary bg-[var(--primary-subtle)] text-primary" : "border-border text-text-secondary hover:bg-hover"
                   )}
                 >
@@ -315,7 +395,7 @@ export function AppSidebar() {
           </div>
           <button
             type="submit"
-            className="w-full rounded-md bg-primary py-2.5 text-body-sm font-medium text-white hover:bg-primary-hover"
+            className="w-full rounded-md bg-primary py-2.5 text-[13px] font-medium text-white hover:bg-primary-hover"
           >
             Create space
           </button>
