@@ -16,7 +16,20 @@ export function getCheckoutUrl(planKey: string): string | null {
     "recharge-200": process.env.NEXT_PUBLIC_WHOP_CHECKOUT_RECHARGE_200,
     "recharge-unlimited": process.env.NEXT_PUBLIC_WHOP_CHECKOUT_RECHARGE_UNLIMITED,
   };
-  return map[planKey] || null;
+  
+  const url = map[planKey];
+  if (!url) return null;
+
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+    const redirectUrl = `${baseUrl}/chat?payment=success`;
+    const parsed = new URL(url);
+    parsed.searchParams.set("successUrl", redirectUrl);
+    parsed.searchParams.set("returnUrl", redirectUrl);
+    return parsed.toString();
+  } catch (err) {
+    return url;
+  }
 }
 
 export function verifyWhopSignature(rawBody: string, headers: Headers): boolean {
