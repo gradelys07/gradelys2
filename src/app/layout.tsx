@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { getMissingRequiredVars } from "@/lib/config";
 import { SetupRequired } from "@/components/setup-required";
+import { PostHogProvider, PostHogPageView } from "@/components/posthog-provider";
 
 function getBaseUrl(): URL {
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
@@ -119,7 +121,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {missing.length > 0 ? (
           <SetupRequired missing={missing} />
         ) : (
-          <Providers>{children}</Providers>
+          <PostHogProvider>
+            <Suspense fallback={null}>
+              <PostHogPageView />
+            </Suspense>
+            <Providers>{children}</Providers>
+          </PostHogProvider>
         )}
       </body>
     </html>
