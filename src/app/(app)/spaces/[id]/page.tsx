@@ -145,7 +145,7 @@ export default function SpaceDetailPage() {
                 {space?.name}
               </h1>
               <div className="text-label-sm text-text-muted mt-0.5">
-                {sources?.length || 0} sources • Mis à jour {formatRelativeDate(new Date())}
+                {sources?.length || 0} sources • Mis à jour {formatRelativeDate(new Date().toISOString())}
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function SpaceDetailPage() {
                   onMessageSent={() => setStartedChatting(true)}
                   renderInputToolbar={() => (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger>
                         <button
                           type="button"
                           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
@@ -226,7 +226,7 @@ export default function SpaceDetailPage() {
                   spaceName={space?.name}
                   renderInputToolbar={() => (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger>
                         <button
                           type="button"
                           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
@@ -265,7 +265,7 @@ export default function SpaceDetailPage() {
                   spaceName={space?.name}
                   renderInputToolbar={() => (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger>
                         <button
                           type="button"
                           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
@@ -304,7 +304,7 @@ export default function SpaceDetailPage() {
                   spaceName={space?.name}
                   renderInputToolbar={() => (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger>
                         <button
                           type="button"
                           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-body-sm text-text-muted hover:bg-hover hover:text-text-primary"
