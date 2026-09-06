@@ -458,7 +458,14 @@ export default function SpaceDetailPage() {
   );
 }
 
-function SpaceToolTab({ kind, spaceId, spaceName }: { kind: "visualize" | "studio" | "practice"; spaceId: string; spaceName?: string }) {
+function SpaceToolTab({ 
+  kind, spaceId, spaceName, renderInputToolbar 
+}: { 
+  kind: "visualize" | "studio" | "practice"; 
+  spaceId: string; 
+  spaceName?: string;
+  renderInputToolbar?: () => React.ReactNode;
+}) {
   const conversationId = useOrCreateToolConversation(kind, spaceId, `${spaceName || "Space"} ${kind}`, true);
   if (!conversationId) {
     return (
@@ -467,7 +474,7 @@ function SpaceToolTab({ kind, spaceId, spaceName }: { kind: "visualize" | "studi
       </div>
     );
   }
-  return <ToolChatThread kind={kind} conversationId={conversationId} initialSpaceId={spaceId} lockSpace />;
+  return <ToolChatThread kind={kind} conversationId={conversationId} initialSpaceId={spaceId} lockSpace renderInputToolbar={renderInputToolbar} />;
 }
 
 function SpaceNotesTab({ spaceId }: { spaceId: string }) {
