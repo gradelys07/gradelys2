@@ -87,7 +87,7 @@ export default function VisualizePage() {
             <HtmlVisual code={structured.code} />
           ) : structured?.kind === "mermaid" ? (
             <MermaidDiagram code={structured.code} id={output.id} />
-          ) : structured?.kind === "bar" || structured?.kind === "pie" || structured?.kind === "line" || structured?.kind === "doughnut" ? (
+          ) : structured?.kind === "chart" ? (
              <ChartRenderer data={structured} />
           ) : (
             <div className="prose dark:prose-invert max-w-none">
