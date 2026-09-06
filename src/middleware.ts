@@ -79,6 +79,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (pathname === "/" && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/chat";
+    return NextResponse.redirect(url);
+  }
+
   if ((pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) && user) {
     const { data: profile } = await supabase
       .from("profiles")
