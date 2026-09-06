@@ -83,6 +83,7 @@ export function ToolChatThread({
   conversationId,
   initialSpaceId,
   lockSpace,
+  renderInputToolbar,
 }: {
   kind: ToolKind;
   conversationId: string;
