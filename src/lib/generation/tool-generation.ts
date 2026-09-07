@@ -116,11 +116,11 @@ ${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
 }
 
 const TYPE_INSTRUCTIONS: Record<string, string> = {
-  notes: "Write structured, exam-ready study notes with headings, bullet points, and bolded key terms — pull the actual definitions, formulas, dates, and examples straight from the material.",
-  report: "Write a formal, well-organized report with an introduction, body sections, and conclusion, built entirely from the material's content.",
-  summary: "Write a concise, dense summary that captures every key idea and specific fact from the material, with no filler.",
-  essay: "Write a well-argued essay with a clear thesis, supporting paragraphs referencing specific material, and a conclusion.",
-  slides: `Write slide-by-slide content as JSON. Format EXACTLY like:
+  notes: "Write highly structured, comprehensive, university-level study notes. Use a clear hierarchy of headings (H1, H2, H3). Bold all key terms and provide precise definitions. Include bulleted lists for enumerations, and highlight critical formulas, dates, and examples pulled directly from the material. The output must look like a premium, professionally formatted cheat sheet.",
+  report: "Write a highly professional, meticulously organized formal report. It MUST include an Executive Summary, a clear Introduction, deeply detailed Body Sections with logical subheadings, and a strong Conclusion. Use a formal, objective, and analytical tone suitable for a corporate or academic setting. Support every claim with specific data, quotes, and facts from the material.",
+  summary: "Write an ultra-dense, comprehensive, and highly professional executive summary. Capture every critical idea, specific fact, and nuance from the material without any fluff or generic filler. Synthesize the information elegantly, using bullet points for key takeaways where appropriate, ensuring a high-level academic or professional standard.",
+  essay: "Write a masterfully crafted, university-level essay. It MUST feature a compelling and clear thesis statement in the introduction, highly structured body paragraphs with seamless transitions and rigorous argumentation, and a profound conclusion. The tone must be scholarly, objective, and deeply analytical. Every argument must be substantiated by specific evidence from the material.",
+  slides: `Write a highly professional, beautifully structured slide-by-slide presentation outline as JSON. Each slide must have a punchy, engaging title. The bullets must be concise, impactful, and clearly articulate the core concepts without overwhelming text. Aim for 5-8 slides with 3-5 high-value bullet points each. Format EXACTLY like:
 {"title":"Presentation Title", "slides":[{"title":"Slide 1 Title", "bullets":["Bullet 1","Bullet 2"]}]}`,
 };
 
