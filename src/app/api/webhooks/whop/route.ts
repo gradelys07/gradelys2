@@ -29,11 +29,33 @@ export async function POST(req: NextRequest) {
           throw new Error("Webhook event is missing the user's email.");
         }
 
-        // The plan field might be an object (Whop V3) or a string. Safely check for "pro".
-        const planRaw = event.data.plan || event.data.product || event.data.experience || "";
-        const planStr = typeof planRaw === 'string' ? planRaw : JSON.stringify(planRaw);
-        
-        const plan = planStr.toLowerCase().includes("pro") ? "pro" : "plus";
+        // Get IDs from event to cross-reference with our configured checkout URLs
+        const planId = event.data.plan_id || event.data.plan?.id;
+        const productId = event.data.product_id || event.data.product?.id;
+        const experienceId = event.data.experience_id || event.data.experience?.id;
+        const allEventIds = [planId, productId, experienceId].filter(Boolean);
+
+        const proUrls = [
+          process.env.NEXT_PUBLIC_WHOP_CHECKOUT_PRO_MONTHLY,
+          process.env.NEXT_PUBLIC_WHOP_CHECKOUT_PRO_ANNUAL
+        ].filter(Boolean) as string[];
+
+        let plan: "pro" | "plus" = "plus";
+
+        // Check if any of the event's IDs match our Pro checkout URLs
+        const isProUrlMatch = proUrls.some(url => allEventIds.some(id => url.includes(id)));
+
+        if (isProUrlMatch) {
+          plan = "pro";
+        } else {
+          // Fallback: check if the stringified product/plan contains "pro"
+          const planRaw = event.data.plan || event.data.product || event.data.experience || "";
+          const planStr = typeof planRaw === 'string' ? planRaw : JSON.stringify(planRaw);
+          if (planStr.toLowerCase().includes("pro")) {
+            plan = "pro";
+          }
+        }
+
         const creditsMax = plan === "pro" ? planLimits.pro.creditsMax : planLimits.plus.creditsMax;
 
         const { data: profile, error: profileError } = await supabase
