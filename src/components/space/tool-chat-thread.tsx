@@ -386,7 +386,11 @@ function ToolMessageBubble({
           </div>
         ) : structured?.kind === "studio" ? (
           <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            <Markdown content={message.content} />
+            {structured.docType === "slides" ? (
+              <p className="text-body-md font-medium text-text-primary">{structured.title}</p>
+            ) : (
+              <Markdown content={message.content} />
+            )}
             <Link
               href={`/studio/documents/${structured.documentId}`}
               className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-label-lg text-text-secondary hover:bg-hover"
