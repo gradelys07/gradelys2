@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     
     // Check if user exists first (optional, but good for security so we don't error out on admin.generateLink)
     const { data: users, error: userError } = await supabase.auth.admin.listUsers();
-    const userExists = users?.users?.some(u => u.email === email);
+    const userExists = users?.users?.some((u: any) => u.email === email);
 
     if (userExists) {
       // Generate a recovery link using the service role key (bypasses Supabase email sending limits)
