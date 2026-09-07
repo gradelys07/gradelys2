@@ -12,21 +12,37 @@ declare global {
   }
 }
 
-interface SlideData {
-  title: string;
-  bullets: string[];
+/* --- Types --- */
+interface BulletItem {
+  icon: string;
+  text: string;
+  detail: string;
 }
 
-/* --- Color palettes for slide backgrounds --- */
-const SLIDE_THEMES = [
-  { bg: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", accent: "#38bdf8", text: "#f1f5f9", bullet: "#94a3b8", decorFrom: "rgba(56,189,248,0.15)", decorTo: "rgba(56,189,248,0.03)" },
-  { bg: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", accent: "#a78bfa", text: "#e0e7ff", bullet: "#a5b4fc", decorFrom: "rgba(167,139,250,0.18)", decorTo: "rgba(167,139,250,0.03)" },
-  { bg: "linear-gradient(135deg, #042f2e 0%, #134e4a 100%)", accent: "#2dd4bf", text: "#ccfbf1", bullet: "#5eead4", decorFrom: "rgba(45,212,191,0.15)", decorTo: "rgba(45,212,191,0.03)" },
-  { bg: "linear-gradient(135deg, #1c1917 0%, #292524 100%)", accent: "#fb923c", text: "#fed7aa", bullet: "#fdba74", decorFrom: "rgba(251,146,60,0.15)", decorTo: "rgba(251,146,60,0.03)" },
-  { bg: "linear-gradient(135deg, #0c4a6e 0%, #075985 100%)", accent: "#38bdf8", text: "#e0f2fe", bullet: "#7dd3fc", decorFrom: "rgba(56,189,248,0.15)", decorTo: "rgba(56,189,248,0.03)" },
-  { bg: "linear-gradient(135deg, #3b0764 0%, #581c87 100%)", accent: "#d946ef", text: "#f5d0fe", bullet: "#e879f9", decorFrom: "rgba(217,70,239,0.15)", decorTo: "rgba(217,70,239,0.03)" },
-  { bg: "linear-gradient(135deg, #14532d 0%, #166534 100%)", accent: "#4ade80", text: "#dcfce7", bullet: "#86efac", decorFrom: "rgba(74,222,128,0.15)", decorTo: "rgba(74,222,128,0.03)" },
-  { bg: "linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)", accent: "#fca5a5", text: "#fef2f2", bullet: "#fca5a5", decorFrom: "rgba(252,165,165,0.12)", decorTo: "rgba(252,165,165,0.03)" },
+interface SlideData {
+  title: string;
+  subtitle?: string;
+  bullets: (string | BulletItem)[];
+}
+
+/* --- Normalize bullets (backward compat with old string[] format) --- */
+function normalizeBullet(b: string | BulletItem): BulletItem {
+  if (typeof b === "string") {
+    return { icon: "▸", text: b, detail: "" };
+  }
+  return b;
+}
+
+/* --- Slide color themes (light, clean, infographic) --- */
+const SLIDE_PALETTES = [
+  { bg: "#f8fafc", accent: "#0ea5e9", accentLight: "#e0f2fe", cardBg: "#ffffff", title: "#0f172a", subtitle: "#475569", text: "#1e293b", detail: "#64748b", border: "#e2e8f0", pattern: "rgba(14,165,233,0.04)" },
+  { bg: "#faf5ff", accent: "#8b5cf6", accentLight: "#ede9fe", cardBg: "#ffffff", title: "#1e1b4b", subtitle: "#6b21a8", text: "#1e1b4b", detail: "#7c3aed", border: "#e9d5ff", pattern: "rgba(139,92,246,0.04)" },
+  { bg: "#f0fdf4", accent: "#10b981", accentLight: "#d1fae5", cardBg: "#ffffff", title: "#052e16", subtitle: "#166534", text: "#064e3b", detail: "#059669", border: "#a7f3d0", pattern: "rgba(16,185,129,0.04)" },
+  { bg: "#fff7ed", accent: "#f97316", accentLight: "#fed7aa", cardBg: "#ffffff", title: "#431407", subtitle: "#9a3412", text: "#7c2d12", detail: "#ea580c", border: "#fdba74", pattern: "rgba(249,115,22,0.04)" },
+  { bg: "#f0f9ff", accent: "#0284c7", accentLight: "#bae6fd", cardBg: "#ffffff", title: "#0c4a6e", subtitle: "#0369a1", text: "#075985", detail: "#0284c7", border: "#7dd3fc", pattern: "rgba(2,132,199,0.04)" },
+  { bg: "#fdf2f8", accent: "#ec4899", accentLight: "#fce7f3", cardBg: "#ffffff", title: "#500724", subtitle: "#9d174d", text: "#831843", detail: "#db2777", border: "#f9a8d4", pattern: "rgba(236,72,153,0.04)" },
+  { bg: "#ecfeff", accent: "#06b6d4", accentLight: "#cffafe", cardBg: "#ffffff", title: "#083344", subtitle: "#0e7490", text: "#155e75", detail: "#0891b2", border: "#67e8f9", pattern: "rgba(6,182,212,0.04)" },
+  { bg: "#fefce8", accent: "#eab308", accentLight: "#fef08a", cardBg: "#ffffff", title: "#422006", subtitle: "#854d0e", text: "#713f12", detail: "#ca8a04", border: "#fde047", pattern: "rgba(234,179,8,0.04)" },
 ];
 
 export function SlideViewer({
@@ -40,12 +56,10 @@ export function SlideViewer({
 }) {
   const [current, setCurrent] = React.useState(0);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const prev = () => setCurrent((s) => Math.max(0, s - 1));
   const next = () => setCurrent((s) => Math.min(slides.length - 1, s + 1));
 
-  // Keyboard navigation
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") prev();
@@ -60,185 +74,200 @@ export function SlideViewer({
 
   const currentSlide = slides[current];
   const isTitle = current === 0;
-  const theme = SLIDE_THEMES[current % SLIDE_THEMES.length];
-  const progress = ((current + 1) / slides.length) * 100;
+  const palette = SLIDE_PALETTES[current % SLIDE_PALETTES.length];
+  const normalizedBullets = currentSlide.bullets.map(normalizeBullet);
 
   return (
     <div
-      ref={containerRef}
       className={cn(
         "flex flex-col items-center justify-center",
-        isFullscreen
-          ? "fixed inset-0 z-50 bg-black/95 p-4"
-          : "p-6"
+        isFullscreen ? "fixed inset-0 z-50 bg-black/90 p-4" : "p-6"
       )}
     >
       <Script src="/pptxgen.bundle.js" strategy="lazyOnload" />
 
-      {/* Slide Card */}
+      {/* --- Slide --- */}
       <div
-        className="relative w-full max-w-5xl overflow-hidden rounded-2xl shadow-2xl"
+        className="relative w-full max-w-5xl overflow-hidden rounded-2xl"
         style={{
           aspectRatio: "16 / 9",
+          backgroundColor: palette.bg,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Background */}
+        {/* Subtle dot pattern */}
         <div
-          className="absolute inset-0"
-          style={{ background: theme.bg }}
-        />
-
-        {/* Decorative circle top-right */}
-        <div
-          className="absolute -top-20 -right-20 h-80 w-80 rounded-full"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${theme.decorFrom}, ${theme.decorTo})`,
+            backgroundImage: `radial-gradient(${palette.accent}15 1px, transparent 1px)`,
+            backgroundSize: "24px 24px",
           }}
         />
 
-        {/* Decorative circle bottom-left */}
+        {/* Accent stripe left */}
         <div
-          className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full"
-          style={{
-            background: `radial-gradient(circle, ${theme.decorFrom}, ${theme.decorTo})`,
-          }}
-        />
-
-        {/* Accent line top */}
-        <div
-          className="absolute top-0 left-0 h-1 w-full"
-          style={{ background: `linear-gradient(90deg, ${theme.accent}, transparent)` }}
+          className="absolute left-0 top-0 bottom-0 w-1.5"
+          style={{ backgroundColor: palette.accent }}
         />
 
         {/* Content */}
-        <div className="relative z-10 flex h-full flex-col justify-center px-[8%] py-[6%]">
+        <div className="relative z-10 flex h-full flex-col px-[6%] py-[4%]">
           {isTitle ? (
-            /* --- Title Slide --- */
-            <div className="flex flex-col items-center justify-center text-center gap-6">
+            /* ============ TITLE SLIDE ============ */
+            <div className="flex h-full flex-col items-center justify-center text-center gap-5">
               <div
-                className="h-1 w-24 rounded-full mb-2"
-                style={{ backgroundColor: theme.accent }}
-              />
+                className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold"
+                style={{ backgroundColor: palette.accentLight, color: palette.accent }}
+              >
+                📊 {slides.length} slides
+              </div>
               <h1
-                className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight"
-                style={{ color: theme.text }}
+                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight max-w-[85%]"
+                style={{ color: palette.title }}
               >
                 {title}
               </h1>
-              <p
-                className="text-lg font-medium opacity-70"
-                style={{ color: theme.bullet }}
-              >
-                {slides.length} slides
-              </p>
-              <div
-                className="h-1 w-24 rounded-full mt-2"
-                style={{ backgroundColor: theme.accent }}
-              />
+              {currentSlide.subtitle && (
+                <p
+                  className="text-lg sm:text-xl font-medium max-w-[70%] leading-relaxed"
+                  style={{ color: palette.subtitle }}
+                >
+                  {currentSlide.subtitle}
+                </p>
+              )}
+              <div className="flex items-center gap-2 mt-2">
+                <div className="h-0.5 w-12 rounded-full" style={{ backgroundColor: palette.accent }} />
+                <div className="h-0.5 w-6 rounded-full" style={{ backgroundColor: `${palette.accent}44` }} />
+              </div>
             </div>
           ) : (
-            /* --- Content Slide --- */
+            /* ============ CONTENT SLIDE ============ */
             <>
-              <div className="flex items-center gap-4 mb-8">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold shrink-0"
-                  style={{
-                    backgroundColor: theme.accent,
-                    color: "#0f172a",
-                  }}
-                >
-                  {current}
+              {/* Header */}
+              <div className="mb-auto">
+                <div className="flex items-center gap-3 mb-2">
+                  <span
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
+                    style={{ backgroundColor: palette.accent, color: "#fff" }}
+                  >
+                    {String(current).padStart(2, "0")}
+                  </span>
+                  <h2
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight"
+                    style={{ color: palette.title }}
+                  >
+                    {currentSlide.title}
+                  </h2>
                 </div>
-                <h2
-                  className="text-2xl sm:text-3xl md:text-4xl font-bold leading-snug"
-                  style={{ color: theme.text }}
-                >
-                  {currentSlide.title}
-                </h2>
+                {currentSlide.subtitle && (
+                  <p
+                    className="text-sm sm:text-base font-medium ml-11"
+                    style={{ color: palette.subtitle }}
+                  >
+                    {currentSlide.subtitle}
+                  </p>
+                )}
               </div>
 
-              <ul className="space-y-4 pl-2">
-                {currentSlide.bullets.map((bullet, i) => (
-                  <li key={i} className="flex items-start gap-4">
+              {/* Cards grid */}
+              <div
+                className={cn(
+                  "grid gap-3 mt-4",
+                  normalizedBullets.length <= 2 ? "grid-cols-2" :
+                  normalizedBullets.length === 3 ? "grid-cols-3" :
+                  "grid-cols-2 lg:grid-cols-4"
+                )}
+              >
+                {normalizedBullets.map((bullet, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-2 rounded-xl p-4 transition-transform hover:scale-[1.02]"
+                    style={{
+                      backgroundColor: palette.cardBg,
+                      border: `1px solid ${palette.border}`,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                    }}
+                  >
                     <div
-                      className="mt-2.5 h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: theme.accent }}
-                    />
-                    <span
-                      className="text-lg sm:text-xl md:text-2xl leading-relaxed font-medium"
-                      style={{ color: theme.bullet }}
+                      className="flex h-10 w-10 items-center justify-center rounded-lg text-xl"
+                      style={{ backgroundColor: palette.accentLight }}
                     >
-                      {bullet}
-                    </span>
-                  </li>
+                      {bullet.icon}
+                    </div>
+                    <h3
+                      className="text-sm sm:text-base font-bold leading-snug"
+                      style={{ color: palette.text }}
+                    >
+                      {bullet.text}
+                    </h3>
+                    {bullet.detail && (
+                      <p
+                        className="text-xs sm:text-sm leading-relaxed"
+                        style={{ color: palette.detail }}
+                      >
+                        {bullet.detail}
+                      </p>
+                    )}
+                  </div>
                 ))}
-              </ul>
+              </div>
             </>
           )}
         </div>
 
         {/* Slide number badge */}
-        <div
-          className="absolute bottom-4 right-6 z-10 rounded-lg px-3 py-1 text-sm font-semibold"
-          style={{
-            backgroundColor: `${theme.accent}22`,
-            color: theme.accent,
-          }}
-        >
-          {current + 1} / {slides.length}
-        </div>
+        {!isTitle && (
+          <div
+            className="absolute bottom-3 right-5 z-10 rounded-full px-3 py-0.5 text-xs font-semibold"
+            style={{ backgroundColor: palette.accentLight, color: palette.accent }}
+          >
+            {current + 1} / {slides.length}
+          </div>
+        )}
       </div>
 
-      {/* Progress bar */}
-      <div className="mt-4 w-full max-w-5xl h-1 rounded-full bg-[var(--border-subtle)] overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-300 ease-out"
-          style={{
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${theme.accent}, ${theme.accent}88)`,
-          }}
-        />
-      </div>
-
-      {/* Controls */}
-      <div className="mt-4 flex items-center justify-between w-full max-w-5xl">
-        <div className="flex items-center gap-2">
+      {/* --- Controls --- */}
+      <div className="mt-5 flex items-center justify-between w-full max-w-5xl">
+        {/* Dot navigation */}
+        <div className="flex items-center gap-1.5">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               className={cn(
-                "h-2 rounded-full transition-all duration-200",
-                i === current ? "w-8" : "w-2 opacity-40 hover:opacity-70"
+                "rounded-full transition-all duration-200",
+                i === current ? "h-2.5 w-7" : "h-2.5 w-2.5 opacity-30 hover:opacity-60"
               )}
               style={{
-                backgroundColor: i === current ? theme.accent : "var(--text-muted)",
+                backgroundColor: i === current ? palette.accent : palette.title,
               }}
             />
           ))}
         </div>
 
+        {/* Arrows */}
         <div className="flex items-center gap-2">
           <button
             onClick={prev}
             disabled={current === 0}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-30 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={next}
             disabled={current === slides.length - 1}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-30 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
 
+        {/* Actions */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
@@ -251,17 +280,17 @@ export function SlideViewer({
   );
 }
 
-/* ---------- PPTX EXPORT (professional styling) ---------- */
+/* ========== PPTX EXPORT (professional infographic style) ========== */
 
-const PPTX_THEMES = [
-  { bg: "0F172A", accent: "38BDF8", titleColor: "F1F5F9", bulletColor: "94A3B8" },
-  { bg: "1E1B4B", accent: "A78BFA", titleColor: "E0E7FF", bulletColor: "A5B4FC" },
-  { bg: "042F2E", accent: "2DD4BF", titleColor: "CCFBF1", bulletColor: "5EEAD4" },
-  { bg: "1C1917", accent: "FB923C", titleColor: "FED7AA", bulletColor: "FDBA74" },
-  { bg: "0C4A6E", accent: "38BDF8", titleColor: "E0F2FE", bulletColor: "7DD3FC" },
-  { bg: "3B0764", accent: "D946EF", titleColor: "F5D0FE", bulletColor: "E879F9" },
-  { bg: "14532D", accent: "4ADE80", titleColor: "DCFCE7", bulletColor: "86EFAC" },
-  { bg: "450A0A", accent: "FCA5A5", titleColor: "FEF2F2", bulletColor: "FCA5A5" },
+const PPTX_PALETTES = [
+  { bg: "F8FAFC", accent: "0EA5E9", accentLight: "E0F2FE", title: "0F172A", text: "1E293B", detail: "64748B" },
+  { bg: "FAF5FF", accent: "8B5CF6", accentLight: "EDE9FE", title: "1E1B4B", text: "1E1B4B", detail: "7C3AED" },
+  { bg: "F0FDF4", accent: "10B981", accentLight: "D1FAE5", title: "052E16", text: "064E3B", detail: "059669" },
+  { bg: "FFF7ED", accent: "F97316", accentLight: "FED7AA", title: "431407", text: "7C2D12", detail: "EA580C" },
+  { bg: "F0F9FF", accent: "0284C7", accentLight: "BAE6FD", title: "0C4A6E", text: "075985", detail: "0284C7" },
+  { bg: "FDF2F8", accent: "EC4899", accentLight: "FCE7F3", title: "500724", text: "831843", detail: "DB2777" },
+  { bg: "ECFEFF", accent: "06B6D4", accentLight: "CFFAFE", title: "083344", text: "155E75", detail: "0891B2" },
+  { bg: "FEFCE8", accent: "EAB308", accentLight: "FEF08A", title: "422006", text: "713F12", detail: "CA8A04" },
 ];
 
 export async function exportToPptx(title: string, slides: SlideData[]) {
@@ -274,85 +303,124 @@ export async function exportToPptx(title: string, slides: SlideData[]) {
   pres.title = title;
 
   // --- Title Slide ---
+  const t0 = PPTX_PALETTES[0];
   const titleSlide = pres.addSlide();
-  const t0 = PPTX_THEMES[0];
   titleSlide.background = { color: t0.bg };
 
-  // Accent line top
+  // Left accent bar
   titleSlide.addShape(pres.ShapeType ? pres.ShapeType.rect : "rect", {
-    x: 0, y: 0, w: "100%", h: 0.06, fill: { color: t0.accent },
+    x: 0, y: 0, w: 0.12, h: "100%", fill: { color: t0.accent },
   });
 
-  // Title text
+  // Badge
+  titleSlide.addText(`📊 ${slides.length} slides`, {
+    x: 2.5, y: 1.5, w: 5, h: 0.5,
+    fontSize: 14, color: t0.accent, align: "center", fontFace: "Calibri",
+    fill: { color: t0.accentLight },
+    shape: pres.ShapeType ? pres.ShapeType.roundRect : "roundRect",
+    rectRadius: 0.2,
+  });
+
+  // Title
   titleSlide.addText(title, {
-    x: 1, y: 1.8, w: 8, h: 2,
-    fontSize: 40, bold: true, color: t0.titleColor,
-    align: "center", fontFace: "Calibri",
-  });
-
-  // Subtitle
-  titleSlide.addText(`${slides.length} slides`, {
-    x: 1, y: 3.8, w: 8, h: 0.6,
-    fontSize: 16, color: t0.bulletColor,
+    x: 1, y: 2.2, w: 8, h: 1.5,
+    fontSize: 36, bold: true, color: t0.title,
     align: "center", fontFace: "Calibri",
   });
 
   // Accent bar
   titleSlide.addShape(pres.ShapeType ? pres.ShapeType.rect : "rect", {
-    x: 4, y: 3.5, w: 2, h: 0.06, fill: { color: t0.accent },
+    x: 4, y: 3.9, w: 2, h: 0.05, fill: { color: t0.accent },
   });
 
   // --- Content Slides ---
   slides.forEach((slide, idx) => {
     const s = pres.addSlide();
-    const theme = PPTX_THEMES[(idx + 1) % PPTX_THEMES.length];
-    s.background = { color: theme.bg };
+    const p = PPTX_PALETTES[(idx + 1) % PPTX_PALETTES.length];
+    s.background = { color: p.bg };
 
-    // Accent line top
+    // Left accent bar
     s.addShape(pres.ShapeType ? pres.ShapeType.rect : "rect", {
-      x: 0, y: 0, w: "100%", h: 0.06, fill: { color: theme.accent },
+      x: 0, y: 0, w: 0.12, h: "100%", fill: { color: p.accent },
     });
 
-    // Slide number badge
-    s.addText(`${idx + 1}`, {
-      x: 0.4, y: 0.4, w: 0.5, h: 0.5,
-      fontSize: 16, bold: true, color: "0F172A",
+    // Slide number
+    s.addText(String(idx + 1).padStart(2, "0"), {
+      x: 0.35, y: 0.3, w: 0.5, h: 0.5,
+      fontSize: 14, bold: true, color: "FFFFFF",
       align: "center", valign: "middle", fontFace: "Calibri",
-      fill: { color: theme.accent },
+      fill: { color: p.accent },
       shape: pres.ShapeType ? pres.ShapeType.roundRect : "roundRect",
-      rectRadius: 0.1,
+      rectRadius: 0.08,
     });
 
-    // Slide title
+    // Title
     s.addText(slide.title, {
-      x: 1.1, y: 0.35, w: 8, h: 0.7,
-      fontSize: 28, bold: true, color: theme.titleColor,
-      fontFace: "Calibri",
+      x: 1, y: 0.25, w: 8, h: 0.6,
+      fontSize: 24, bold: true, color: p.title, fontFace: "Calibri",
     });
 
-    // Bullets
-    s.addText(
-      slide.bullets.map((b) => ({
-        text: b,
-        options: {
-          bullet: { type: "number", numberType: "arabicPeriod" },
-          color: theme.bulletColor,
-          fontSize: 18,
-          fontFace: "Calibri",
-          paraSpaceAfter: 10,
-        },
-      })),
-      {
-        x: 0.8, y: 1.4, w: 8.4, h: 4,
-        valign: "top",
-      }
-    );
+    // Subtitle
+    if (slide.subtitle) {
+      s.addText(slide.subtitle, {
+        x: 1, y: 0.8, w: 8, h: 0.4,
+        fontSize: 13, color: p.detail, fontFace: "Calibri",
+      });
+    }
 
-    // Slide count bottom-right
+    // Bullet cards
+    const bullets = slide.bullets.map(normalizeBullet);
+    const cols = Math.min(bullets.length, 4);
+    const cardW = (9 / cols) - 0.2;
+    const startY = slide.subtitle ? 1.5 : 1.3;
+
+    bullets.forEach((b, bi) => {
+      const col = bi % cols;
+      const row = Math.floor(bi / cols);
+      const x = 0.4 + col * (cardW + 0.2);
+      const y = startY + row * 2.2;
+
+      // Card background
+      s.addShape(pres.ShapeType ? pres.ShapeType.roundRect : "roundRect", {
+        x, y, w: cardW, h: 2,
+        fill: { color: "FFFFFF" },
+        line: { color: "E2E8F0", width: 1 },
+        rectRadius: 0.1,
+        shadow: { type: "outer", blur: 4, offset: 2, color: "00000010" },
+      });
+
+      // Icon
+      s.addText(b.icon, {
+        x: x + 0.15, y: y + 0.15, w: 0.6, h: 0.6,
+        fontSize: 20, align: "center", valign: "middle",
+        fill: { color: p.accentLight },
+        shape: pres.ShapeType ? pres.ShapeType.roundRect : "roundRect",
+        rectRadius: 0.08,
+      });
+
+      // Text
+      s.addText(b.text, {
+        x: x + 0.15, y: y + 0.85, w: cardW - 0.3, h: 0.4,
+        fontSize: 12, bold: true, color: p.text, fontFace: "Calibri",
+      });
+
+      // Detail
+      if (b.detail) {
+        s.addText(b.detail, {
+          x: x + 0.15, y: y + 1.25, w: cardW - 0.3, h: 0.6,
+          fontSize: 10, color: p.detail, fontFace: "Calibri",
+          valign: "top",
+        });
+      }
+    });
+
+    // Slide count
     s.addText(`${idx + 1} / ${slides.length}`, {
-      x: 8, y: 4.9, w: 1.5, h: 0.4,
-      fontSize: 10, color: theme.bulletColor,
-      align: "right", fontFace: "Calibri",
+      x: 8.2, y: 4.9, w: 1.3, h: 0.3,
+      fontSize: 9, color: p.detail, align: "right", fontFace: "Calibri",
+      fill: { color: p.accentLight },
+      shape: pres.ShapeType ? pres.ShapeType.roundRect : "roundRect",
+      rectRadius: 0.15,
     });
   });
 

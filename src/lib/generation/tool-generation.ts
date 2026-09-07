@@ -126,8 +126,16 @@ const TYPE_INSTRUCTIONS: Record<string, string> = {
   report: "Write a highly professional, meticulously organized formal report. It MUST include an Executive Summary, a clear Introduction, deeply detailed Body Sections with logical subheadings, and a strong Conclusion. Use a formal, objective, and analytical tone suitable for a corporate or academic setting. Support every claim with specific data, quotes, and facts from the material.",
   summary: "Write an ultra-dense, comprehensive, and highly professional executive summary. Capture every critical idea, specific fact, and nuance from the material without any fluff or generic filler. Synthesize the information elegantly, using bullet points for key takeaways where appropriate, ensuring a high-level academic or professional standard.",
   essay: "Write a masterfully crafted, university-level essay. It MUST feature a compelling and clear thesis statement in the introduction, highly structured body paragraphs with seamless transitions and rigorous argumentation, and a profound conclusion. The tone must be scholarly, objective, and deeply analytical. Every argument must be substantiated by specific evidence from the material.",
-  slides: `Write a highly professional, beautifully structured slide-by-slide presentation outline as JSON. Each slide must have a punchy, engaging title. The bullets must be concise, impactful, and clearly articulate the core concepts without overwhelming text. Aim for 5-8 slides with 3-5 high-value bullet points each. Format EXACTLY like:
-{"title":"Presentation Title", "slides":[{"title":"Slide 1 Title", "bullets":["Bullet 1","Bullet 2"]}]}`,
+  slides: `Create a highly professional, infographic-style presentation as JSON. Think of it like a premium consulting deck (McKinsey/BCG style).
+
+RULES:
+- Aim for 5-8 slides, each with 3-4 bullet points maximum.
+- Each bullet MUST have an "icon" (a single relevant emoji), a short "text" (the key point, max 8 words), and a "detail" (1 sentence explaining the point).
+- Each slide MUST have a "title" and a short "subtitle" (1 sentence context).
+- Keep text extremely concise and punchy — these are visual cards, not paragraphs.
+
+Format EXACTLY like this JSON (no markdown fences):
+{"title":"Presentation Title","slides":[{"title":"Slide Title","subtitle":"One line of context","bullets":[{"icon":"📊","text":"Key Point","detail":"Brief explanation of this point."}]}]}`,
 };
 
 export async function generateStudioContent(
