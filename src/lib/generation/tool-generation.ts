@@ -134,7 +134,14 @@ export async function generateStudioContent(
   const ctx = await getSpaceContext(supabase, spaceId);
   const instruction = customPrompt || TYPE_INSTRUCTIONS[type] || TYPE_INSTRUCTIONS.notes;
 
-  let formatInstruction = "Format the output in clean Markdown starting with a single # title.";
+  let formatInstruction = `Format the output in clean, highly visual Markdown:
+- Start with a single # title.
+- CRITICAL: You MUST include at least one relevant, highly professional header image right after the title, and 1-2 inline images if the document is long. 
+  Generate the image using this exact markdown syntax: ![Description](https://image.pollinations.ai/prompt/{URL_ENCODED_DETAILED_PROMPT}?width=1200&height=600&nologo=true)
+  (Replace {URL_ENCODED_DETAILED_PROMPT} with a detailed, url-encoded english description of the image you want, e.g., "A_professional_corporate_report_on_a_desk_with_graphs").
+- Use blockquotes (\`> \`) extensively for key insights, definitions, or critical takeaways so they render as premium callouts.
+- Include external links if referencing common concepts.`;
+  
   if (type === "slides") {
     formatInstruction = ""; // We already requested JSON in the slides instruction
   }
