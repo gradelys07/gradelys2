@@ -126,16 +126,35 @@ const TYPE_INSTRUCTIONS: Record<string, string> = {
   report: "Write a highly professional, meticulously organized formal report. It MUST include an Executive Summary, a clear Introduction, deeply detailed Body Sections with logical subheadings, and a strong Conclusion. Use a formal, objective, and analytical tone suitable for a corporate or academic setting. Support every claim with specific data, quotes, and facts from the material.",
   summary: "Write an ultra-dense, comprehensive, and highly professional executive summary. Capture every critical idea, specific fact, and nuance from the material without any fluff or generic filler. Synthesize the information elegantly, using bullet points for key takeaways where appropriate, ensuring a high-level academic or professional standard.",
   essay: "Write a masterfully crafted, university-level essay. It MUST feature a compelling and clear thesis statement in the introduction, highly structured body paragraphs with seamless transitions and rigorous argumentation, and a profound conclusion. The tone must be scholarly, objective, and deeply analytical. Every argument must be substantiated by specific evidence from the material.",
-  slides: `Create a highly professional, infographic-style presentation as JSON. Think of it like a premium consulting deck (McKinsey/BCG style).
+  slides: `You are a world-class presentation designer (like Canva, Pitch, or Beautiful.ai). Create a stunning, unique, visually rich presentation as a JSON object containing HTML slides.
 
-RULES:
-- Aim for 5-8 slides, each with 3-4 bullet points maximum.
-- Each bullet MUST have an "icon" (a single relevant emoji), a short "text" (the key point, max 8 words), and a "detail" (1 sentence explaining the point).
-- Each slide MUST have a "title" and a short "subtitle" (1 sentence context).
-- Keep text extremely concise and punchy — these are visual cards, not paragraphs.
+CRITICAL DESIGN RULES:
+- Create 6-10 slides. Each slide MUST be a UNIQUE visual design — different layout, different color scheme, different arrangement.
+- Each slide's "html" field is a SELF-CONTAINED HTML snippet that will be rendered inside a 960x540px container (16:9 ratio).
+- Use ONLY inline styles. No external CSS, no external images, no external fonts.
+- Make it look like a premium Canva/Pitch template — NOT plain text on a white background.
 
-Format EXACTLY like this JSON (no markdown fences):
-{"title":"Presentation Title","slides":[{"title":"Slide Title","subtitle":"One line of context","bullets":[{"icon":"📊","text":"Key Point","detail":"Brief explanation of this point."}]}]}`,
+VISUAL ELEMENTS TO USE (mix and match for uniqueness):
+- CSS gradients (linear-gradient, radial-gradient) for backgrounds
+- Flexbox and CSS Grid for layouts
+- SVG shapes for decorative elements (circles, lines, abstract shapes)
+- Emoji (📊 💡 🎯 ⚡ 🔑 📈 🏆 ✅ ⚠️ 🔍 etc.) as visual icons
+- Border-radius, box-shadow for card effects
+- Different layout types per slide: split (left/right), grid cards, centered hero, timeline vertical, stats row, comparison columns, quote highlight
+- Color: use harmonious palettes. Each slide can have a different accent color but maintain coherence.
+- Typography: use font-weight, font-size, letter-spacing, text-transform for hierarchy. Titles should be large and bold. Details should be smaller and lighter.
+
+SLIDE TYPES TO INCLUDE (vary the layouts):
+1. TITLE slide: Large centered title with decorative elements, subtitle, gradient background
+2. OVERVIEW slide: 3-4 cards in a grid showing key themes
+3. CONTENT slides: Mix of split layouts (text + visual), card grids, timeline, numbered lists with icons
+4. STATS slide: Big numbers with labels in a row
+5. CONCLUSION slide: Key takeaways with a strong visual close
+
+ALSO provide "title" and "keyPoints" (array of strings) for each slide for PPTX export.
+
+Return EXACTLY this JSON format (no markdown fences):
+{"title":"Presentation Title","slides":[{"html":"<div style='width:100%;height:100%;...'>...</div>","title":"Slide Title","keyPoints":["Point 1","Point 2"]}]}`,
 };
 
 export async function generateStudioContent(
@@ -173,7 +192,7 @@ ${ctx.text || "(no text extracted — read the attached file(s) directly)"}
 ${formatInstruction}`;
 
   const isJson = type === "slides";
-  const raw = await generateContent(fullPrompt, { jsonMode: isJson, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
+  const raw = await generateContent(fullPrompt, { jsonMode: isJson, temperature: isJson ? 0.7 : 0.5, images: ctx.files.length ? ctx.files : undefined });
 
   let content = raw;
   let docTitle = topic.slice(0, 60);
