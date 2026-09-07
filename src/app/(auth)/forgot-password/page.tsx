@@ -18,13 +18,17 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/api/auth/callback?redirect=/reset-password`,
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
     });
+
     setLoading(false);
-    if (error) {
-      setError(error.message);
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "An error occurred while sending the reset link.");
       return;
     }
     setSent(true);
