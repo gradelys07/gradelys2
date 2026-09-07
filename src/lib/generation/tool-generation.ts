@@ -9,6 +9,12 @@ const LANGUAGE_RULE =
 const GROUNDING_RULE =
   "CRITICAL GROUNDING RULE: Base your output strictly and specifically on the facts, terms, numbers, names, dates, and examples that literally appear in the MATERIAL below (text and/or attached files). Do NOT write generic, textbook-style filler that could apply to any topic — every item must reference something concrete found in the material. If the material only weakly covers a point, skip it rather than inventing detail. If there is no usable material at all, say so instead of fabricating content.";
 
+/** Parse JSON output from the AI safely by stripping markdown blocks */
+function parseCleanJson(raw: string) {
+  const clean = raw.replace(/```(?:json)?\n?/gi, "").replace(/```/g, "").trim();
+  return JSON.parse(clean);
+}
+
 /** Sanitize common Mermaid syntax issues that cause parse errors. */
 function sanitizeMermaidCode(code: string): string {
   // Remove HTML tags like <br>, <b>, etc.
@@ -107,7 +113,7 @@ ${LANGUAGE_RULE} (the "title" and "name" fields must be in that language)
 MATERIAL:
 ${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
     const raw = await generateContent(genPrompt, { jsonMode: true, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
-    const parsed = JSON.parse(raw);
+    const parsed = parseCleanJson(raw);
     outputData = { kind: "chart", ...parsed };
     title = parsed.title || title;
   }
@@ -166,11 +172,12 @@ ${formatInstruction}`;
 
   if (isJson) {
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = parseCleanJson(raw);
       docTitle = parsed.title || docTitle;
       content = JSON.stringify(parsed); // Save the stringified JSON
     } catch (e) {
       // fallback
+      content = raw.replace(/```(?:json)?\n?/gi, "").replace(/```/g, "").trim();
     }
   } else {
     const titleLine = content.split("\\n").find((l) => l.startsWith("# "));
@@ -205,7 +212,7 @@ Return ONLY a JSON array of objects shaped exactly like:
 No markdown fences, no commentary — JSON only.`;
 
   const raw = await generateContent(prompt, { jsonMode: true, temperature: 0.6, images: ctx.files.length ? ctx.files : undefined });
-  const questions = JSON.parse(raw);
+  const questions = parseCleanJson(raw);
   if (!Array.isArray(questions)) throw new Error("Invalid response shape");
   return questions;
 }
@@ -232,7 +239,7 @@ ${ctx.text || "(no text extracted — read the attached file(s) directly)"}
 Return ONLY a JSON array like [{"question": "...", "answer": "..."}]. No markdown, no commentary.`;
 
   const raw = await generateContent(prompt, { jsonMode: true, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
-  const cards = JSON.parse(raw);
+  const cards = parseCleanJson(raw);
   if (!Array.isArray(cards)) throw new Error("Invalid response shape");
   return cards as { question: string; answer: string }[];
 }
@@ -269,7 +276,7 @@ No markdown fences, no commentary — JSON only.`;
   const promptImages = images && images.length > 0 ? images : (ctx.files.length ? ctx.files : undefined);
 
   const raw = await generateContent(prompt, { jsonMode: true, temperature: 0.3, images: promptImages });
-  return JSON.parse(raw);
+  return parseCleanJson(raw);
 }
 
 /** Writes a set of open-ended written exam questions (no options) grounded in the space's material. */
@@ -327,7 +334,7 @@ Return ONLY a JSON object shaped exactly like this (do not use markdown blocks):
 No markdown fences, no commentary — JSON only.`;
 
   const raw = await generateContent(prompt, { jsonMode: true, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
-  const exam = JSON.parse(raw);
+  const exam = parseCleanJson(raw);
   if (typeof exam !== "object" || !exam.exercises) throw new Error("Invalid response shape");
   return exam as any;
 }
