@@ -15,6 +15,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { toast } from "sonner";
 import { useConversations } from "@/hooks/use-chat";
 import { Switch } from "@/components/ui/switch";
+import { useGamification } from "@/hooks/use-gamification";
 
 
 
@@ -36,6 +37,8 @@ export default function ChatHomePage() {
   const { data: sources } = useSources(spaceId);
   const { data: conversations } = useConversations("chat");
   const recentConversations = conversations?.slice(0, 4) || [];
+  const { data: gamification } = useGamification();
+  const currentStreak = gamification?.streak?.current_streak || 0;
 
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -99,7 +102,7 @@ export default function ChatHomePage() {
             onClick={() => router.push("/progress")}
             className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-label-sm font-medium text-text-secondary shadow-sm hover:bg-hover transition-colors"
           >
-            <span className="text-orange-500">🔥</span> {t("chat.studyStreak")} <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+            <span className="text-orange-500">🔥</span> {currentStreak} {t("chat.studyStreak")} <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
           </button>
 
           <div className="mt-12 text-center">
