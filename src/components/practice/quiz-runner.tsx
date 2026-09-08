@@ -4,6 +4,7 @@ import * as React from "react";
 import { CheckCircle2, XCircle, Clock, ArrowLeft, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Markdown } from "@/components/markdown";
 import { cn, formatDuration } from "@/lib/utils";
 import type { QuizQuestion } from "@/types";
 
@@ -98,7 +99,7 @@ export function QuizRunner({
                   <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-body-sm text-text-primary">{q.question}</p>
+                  <div className="text-body-sm text-text-primary"><Markdown content={q.question} /></div>
                   {answers[i] !== q.correct && (
                     <p className="mt-1 text-body-sm text-text-muted">
                       Your answer: <span className="text-red">{answers[i] || "Skipped"}</span>
@@ -140,7 +141,7 @@ export function QuizRunner({
         <Progress value={((index + 1) / questions.length) * 100} className="mt-2" />
       </div>
 
-      <h2 className="mt-6 text-heading-lg text-text-primary">{question.question}</h2>
+      <div className="mt-6 text-heading-lg text-text-primary"><Markdown content={question.question} /></div>
       <p className="mt-1 text-label-md text-text-muted">Pick an answer — you'll see your score at the end.</p>
 
       <div className="mt-5 space-y-2.5">
@@ -155,7 +156,7 @@ export function QuizRunner({
                 : "border-border text-text-primary hover:border-border-strong hover:bg-hover"
             )}
           >
-            {option}
+            <Markdown content={option} />
           </button>
         ))}
       </div>

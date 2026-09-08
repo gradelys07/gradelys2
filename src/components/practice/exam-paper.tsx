@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Camera, Send, Upload, FileText, CheckCircle2 } from "lucide-react";
+import { Markdown } from "@/components/markdown";
 import { Exam } from "@/types";
 import { ExamTimer } from "./exam-timer";
 import { Button } from "@/components/ui/button";
@@ -101,7 +102,7 @@ export function ExamPaper({ exam }: { exam: Exam }) {
           {result.perQuestion?.map((q: any, i: number) => (
             <div key={i} className="rounded-lg border border-border-subtle bg-base p-4">
               <div className="flex items-start justify-between gap-4">
-                <p className="text-body-md font-medium text-text-primary">{q.question}</p>
+                <div className="mb-4 text-body-md font-medium text-text-primary"><Markdown content={q.question} /></div>
                 <span className="shrink-0 text-label-lg font-bold text-primary">{q.score} / {q.maxScore}</span>
               </div>
               <p className="mt-2 text-body-sm text-text-secondary bg-elevated p-3 rounded-md border border-border-subtle">{q.feedback}</p>
@@ -154,10 +155,10 @@ export function ExamPaper({ exam }: { exam: Exam }) {
             <div className="space-y-8 pl-4 border-l-2 border-border-subtle">
               {ex.questions?.map((q: any, qIdx: number) => (
                 <div key={q.id || qIdx}>
-                  <p className="text-body-md text-text-primary mb-3">
+                  <div className="text-body-md text-text-primary mb-3">
                     <span className="font-semibold text-text-secondary mr-2">{qIdx + 1}.</span>
-                    {q.text || q.question} <span className="text-text-muted text-body-sm">({q.points} pts)</span>
-                  </p>
+                    <Markdown content={q.text || q.question} /> <span className="text-text-muted text-body-sm">({q.points} pts)</span>
+                  </div>
                   <textarea
                     value={answers[q.id || qIdx] || ""}
                     onChange={(e) => setAnswers({ ...answers, [q.id || qIdx]: e.target.value })}
