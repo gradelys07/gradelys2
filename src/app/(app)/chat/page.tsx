@@ -344,35 +344,35 @@ export default function ChatHomePage() {
 
         {/* Quick Stats */}
         <div>
-          <h3 className="mb-4 text-label-lg font-semibold text-text-primary">Quick stats</h3>
+          <h3 className="mb-4 text-label-lg font-semibold text-text-primary">{t("chat.quickStats")}</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-border bg-surface p-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 mb-2">
                 <MessageSquare className="h-4 w-4" />
               </div>
-              <div className="text-title-sm font-bold text-text-primary">22</div>
-              <div className="text-body-xs text-text-muted mt-0.5">Messages sent</div>
+              <div className="text-title-sm font-bold text-text-primary">{gamification?.counters?.messagesSent || 0}</div>
+              <div className="text-body-xs text-text-muted mt-0.5">{t("chat.messagesSent")}</div>
             </div>
             <div className="rounded-xl border border-border bg-surface p-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500 mb-2">
                 <FileText className="h-4 w-4" />
               </div>
-              <div className="text-title-sm font-bold text-text-primary">18</div>
-              <div className="text-body-xs text-text-muted mt-0.5">Documents written</div>
+              <div className="text-title-sm font-bold text-text-primary">{gamification?.counters?.documentsCreated || 0}</div>
+              <div className="text-body-xs text-text-muted mt-0.5">{t("chat.documentsWritten")}</div>
             </div>
             <div className="rounded-xl border border-border bg-surface p-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 mb-2">
                 <ClipboardList className="h-4 w-4" />
               </div>
-              <div className="text-title-sm font-bold text-text-primary">12</div>
-              <div className="text-body-xs text-text-muted mt-0.5">Quizzes completed</div>
+              <div className="text-title-sm font-bold text-text-primary">{gamification?.counters?.quizzesCompleted || 0}</div>
+              <div className="text-body-xs text-text-muted mt-0.5">{t("chat.quizzesCompleted")}</div>
             </div>
             <div className="rounded-xl border border-border bg-surface p-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 mb-2">
                 <Star className="h-4 w-4" />
               </div>
-              <div className="text-title-sm font-bold text-text-primary">1</div>
-              <div className="text-body-xs text-text-muted mt-0.5">Note created</div>
+              <div className="text-title-sm font-bold text-text-primary">{gamification?.counters?.notesCreated || 0}</div>
+              <div className="text-body-xs text-text-muted mt-0.5">{t("chat.notesCreated")}</div>
             </div>
           </div>
         </div>
