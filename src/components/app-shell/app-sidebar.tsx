@@ -44,6 +44,8 @@ export function AppSidebar() {
   const collapsed = useUIStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const setCommandPaletteOpen = useUIStore((s) => s.setCommandPaletteOpen);
+  const newSpaceOpen = useUIStore((s) => s.newSpaceOpen);
+  const setNewSpaceOpen = useUIStore((s) => s.setNewSpaceOpen);
   const user = useAuthStore((s) => s.user);
   const subscription = useAuthStore((s) => s.subscription);
   const createConversation = useCreateConversation();
@@ -56,7 +58,6 @@ export function AppSidebar() {
 
   const [spacesOpen, setSpacesOpen] = React.useState(true);
   const [chatsOpen, setChatsOpen] = React.useState(true);
-  const [newSpaceOpen, setNewSpaceOpen] = React.useState(false);
   const [spaceName, setSpaceName] = React.useState("");
   const [template, setTemplate] = React.useState<SpaceTemplateOption>(SPACE_TEMPLATES[0]);
   const [activeTab, setActiveTab] = React.useState<"browse" | "chat">("browse");

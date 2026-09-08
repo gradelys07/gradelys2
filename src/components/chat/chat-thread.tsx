@@ -66,7 +66,21 @@ export function ChatThread({
 
   React.useEffect(() => {
     if (serverMessages) {
-      setLocalMessages(serverMessages.map((m) => ({ id: m.id, role: m.role, content: m.content, sources: m.sources })));
+      setLocalMessages((prev) => {
+        const dbMessages = serverMessages.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          sources: m.sources,
+        }));
+        
+        // Keep local messages that don't match any DB message content
+        const locals = prev.filter(
+          (m) => m.id.startsWith("local-") && !dbMessages.some((dbM) => dbM.content === m.content && dbM.role === m.role)
+        );
+        
+        return [...dbMessages, ...locals];
+      });
     }
   }, [serverMessages]);
 
@@ -152,6 +166,7 @@ export function ChatThread({
       trackChatSent(model);
       recordActivity.mutate();
       qc.invalidateQueries({ queryKey: ["conversations"] });
+      qc.invalidateQueries({ queryKey: ["messages", conversationId] });
     } catch (err: any) {
       const msg = err.message || "Something went wrong";
       if (msg.includes("Upgrade")) trackHitLimit("chat");
