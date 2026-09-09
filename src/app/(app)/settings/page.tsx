@@ -143,7 +143,7 @@ function SubscriptionTab() {
               <Button>Upgrade plan</Button>
             </Link>
           )}
-          <a href="https://whop.com/hub/" target="_blank" rel="noopener noreferrer">
+          <a href="https://whop.com/gradelys" target="_blank" rel="noopener noreferrer">
             <Button variant="outline">Gérer l'abonnement</Button>
           </a>
         </div>
