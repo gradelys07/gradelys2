@@ -354,7 +354,7 @@ export function AppSidebar() {
             <DropdownMenuItem onClick={() => router.push("/settings")}>
               <Settings className="h-4 w-4" /> Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/pricing")}>
+            <DropdownMenuItem onClick={() => router.push("/settings?tab=subscription")}>
               <CreditCard className="h-4 w-4" /> Billing & plans
             </DropdownMenuItem>
             {user?.role === "admin" && (

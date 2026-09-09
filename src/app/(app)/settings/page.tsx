@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/input";
@@ -20,13 +20,16 @@ import { trackClickUpgrade, trackInitiateCheckout } from "@/lib/whop/tracking";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/locale-provider";
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tab = searchParams.get("tab") || "profile";
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-display-md text-text-primary">{t("settings.title")}</h1>
 
-      <Tabs defaultValue="profile" className="mt-8">
+      <Tabs value={tab} onValueChange={(v) => router.replace(`/settings?tab=${v}`, { scroll: false })} className="mt-8">
         <TabsList>
           <TabsTrigger value="profile">{t("settings.profile")}</TabsTrigger>
           <TabsTrigger value="subscription">{t("settings.subscription")}</TabsTrigger>
@@ -39,6 +42,14 @@ export default function SettingsPage() {
         <TabsContent value="security" className="mt-6"><SecurityTab /></TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 flex items-center justify-center text-text-muted">Loading...</div>}>
+      <SettingsContent />
+    </React.Suspense>
   );
 }
 
@@ -126,11 +137,16 @@ function SubscriptionTab() {
           </div>
           <Badge variant={subscription?.plan === "free" ? "default" : "primary"}>{subscription?.status}</Badge>
         </div>
-        {subscription?.plan === "free" && (
-          <Link href="/pricing" onClick={() => trackClickUpgrade("settings_subscription")}>
-            <Button className="mt-4">Upgrade plan</Button>
-          </Link>
-        )}
+        <div className="mt-4 flex flex-wrap gap-3">
+          {subscription?.plan === "free" && (
+            <Link href="/pricing" onClick={() => trackClickUpgrade("settings_subscription")}>
+              <Button>Upgrade plan</Button>
+            </Link>
+          )}
+          <a href="https://whop.com/hub/" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline">Gérer l'abonnement</Button>
+          </a>
+        </div>
       </div>
 
       <div>
