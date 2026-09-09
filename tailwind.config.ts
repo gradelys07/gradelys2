@@ -121,6 +121,14 @@ const config: Config = {
           "60%": { transform: "scale(1.08)", opacity: "1" },
           "100%": { transform: "scale(1)" },
         },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-50% - 12px))" }, // 24px gap = 12px half
+        },
+        "marquee-reverse": {
+          from: { transform: "translateX(calc(-50% - 12px))" },
+          to: { transform: "translateX(0)" },
+        }
       },
       animation: {
         "fade-in": "fade-in 150ms ease-out",
@@ -129,6 +137,8 @@ const config: Config = {
         shimmer: "shimmer 1.5s linear infinite",
         "pulse-dot": "pulse-dot 1.4s ease-in-out infinite",
         pop: "pop 600ms ease-out",
+        marquee: "marquee 40s linear infinite",
+        "marquee-reverse": "marquee-reverse 40s linear infinite",
       },
     },
   },
