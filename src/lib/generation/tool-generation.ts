@@ -131,17 +131,9 @@ Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "s
       throw new Error("The AI could not produce a valid image prompt from the available material.");
     }
 
-    // Step 2: Generate image with Pollinations.ai (Free & fast)
+    // Step 2: Generate image with Gemini 3.1 Flash Image (Cheap and Powerful)
     const fullImagePrompt = `${parsed.imagePrompt}, ${parsed.style}, ultra high quality, sharp details, professional, 8K`;
-    const encodedPrompt = encodeURIComponent(fullImagePrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true`;
-    
-    // Fetch and convert to base64 so it can be saved in DB
-    const imageRes = await fetch(imageUrl);
-    if (!imageRes.ok) throw new Error("Failed to generate image from Pollinations");
-    const arrayBuffer = await imageRes.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    const mimeType = "image/jpeg";
+    const { base64, mimeType } = await generateImage(fullImagePrompt);
 
     // Step 3: Create HTML overlay with the image as base + text annotations from Gemini
     const overlays = parsed.overlayTexts || [];
@@ -245,30 +237,36 @@ const TYPE_INSTRUCTIONS: Record<string, string> = {
   report: "Write a highly professional, meticulously organized formal report. It MUST include an Executive Summary, a clear Introduction, deeply detailed Body Sections with logical subheadings, and a strong Conclusion. Use a formal, objective, and analytical tone suitable for a corporate or academic setting. Support every claim with specific data, quotes, and facts from the material.",
   summary: "Write an ultra-dense, comprehensive, and highly professional executive summary. Capture every critical idea, specific fact, and nuance from the material without any fluff or generic filler. Synthesize the information elegantly, using bullet points for key takeaways where appropriate, ensuring a high-level academic or professional standard.",
   essay: "Write a masterfully crafted, university-level essay. It MUST feature a compelling and clear thesis statement in the introduction, highly structured body paragraphs with seamless transitions and rigorous argumentation, and a profound conclusion. The tone must be scholarly, objective, and deeply analytical. Every argument must be substantiated by specific evidence from the material.",
-  slides: `You are a world-class presentation designer (like Canva, Pitch, or Beautiful.ai). Create a stunning, unique, visually rich presentation as a JSON object containing HTML slides.
+  slides: `You are generating a complete slide deck in structured JSON.
+CRITICAL LANGUAGE RULE: Write all slide content in the language of the provided material.
+${GROUNDING_RULE}
 
-CRITICAL DESIGN RULES:
+RULES:
 - Create 6-10 slides. Each slide MUST be a UNIQUE visual design — different layout, different color scheme, different arrangement.
 - Each slide's "html" field is a SELF-CONTAINED HTML snippet that will be rendered inside a 960x540px container (16:9 ratio).
-- Use ONLY inline styles. No external CSS, no external images, no external fonts.
-- Make it look like a premium Canva/Pitch template — NOT plain text on a white background.
+- Use ONLY inline styles. No external CSS, no external fonts.
+- Make it look like a premium Canva/Pitch template.
+
+BACKGROUND IMAGE INTEGRATION (CRITICAL):
+- You MUST use Pollinations to generate a gorgeous background image for at least 3-4 of the slides.
+- Do NOT let Pollinations write any text on the images! You must add the word "no_text_no_letters_blank_background" in the prompt.
+- Syntax for the image URL: https://image.pollinations.ai/prompt/{URL_ENCODED_DETAILED_PROMPT_WITHOUT_TEXT}?width=960&height=540&nologo=true
+- Place this image as the background-image in the slide's main div: <div style="background-image: url('...'); background-size: cover; position: relative;">
+- Add a dark or colored overlay using an inner div or background-color with rgba so the text (which you add in HTML) remains highly readable!
+- Example: <div style="width:100%; height:100%; background: url('https://image.pollinations.ai/prompt/abstract_blue_gradient_background_no_text?width=960&height=540&nologo=true'); background-size: cover;"><div style="background: rgba(0,0,0,0.6); width: 100%; height: 100%; padding: 40px; color: white;">...your html text here...</div></div>
 
 VISUAL ELEMENTS TO USE (mix and match for uniqueness):
-- CSS gradients (linear-gradient, radial-gradient) for backgrounds
-- Flexbox and CSS Grid for layouts
-- SVG shapes for decorative elements (circles, lines, abstract shapes)
-- Emoji (📊 💡 🎯 ⚡ 🔑 📈 🏆 ✅ ⚠️ 🔍 etc.) as visual icons
-- Border-radius, box-shadow for card effects
-- Different layout types per slide: split (left/right), grid cards, centered hero, timeline vertical, stats row, comparison columns, quote highlight
-- Color: use harmonious palettes. Each slide can have a different accent color but maintain coherence.
+- CSS gradients (linear-gradient, radial-gradient) for backgrounds when not using pollinations images.
+- Flexbox and CSS Grid for layouts.
+- Different layout types per slide: split (left/right), grid cards, centered hero, timeline vertical, stats row, comparison columns, quote highlight.
 - Typography: use font-weight, font-size, letter-spacing, text-transform for hierarchy. Titles should be large and bold. Details should be smaller and lighter.
 
 SLIDE TYPES TO INCLUDE (vary the layouts):
-1. TITLE slide: Large centered title with decorative elements, subtitle, gradient background
-2. OVERVIEW slide: 3-4 cards in a grid showing key themes
-3. CONTENT slides: Mix of split layouts (text + visual), card grids, timeline, numbered lists with icons
-4. STATS slide: Big numbers with labels in a row
-5. CONCLUSION slide: Key takeaways with a strong visual close
+1. TITLE slide: Large centered title, subtitle, awesome pollinations background image.
+2. OVERVIEW slide: 3-4 cards in a grid showing key themes.
+3. CONTENT slides: Mix of split layouts (text + visual), card grids, timeline, numbered lists.
+4. STATS slide: Big numbers with labels in a row.
+5. CONCLUSION slide: Key takeaways with a strong visual close.
 
 ALSO provide "title" and "keyPoints" (array of strings) for each slide for PPTX export.
 
