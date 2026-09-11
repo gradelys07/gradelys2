@@ -42,7 +42,6 @@ interface Preset {
 const PRESETS: Record<ToolKind, Preset[]> = {
   visualize: [
     { id: "auto", title: "Auto format", subtitle: "Let Gradelys choose", icon: Sparkles, visualType: "auto", prompt: "Give me a visual overview of the most important ideas in this space." },
-    { id: "image", title: "AI Image", subtitle: "High-quality generated image", icon: ImageIcon, visualType: "image", prompt: "Generate a high-quality educational image based on this content." },
     { id: "infographic", title: "Infographic", subtitle: "Rich visual page", icon: ImageIcon, visualType: "infographic", prompt: "Create a rich visual infographic summarizing the key ideas." },
     { id: "diagram", title: "Diagrams", subtitle: "Flows, timelines & networks", icon: Network, visualType: "diagram", prompt: "Create a diagram showing how the key parts connect." },
     { id: "mindmap", title: "Mind maps", subtitle: "Ideas & connections", icon: GitBranch, visualType: "mindmap", prompt: "Create a mind map branching out from the central idea." },

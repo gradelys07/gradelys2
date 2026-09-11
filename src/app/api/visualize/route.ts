@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     .insert({
       user_id: user!.id,
       space_id: spaceId,
-      type,
+      type: outputData.kind || type,
       prompt: input,
       title,
       description: body.description || "",

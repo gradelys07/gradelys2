@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       const { title, outputData } = await generateVisualizeContent(supabase, spaceId, message, type, customPrompt);
 
       const { data: visDoc, error: visError } = await supabase.from("visualize_outputs").insert({
-        user_id: user!.id, space_id: spaceId, type, prompt: message, title, output_data: outputData,
+        user_id: user!.id, space_id: spaceId, type: outputData.kind || type, prompt: message, title, output_data: outputData,
       }).select().single();
 
       if (visError) return errorResponse(`Failed to save visualization: ${visError.message}`, 500);

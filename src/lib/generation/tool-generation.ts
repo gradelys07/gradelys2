@@ -58,9 +58,36 @@ export async function generateVisualizeContent(
 ) {
   const ctx = await getSpaceContext(supabase, spaceId);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
-  const useMermaid = MERMAID_TYPES.includes(type);
-  const useHtml = type === "infographic" || type === "html";
-  const useImage = IMAGE_TYPES.includes(type);
+  let finalType = type;
+
+  // ── AUTO SELECTION ──────────────────────────────────────────────
+  if (type === "auto") {
+    const autoPrompt = `You are a visual medium selector. A student wants a visualization for: "${prompt}".
+Based on the material and request, select the BEST medium. 
+- "image": Best for realistic scenes, metaphors, or artistic representations.
+- "mermaid": Best for flowcharts, mindmaps, timelines, architecture, or process steps.
+- "chart": Best for numerical data, statistics, or direct comparisons.
+- "infographic": Best for rich HTML summaries with cards, icons, and structured text.
+
+MATERIAL:
+${ctx.text ? ctx.text.slice(0, 3000) : "(no text)"}
+
+Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infographic"}`;
+
+    const raw = await generateContent(autoPrompt, { jsonMode: true, temperature: 0.2, images: ctx.files.length ? ctx.files : undefined });
+    try {
+      const parsed = parseCleanJson(raw);
+      if (["image", "mermaid", "chart", "infographic"].includes(parsed.bestType)) {
+        finalType = parsed.bestType;
+      }
+    } catch (e) {
+      finalType = "mermaid"; // fallback
+    }
+  }
+
+  const useMermaid = MERMAID_TYPES.includes(finalType) && finalType !== "auto";
+  const useHtml = finalType === "infographic" || finalType === "html";
+  const useImage = IMAGE_TYPES.includes(finalType);
 
   let outputData: any;
   let title = prompt.slice(0, 60);
@@ -104,9 +131,17 @@ Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "s
       throw new Error("The AI could not produce a valid image prompt from the available material.");
     }
 
-    // Step 2: Generate image with Google Imagen 3
+    // Step 2: Generate image with Pollinations.ai (Free & fast)
     const fullImagePrompt = `${parsed.imagePrompt}, ${parsed.style}, ultra high quality, sharp details, professional, 8K`;
-    const { base64, mimeType } = await generateImage(fullImagePrompt);
+    const encodedPrompt = encodeURIComponent(fullImagePrompt);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true`;
+    
+    // Fetch and convert to base64 so it can be saved in DB
+    const imageRes = await fetch(imageUrl);
+    if (!imageRes.ok) throw new Error("Failed to generate image from Pollinations");
+    const arrayBuffer = await imageRes.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = "image/jpeg";
 
     // Step 3: Create HTML overlay with the image as base + text annotations from Gemini
     const overlays = parsed.overlayTexts || [];
