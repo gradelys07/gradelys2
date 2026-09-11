@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const { data: sub } = await supabase.from("subscriptions").select("plan").eq("user_id", user!.id).single();
   if (sub?.plan === "free") {
     return errorResponse(
-      "Visualize isn't included in the Free plan. Upgrade to Plus or Pro to generate images.",
+      "Visualize isn't included in the Free plan. Upgrade to Plus or Pro to generate diagrams, charts, and images.",
       403
     );
   }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     .insert({
       user_id: user!.id,
       space_id: spaceId,
-      type: "image",
+      type,
       prompt: input,
       title,
       description: body.description || "",

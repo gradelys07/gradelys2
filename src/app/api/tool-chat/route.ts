@@ -57,10 +57,24 @@ export async function POST(req: NextRequest) {
       const { title, outputData } = await generateVisualizeContent(supabase, spaceId, message, type, customPrompt);
 
       const { data: visDoc, error: visError } = await supabase.from("visualize_outputs").insert({
-        user_id: user!.id, space_id: spaceId, type: "image", prompt: message, title, output_data: outputData,
+        user_id: user!.id, space_id: spaceId, type, prompt: message, title, output_data: outputData,
       }).select().single();
 
       if (visError) return errorResponse(`Failed to save visualization: ${visError.message}`, 500);
+
+      const structuredPayload = outputData.kind === "image" ? {
+        kind: "image",
+        visualizeId: visDoc.id,
+        title,
+        imageUrl: `data:${outputData.mimeType};base64,${outputData.imageBase64}`,
+        promptUsed: outputData.promptUsed,
+        style: outputData.style,
+      } : {
+        kind: "visualize",
+        visualizeId: visDoc.id,
+        title,
+        output: outputData,
+      };
 
       const { data: assistantMsg, error } = await supabase
         .from("messages")
@@ -68,14 +82,7 @@ export async function POST(req: NextRequest) {
           conversation_id: conversationId,
           role: "assistant",
           content: `Generated: ${title}`,
-          structured: {
-            kind: "image",
-            visualizeId: visDoc.id,
-            title,
-            imageUrl: outputData.imageUrl,
-            promptUsed: outputData.promptUsed,
-            style: outputData.style,
-          },
+          structured: structuredPayload,
         })
         .select()
         .single();

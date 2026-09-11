@@ -82,11 +82,10 @@ export default function VisualizePage() {
             <h1 className="text-body-lg font-semibold text-text-primary truncate">{output.title}</h1>
           </div>
         </div>
-        {structured?.kind === "image" && structured.imageUrl && (
+        {(structured?.kind === "image" && structured.imageBase64) && (
           <a
-            href={structured.imageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`data:${structured.mimeType};base64,${structured.imageBase64}`}
+            download={`${output.title}.jpg`}
             className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-label-lg text-text-secondary hover:bg-hover"
           >
             <Download className="h-3.5 w-3.5" /> Télécharger
@@ -97,13 +96,8 @@ export default function VisualizePage() {
         <div className="mx-auto max-w-5xl">
           {structured?.kind === "image" ? (
             <div className="space-y-4">
-              <div className="overflow-hidden rounded-xl border border-border-strong bg-elevated shadow-sm">
-                <img
-                  src={structured.imageUrl}
-                  alt={output.title}
-                  className="w-full object-contain"
-                  loading="lazy"
-                />
+              <div className="overflow-hidden rounded-xl border border-border-strong bg-elevated shadow-sm p-4">
+                <HtmlVisual code={structured.code?.replace("__IMAGE_SRC__", `data:${structured.mimeType};base64,${structured.imageBase64}`)} />
               </div>
               {structured.promptUsed && (
                 <div className="rounded-lg border border-border-subtle bg-surface p-4">

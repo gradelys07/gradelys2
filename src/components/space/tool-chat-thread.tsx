@@ -4,9 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowUp, Paperclip, Sparkles, Check, ChevronRight, FolderKanban,
-  Image as ImageIcon, Palette, BookOpen, Microscope, Wand2,
+  Network, GitBranch, PieChart as PieChartIcon, Clock, GitCompare, Image as ImageIcon,
+  Palette, BookOpen, Microscope, Wand2,
   FileText, ScrollText, FileStack, PenTool, Presentation,
-  Layers, Brain, X, Send, Clock, Download,
+  Layers, Brain, X, Send, Download,
 } from "lucide-react";
 import { useSpaces } from "@/hooks/use-spaces";
 import { useMessages, useUpdateConversation } from "@/hooks/use-chat";
@@ -40,12 +41,14 @@ interface Preset {
 
 const PRESETS: Record<ToolKind, Preset[]> = {
   visualize: [
-    { id: "auto", title: "Auto — AI choisit", subtitle: "Gemini choisit le meilleur style", icon: Sparkles, visualType: "auto", prompt: "Génère une image visuelle qui illustre les concepts clés de ce cours." },
-    { id: "illustration", title: "Illustration", subtitle: "Illustration éducative", icon: Palette, visualType: "illustration", prompt: "Crée une illustration éducative des concepts principaux." },
-    { id: "schema", title: "Schéma", subtitle: "Schéma explicatif", icon: BookOpen, visualType: "schema", prompt: "Crée un schéma visuel qui explique le contenu du cours." },
-    { id: "realistic", title: "Réaliste", subtitle: "Image photo-réaliste", icon: ImageIcon, visualType: "realistic", prompt: "Génère une image réaliste qui représente le sujet du cours." },
-    { id: "scientific", title: "Scientifique", subtitle: "Visualisation scientifique", icon: Microscope, visualType: "scientific", prompt: "Crée une visualisation scientifique précise du contenu." },
-    { id: "creative", title: "Créatif", subtitle: "Style artistique unique", icon: Wand2, visualType: "creative", prompt: "Crée une image artistique et créative qui capture l'essence du sujet." },
+    { id: "auto", title: "Auto format", subtitle: "Let Gradelys choose", icon: Sparkles, visualType: "auto", prompt: "Give me a visual overview of the most important ideas in this space." },
+    { id: "image", title: "AI Image", subtitle: "High-quality generated image", icon: ImageIcon, visualType: "image", prompt: "Generate a high-quality educational image based on this content." },
+    { id: "infographic", title: "Infographic", subtitle: "Rich visual page", icon: ImageIcon, visualType: "infographic", prompt: "Create a rich visual infographic summarizing the key ideas." },
+    { id: "diagram", title: "Diagrams", subtitle: "Flows, timelines & networks", icon: Network, visualType: "diagram", prompt: "Create a diagram showing how the key parts connect." },
+    { id: "mindmap", title: "Mind maps", subtitle: "Ideas & connections", icon: GitBranch, visualType: "mindmap", prompt: "Create a mind map branching out from the central idea." },
+    { id: "chart", title: "Charts", subtitle: "Data & comparisons", icon: PieChartIcon, visualType: "chart", prompt: "Create a chart comparing the key figures or categories." },
+    { id: "timeline", title: "Timeline", subtitle: "Chronological events", icon: Clock, visualType: "timeline", prompt: "Create a timeline of the key stages or events in order." },
+    { id: "comparison", title: "Comparison", subtitle: "Side-by-side contrast", icon: GitCompare, visualType: "comparison", prompt: "Compare the key concepts side by side, highlighting differences." },
   ],
   studio: [
     { id: "notes", title: "Study notes", subtitle: "Structured & exam-ready", icon: FileText, visualType: "notes", prompt: "Write clear, structured study notes covering the key material." },
@@ -409,8 +412,7 @@ function ToolMessageBubble({
               {(structured.imageUrl || structured.output?.imageUrl) && (
                 <a
                   href={structured.imageUrl || structured.output?.imageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download={`${structured.title}.jpg`}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-label-lg text-text-secondary hover:bg-hover"
                 >
                   <Download className="h-3.5 w-3.5" /> Télécharger

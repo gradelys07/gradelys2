@@ -1,4 +1,4 @@
-import { generateContent } from "@/lib/gemini/client";
+import { generateContent, generateImage } from "@/lib/gemini/client";
 import { getSpaceContext } from "@/lib/supabase/space-context";
 
 const MERMAID_TYPES = ["mindmap", "flowchart", "timeline", "concept-map", "diagram", "auto"];
@@ -47,6 +47,8 @@ function sanitizeMermaidCode(code: string): string {
   return cleaned;
 }
 
+const IMAGE_TYPES = ["image", "ai-image"];
+
 export async function generateVisualizeContent(
   supabase: any,
   spaceId: string,
@@ -55,55 +57,149 @@ export async function generateVisualizeContent(
   customPrompt?: string
 ) {
   const ctx = await getSpaceContext(supabase, spaceId);
-  const extraInstruction = customPrompt ? `\nAdditional instructions from the user: ${customPrompt}` : "";
+  const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
+  const useMermaid = MERMAID_TYPES.includes(type);
+  const useHtml = type === "infographic" || type === "html";
+  const useImage = IMAGE_TYPES.includes(type);
 
-  // Step 1: Have Gemini read the source material + user prompt and generate an optimized image generation prompt
-  const optimizerPrompt = `You are an expert image prompt engineer. A student has uploaded course material and wants a visual image generated from it.
+  let outputData: any;
+  let title = prompt.slice(0, 60);
+
+  if (useImage) {
+    // ── AI IMAGE GENERATION (Imagen 3 + Gemini text overlay) ──────────
+    // Step 1: Gemini creates a super detailed image prompt from the sources
+    const promptGenPrompt = `You are an expert image prompt engineer. A student has uploaded course material and wants a HIGH QUALITY visual image generated from it.
 
 YOUR TASK:
-1. Read the MATERIAL below carefully.
+1. Read the MATERIAL below VERY carefully — extract every key concept, term, process, and visual element.
 2. Read the student's request: "${prompt}"
-3. Based on the ACTUAL CONTENT of the material and the student's request, write an optimal image generation prompt in English.
-4. Also decide the best visual style for this content. Choose ONE from: "photorealistic", "educational illustration", "technical diagram", "infographic", "artistic", "3D render", "watercolor", "flat design".
-5. The image prompt MUST reference specific concepts, terms, processes, or subjects found in the material — NOT generic descriptions.
+3. Write an EXTREMELY detailed image generation prompt in English (150-200 words). Include:
+   - The exact scene/composition to depict
+   - Specific objects, elements, labels referencing the material
+   - Colors, lighting, perspective
+   - Visual style (the one that best fits this educational content)
+4. Also decide the best visual style. Choose ONE: "photorealistic photograph", "detailed educational illustration", "scientific diagram with labels", "3D rendered visualization", "watercolor painting", "digital art", "technical blueprint".
+5. Write a short title for this visualization.
 
 ${extraInstruction}
 
-MATERIAL (source of truth — base your image prompt on THIS content):
+MATERIAL (source of truth — base EVERYTHING on THIS):
 ${ctx.text || "(no text extracted — read the attached file(s) directly)"}
 
-Return ONLY a JSON object like this (no markdown fences, no commentary):
-{"imagePrompt": "A detailed, specific image prompt in English grounded in the material content, max 120 words", "style": "chosen style", "title": "Short descriptive title for the visualization"}`;
+Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "style": "chosen style", "title": "Short title", "overlayTexts": [{"text": "Label or annotation", "position": "top-left|top-right|bottom-left|bottom-right|center", "size": "large|medium|small"}]}`;
 
-  const raw = await generateContent(optimizerPrompt, {
-    jsonMode: true,
-    temperature: 0.6,
-    images: ctx.files.length ? ctx.files : undefined,
-  });
+    const raw = await generateContent(promptGenPrompt, {
+      jsonMode: true,
+      temperature: 0.6,
+      images: ctx.files.length ? ctx.files : undefined,
+    });
 
-  let parsed: { imagePrompt: string; style: string; title: string };
-  try {
-    parsed = parseCleanJson(raw);
-  } catch {
-    throw new Error("Failed to generate an optimized image prompt from the material.");
+    let parsed: { imagePrompt: string; style: string; title: string; overlayTexts?: { text: string; position: string; size: string }[] };
+    try {
+      parsed = parseCleanJson(raw);
+    } catch {
+      throw new Error("Failed to generate an optimized image prompt from the material.");
+    }
+    if (!parsed.imagePrompt || !parsed.title) {
+      throw new Error("The AI could not produce a valid image prompt from the available material.");
+    }
+
+    // Step 2: Generate image with Google Imagen 3
+    const fullImagePrompt = `${parsed.imagePrompt}, ${parsed.style}, ultra high quality, sharp details, professional, 8K`;
+    const { base64, mimeType } = await generateImage(fullImagePrompt);
+
+    // Step 3: Create HTML overlay with the image as base + text annotations from Gemini
+    const overlays = parsed.overlayTexts || [];
+    const positionMap: Record<string, string> = {
+      "top-left": "top:20px;left:20px;",
+      "top-right": "top:20px;right:20px;",
+      "bottom-left": "bottom:20px;left:20px;",
+      "bottom-right": "bottom:20px;right:20px;",
+      "center": "top:50%;left:50%;transform:translate(-50%,-50%);",
+    };
+    const sizeMap: Record<string, string> = {
+      large: "font-size:28px;font-weight:800;",
+      medium: "font-size:18px;font-weight:600;",
+      small: "font-size:14px;font-weight:500;",
+    };
+
+    const overlayHtml = overlays.map((o) => {
+      const pos = positionMap[o.position] || positionMap["bottom-left"];
+      const size = sizeMap[o.size] || sizeMap["medium"];
+      return `<div style="position:absolute;${pos}${size}color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.7);max-width:60%;line-height:1.3;padding:8px 14px;background:rgba(0,0,0,0.35);border-radius:8px;backdrop-filter:blur(4px);">${o.text}</div>`;
+    }).join("\n      ");
+
+    const code = `<div style="position:relative;width:100%;font-family:-apple-system,Inter,Segoe UI,sans-serif;">
+      <img src="__IMAGE_SRC__" style="width:100%;display:block;border-radius:8px;" alt="${parsed.title}" />
+      ${overlayHtml}
+    </div>`;
+
+    title = parsed.title;
+    outputData = {
+      kind: "image",
+      imageBase64: base64,
+      mimeType,
+      code,
+      promptUsed: parsed.imagePrompt,
+      style: parsed.style,
+    };
+  } else if (useHtml) {
+    // ── HTML INFOGRAPHIC ──────────────────────────────────────────────
+    const genPrompt = `You are building a polished, self-contained HTML infographic/visual explainer for a student, based on the request: "${prompt}".
+${GROUNDING_RULE}
+${LANGUAGE_RULE}
+${extraInstruction}
+
+Return ONLY a single self-contained HTML fragment (no <html>/<head>/<body> tags, no markdown fences, no commentary) using inline <style> and semantic markup: headings, cards, colored callouts, icons made of emoji or simple SVG/CSS shapes (no external image URLs — they will not load). Use a clean modern layout with CSS flexbox/grid, rounded cards, and a light color palette (white/light-gray backgrounds, one accent color). Make it visually rich but load instantly with zero external dependencies.
+
+MATERIAL:
+${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
+    const html = await generateContent(genPrompt, { temperature: 0.6, images: ctx.files.length ? ctx.files : undefined });
+    outputData = { kind: "html", code: html.replace(/```html|```/g, "").trim() };
+  } else if (useMermaid) {
+    // ── MERMAID DIAGRAMS ──────────────────────────────────────────────
+    const genPrompt = `Produce a Mermaid.js diagram (type: ${type === "auto" ? "choose the best fit — flowchart, mindmap, or timeline" : type}) that visually explains: "${prompt}".
+${GROUNDING_RULE} Use the actual terms, steps, and labels found in the material as node labels — not generic placeholders like "Step 1" or "Concept A".
+${LANGUAGE_RULE}
+${extraInstruction}
+
+CRITICAL MERMAID SYNTAX RULES — follow these exactly or the diagram will fail to render:
+- ALL node labels that contain parentheses, brackets, colons, commas, quotes, accented characters, or any special characters MUST be wrapped in double quotes. Example: A["Label (with parens)"] not A[Label (with parens)]
+- For mindmap nodes, wrap multi-word labels or labels with special chars in double quotes on the same line.
+- Do NOT use HTML tags or <br> in labels.
+- Use only ASCII arrows: -->, --->, -.->, ---|label|
+- Avoid excessively long labels (max ~40 characters per label).
+- Do not use emoji or unicode symbols in node IDs or labels.
+
+MATERIAL:
+${ctx.text || "(no text extracted — read the attached file(s) directly)"}
+
+Return ONLY valid Mermaid syntax, no markdown fences, no commentary. Keep it readable (max ~15 nodes).`;
+    const mermaidCode = await generateContent(genPrompt, { temperature: 0.4, images: ctx.files.length ? ctx.files : undefined });
+    let cleanCode = mermaidCode.replace(/```mermaid|```/g, "").trim();
+    cleanCode = sanitizeMermaidCode(cleanCode);
+    if (cleanCode.toLowerCase().includes("usable material")) {
+      throw new Error("No usable material provided by the sources. Please upload documents with relevant data to generate this diagram.");
+    }
+    if (!cleanCode.match(/^(graph|flowchart|mindmap|timeline|sequenceDiagram|gantt|classDiagram|stateDiagram|pie|journey|erDiagram|requirementDiagram|gitGraph|C4Context|quadrantChart|xychart|block-beta)/i)) {
+      throw new Error("The AI failed to generate a valid diagram from the available material.");
+    }
+    outputData = { kind: "mermaid", code: cleanCode };
+  } else {
+    // ── CHARTS ────────────────────────────────────────────────────────
+    const genPrompt = `Given the topic "${prompt}" and the material below, produce chart-ready data as JSON only, shaped exactly like:
+{"chartType":"bar|line|pie","title":"...","data":[{"name":"...","value":0}]}
+${GROUNDING_RULE} Use real figures, categories, or comparisons drawn from the material — not invented placeholder numbers.
+${LANGUAGE_RULE} (the "title" and "name" fields must be in that language)
+5-8 data points, no commentary, no markdown fences.${extraInstruction}
+
+MATERIAL:
+${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
+    const raw = await generateContent(genPrompt, { jsonMode: true, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
+    const parsed = parseCleanJson(raw);
+    outputData = { kind: "chart", ...parsed };
+    title = parsed.title || title;
   }
-
-  if (!parsed.imagePrompt || !parsed.title) {
-    throw new Error("The AI could not produce a valid image prompt from the available material.");
-  }
-
-  // Step 2: Build the Pollinations.ai URL with the optimized prompt + style
-  const fullPrompt = `${parsed.imagePrompt}, ${parsed.style} style, high quality, detailed, professional`;
-  const encodedPrompt = encodeURIComponent(fullPrompt);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true`;
-
-  const title = parsed.title;
-  const outputData = {
-    kind: "image" as const,
-    imageUrl,
-    promptUsed: parsed.imagePrompt,
-    style: parsed.style,
-  };
 
   return { title, outputData };
 }
