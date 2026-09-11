@@ -1,5 +1,6 @@
 import { generateContent, generateImage } from "@/lib/gemini/client";
 import { getSpaceContext } from "@/lib/supabase/space-context";
+import { enhancePromptWithOpenAI } from "@/lib/openai/client";
 
 const MERMAID_TYPES = ["mindmap", "flowchart", "timeline", "concept-map", "diagram", "auto"];
 
@@ -89,6 +90,14 @@ Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infogra
   const useHtml = finalType === "infographic" || finalType === "html";
   const useImage = IMAGE_TYPES.includes(finalType);
 
+  // ── OPENAI MASTER PROMPT ENGINEER ───────────────────────────────
+  // Enhance the user's original prompt with gpt-4o-mini for maximum detail
+  const enhancedPromptText = await enhancePromptWithOpenAI(
+    prompt,
+    finalType,
+    ctx.text ? ctx.text.slice(0, 6000) : ""
+  );
+
   let outputData: any;
   let title = prompt.slice(0, 60);
 
@@ -99,7 +108,7 @@ Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infogra
 
 YOUR TASK:
 1. Read the MATERIAL below VERY carefully — extract every key concept, term, process, and visual element.
-2. Read the student's request: "${prompt}"
+2. Read the master instruction: "${enhancedPromptText}"
 3. Write an EXTREMELY detailed image generation prompt in English (150-200 words). Include:
    - The exact scene/composition to depict
    - Specific objects, elements, labels referencing the material
@@ -172,7 +181,7 @@ Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "s
     };
   } else if (useHtml) {
     // ── HTML INFOGRAPHIC ──────────────────────────────────────────────
-    const genPrompt = `You are building a polished, self-contained HTML infographic/visual explainer for a student, based on the request: "${prompt}".
+    const genPrompt = `You are building a polished, self-contained HTML infographic/visual explainer for a student, based on the master instruction: "${enhancedPromptText}".
 ${GROUNDING_RULE}
 ${LANGUAGE_RULE}
 ${extraInstruction}
@@ -185,7 +194,7 @@ ${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
     outputData = { kind: "html", code: html.replace(/```html|```/g, "").trim() };
   } else if (useMermaid) {
     // ── MERMAID DIAGRAMS ──────────────────────────────────────────────
-    const genPrompt = `Produce a Mermaid.js diagram (type: ${type === "auto" ? "choose the best fit — flowchart, mindmap, or timeline" : type}) that visually explains: "${prompt}".
+    const genPrompt = `Produce a Mermaid.js diagram (type: ${type === "auto" ? "choose the best fit — flowchart, mindmap, or timeline" : type}) that visually explains the following instruction: "${enhancedPromptText}".
 ${GROUNDING_RULE} Use the actual terms, steps, and labels found in the material as node labels — not generic placeholders like "Step 1" or "Concept A".
 ${LANGUAGE_RULE}
 ${extraInstruction}
@@ -214,7 +223,7 @@ Return ONLY valid Mermaid syntax, no markdown fences, no commentary. Keep it rea
     outputData = { kind: "mermaid", code: cleanCode };
   } else {
     // ── CHARTS ────────────────────────────────────────────────────────
-    const genPrompt = `Given the topic "${prompt}" and the material below, produce chart-ready data as JSON only, shaped exactly like:
+    const genPrompt = `Given the instruction "${enhancedPromptText}" and the material below, produce chart-ready data as JSON only, shaped exactly like:
 {"chartType":"bar|line|pie","title":"...","data":[{"name":"...","value":0}]}
 ${GROUNDING_RULE} Use real figures, categories, or comparisons drawn from the material — not invented placeholder numbers.
 ${LANGUAGE_RULE} (the "title" and "name" fields must be in that language)
@@ -290,6 +299,13 @@ export async function generateStudioContent(
   const ctx = await getSpaceContext(supabase, spaceId);
   const instruction = customPrompt || TYPE_INSTRUCTIONS[type] || TYPE_INSTRUCTIONS.notes;
 
+  // ── OPENAI MASTER PROMPT ENGINEER ───────────────────────────────
+  const enhancedTopic = await enhancePromptWithOpenAI(
+    topic,
+    type,
+    ctx.text ? ctx.text.slice(0, 6000) : ""
+  );
+
   let formatInstruction = `Format the output in clean, highly visual Markdown:
 - Start with a single # title.
 - CRITICAL: You MUST include at least one relevant, highly professional header image right after the title, and 1-2 inline images if the document is long. 
@@ -304,7 +320,8 @@ export async function generateStudioContent(
 
   const fullPrompt = `${instruction}
 
-Focus specifically on: ${topic}
+Master Instruction / Focus specifically on: 
+${enhancedTopic}
 
 ${GROUNDING_RULE}
 ${LANGUAGE_RULE}
