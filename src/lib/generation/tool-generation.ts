@@ -55,71 +55,59 @@ export async function generateVisualizeContent(
   customPrompt?: string
 ) {
   const ctx = await getSpaceContext(supabase, spaceId);
-  const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
-  const useMermaid = MERMAID_TYPES.includes(type);
-  const useHtml = type === "infographic" || type === "html";
+  const extraInstruction = customPrompt ? `\nAdditional instructions from the user: ${customPrompt}` : "";
 
-  let outputData: any;
-  let title = prompt.slice(0, 60);
+  // Step 1: Have Gemini read the source material + user prompt and generate an optimized image generation prompt
+  const optimizerPrompt = `You are an expert image prompt engineer. A student has uploaded course material and wants a visual image generated from it.
 
-  if (useHtml) {
-    const genPrompt = `You are building a polished, self-contained HTML infographic/visual explainer for a student, based on the request: "${prompt}".
-${GROUNDING_RULE}
-${LANGUAGE_RULE}
+YOUR TASK:
+1. Read the MATERIAL below carefully.
+2. Read the student's request: "${prompt}"
+3. Based on the ACTUAL CONTENT of the material and the student's request, write an optimal image generation prompt in English.
+4. Also decide the best visual style for this content. Choose ONE from: "photorealistic", "educational illustration", "technical diagram", "infographic", "artistic", "3D render", "watercolor", "flat design".
+5. The image prompt MUST reference specific concepts, terms, processes, or subjects found in the material — NOT generic descriptions.
+
 ${extraInstruction}
 
-Return ONLY a single self-contained HTML fragment (no <html>/<head>/<body> tags, no markdown fences, no commentary) using inline <style> and semantic markup: headings, cards, colored callouts, icons made of emoji or simple SVG/CSS shapes (no external image URLs — they will not load). Use a clean modern layout with CSS flexbox/grid, rounded cards, and a light color palette (white/light-gray backgrounds, one accent color). Make it visually rich but load instantly with zero external dependencies.
-
-MATERIAL:
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
-    const html = await generateContent(genPrompt, { temperature: 0.6, images: ctx.files.length ? ctx.files : undefined });
-    outputData = { kind: "html", code: html.replace(/```html|```/g, "").trim() };
-  } else if (useMermaid) {
-    const genPrompt = `Produce a Mermaid.js diagram (type: ${type === "auto" ? "choose the best fit — flowchart, mindmap, or timeline" : type}) that visually explains: "${prompt}".
-${GROUNDING_RULE} Use the actual terms, steps, and labels found in the material as node labels — not generic placeholders like "Step 1" or "Concept A".
-${LANGUAGE_RULE}
-${extraInstruction}
-
-CRITICAL MERMAID SYNTAX RULES — follow these exactly or the diagram will fail to render:
-- ALL node labels that contain parentheses, brackets, colons, commas, quotes, accented characters, or any special characters MUST be wrapped in double quotes. Example: A["Label (with parens)"] not A[Label (with parens)]
-- For mindmap nodes, wrap multi-word labels or labels with special chars in double quotes on the same line.
-- Do NOT use HTML tags or <br> in labels.
-- Use only ASCII arrows: -->, --->, -.->, ---|label|
-- Avoid excessively long labels (max ~40 characters per label).
-- Do not use emoji or unicode symbols in node IDs or labels.
-
-MATERIAL:
+MATERIAL (source of truth — base your image prompt on THIS content):
 ${ctx.text || "(no text extracted — read the attached file(s) directly)"}
 
-Return ONLY valid Mermaid syntax, no markdown fences, no commentary. Keep it readable (max ~15 nodes).`;
-    const mermaidCode = await generateContent(genPrompt, { temperature: 0.4, images: ctx.files.length ? ctx.files : undefined });
-    let cleanCode = mermaidCode.replace(/```mermaid|```/g, "").trim();
-    // Sanitize common Mermaid issues
-    cleanCode = sanitizeMermaidCode(cleanCode);
-    if (cleanCode.toLowerCase().includes("usable material")) {
-      throw new Error("No usable material provided by the sources. Please upload documents with relevant data to generate this diagram.");
-    }
-    if (!cleanCode.match(/^(graph|flowchart|mindmap|timeline|sequenceDiagram|gantt|classDiagram|stateDiagram|pie|journey|erDiagram|requirementDiagram|gitGraph|C4Context|quadrantChart|xychart|block-beta)/i)) {
-      throw new Error("The AI failed to generate a valid diagram from the available material.");
-    }
-    outputData = { kind: "mermaid", code: cleanCode };
-  } else {
-    const genPrompt = `Given the topic "${prompt}" and the material below, produce chart-ready data as JSON only, shaped exactly like:
-{"chartType":"bar|line|pie","title":"...","data":[{"name":"...","value":0}]}
-${GROUNDING_RULE} Use real figures, categories, or comparisons drawn from the material — not invented placeholder numbers.
-${LANGUAGE_RULE} (the "title" and "name" fields must be in that language)
-5-8 data points, no commentary, no markdown fences.${extraInstruction}
+Return ONLY a JSON object like this (no markdown fences, no commentary):
+{"imagePrompt": "A detailed, specific image prompt in English grounded in the material content, max 120 words", "style": "chosen style", "title": "Short descriptive title for the visualization"}`;
 
-MATERIAL:
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
-    const raw = await generateContent(genPrompt, { jsonMode: true, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
-    const parsed = parseCleanJson(raw);
-    outputData = { kind: "chart", ...parsed };
-    title = parsed.title || title;
+  const raw = await generateContent(optimizerPrompt, {
+    jsonMode: true,
+    temperature: 0.6,
+    images: ctx.files.length ? ctx.files : undefined,
+  });
+
+  let parsed: { imagePrompt: string; style: string; title: string };
+  try {
+    parsed = parseCleanJson(raw);
+  } catch {
+    throw new Error("Failed to generate an optimized image prompt from the material.");
   }
+
+  if (!parsed.imagePrompt || !parsed.title) {
+    throw new Error("The AI could not produce a valid image prompt from the available material.");
+  }
+
+  // Step 2: Build the Pollinations.ai URL with the optimized prompt + style
+  const fullPrompt = `${parsed.imagePrompt}, ${parsed.style} style, high quality, detailed, professional`;
+  const encodedPrompt = encodeURIComponent(fullPrompt);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=800&nologo=true`;
+
+  const title = parsed.title;
+  const outputData = {
+    kind: "image" as const,
+    imageUrl,
+    promptUsed: parsed.imagePrompt,
+    style: parsed.style,
+  };
 
   return { title, outputData };
 }
+
 
 const TYPE_INSTRUCTIONS: Record<string, string> = {
   notes: "Write highly structured, comprehensive, university-level study notes. Use a clear hierarchy of headings (H1, H2, H3). Bold all key terms and provide precise definitions. Include bulleted lists for enumerations, and highlight critical formulas, dates, and examples pulled directly from the material. The output must look like a premium, professionally formatted cheat sheet.",

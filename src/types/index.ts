@@ -184,6 +184,12 @@ export interface SpaceSource {
 
 export type VisualType =
   | "auto"
+  | "image"
+  | "illustration"
+  | "schema"
+  | "realistic"
+  | "scientific"
+  | "creative"
   | "diagram"
   | "mindmap"
   | "chart"

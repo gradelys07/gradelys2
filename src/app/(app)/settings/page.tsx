@@ -104,14 +104,14 @@ function ProfileTab() {
         </select>
       </div>
       <div>
-        <Label htmlFor="educationSystem">Education System (Country format for Exams)</Label>
+        <Label htmlFor="educationSystem">Pays (Country)</Label>
         <select
           id="educationSystem"
           value={educationSystem}
           onChange={(e) => setEducationSystem(e.target.value)}
           className="flex h-10 w-full rounded-md border border-border bg-elevated px-3 text-body-md text-text-primary focus-visible:outline-none focus-visible:border-primary"
         >
-          {["Standard", "Algérie - BAC", "Algérie - BEM", "France - Baccalauréat", "France - Brevet", "US - High School", "US - College", "UK - A-Levels", "UK - GCSE"].map((sys) => (
+          {["Standard", "Algérie", "Maroc", "Tunisie", "France", "Canada", "États-Unis", "Royaume-Uni", "Belgique", "Suisse"].map((sys) => (
             <option key={sys} value={sys}>{sys}</option>
           ))}
         </select>

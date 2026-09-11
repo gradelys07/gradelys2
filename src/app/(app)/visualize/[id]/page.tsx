@@ -6,7 +6,7 @@ import { useParams, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ChartRenderer } from "@/components/chart-renderer";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { Sparkles, ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
 import { Markdown } from "@/components/markdown";
 
@@ -67,31 +67,67 @@ export default function VisualizePage() {
 
   return (
     <div className="flex h-screen w-full flex-col bg-background overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center border-b border-border bg-base px-4 sm:px-6">
-        <Link
-          href="/explore"
-          className="mr-4 flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-hover hover:text-text-primary"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-primary to-purple">
-            <Sparkles className="h-3.5 w-3.5 text-white" />
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-base px-4 sm:px-6">
+        <div className="flex items-center">
+          <Link
+            href="/explore"
+            className="mr-4 flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-hover hover:text-text-primary"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-primary to-purple">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+            </div>
+            <h1 className="text-body-lg font-semibold text-text-primary truncate">{output.title}</h1>
           </div>
-          <h1 className="text-body-lg font-semibold text-text-primary truncate">{output.title}</h1>
         </div>
+        {structured?.kind === "image" && structured.imageUrl && (
+          <a
+            href={structured.imageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-label-lg text-text-secondary hover:bg-hover"
+          >
+            <Download className="h-3.5 w-3.5" /> Télécharger
+          </a>
+        )}
       </header>
       <main className="flex-1 overflow-y-auto p-4 sm:p-8">
-        <div className="mx-auto max-w-5xl rounded-xl border border-border-strong bg-elevated p-8 shadow-sm">
-          {structured?.kind === "html" ? (
-            <HtmlVisual code={structured.code} />
-          ) : structured?.kind === "mermaid" ? (
-            <MermaidDiagram code={structured.code} id={output.id} />
-          ) : structured?.kind === "chart" ? (
-             <ChartRenderer data={structured} />
+        <div className="mx-auto max-w-5xl">
+          {structured?.kind === "image" ? (
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-xl border border-border-strong bg-elevated shadow-sm">
+                <img
+                  src={structured.imageUrl}
+                  alt={output.title}
+                  className="w-full object-contain"
+                  loading="lazy"
+                />
+              </div>
+              {structured.promptUsed && (
+                <div className="rounded-lg border border-border-subtle bg-surface p-4">
+                  <p className="text-label-sm uppercase text-text-muted mb-1">Prompt utilisé</p>
+                  <p className="text-body-sm text-text-secondary italic">{structured.promptUsed}</p>
+                  {structured.style && (
+                    <p className="mt-2 text-label-md text-text-muted">Style: <span className="text-text-secondary capitalize">{structured.style}</span></p>
+                  )}
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="prose dark:prose-invert max-w-none">
-               <Markdown content={JSON.stringify(structured, null, 2)} />
+            <div className="rounded-xl border border-border-strong bg-elevated p-8 shadow-sm">
+              {structured?.kind === "html" ? (
+                <HtmlVisual code={structured.code} />
+              ) : structured?.kind === "mermaid" ? (
+                <MermaidDiagram code={structured.code} id={output.id} />
+              ) : structured?.kind === "chart" ? (
+                <ChartRenderer data={structured} />
+              ) : (
+                <div className="prose dark:prose-invert max-w-none">
+                  <Markdown content={JSON.stringify(structured, null, 2)} />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -99,3 +135,4 @@ export default function VisualizePage() {
     </div>
   );
 }
+

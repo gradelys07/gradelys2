@@ -4,9 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowUp, Paperclip, Sparkles, Check, ChevronRight, FolderKanban,
-  Network, GitBranch, PieChart as PieChartIcon, Clock, GitCompare, Image as ImageIcon,
+  Image as ImageIcon, Palette, BookOpen, Microscope, Wand2,
   FileText, ScrollText, FileStack, PenTool, Presentation,
-  Layers, Brain, X, Send,
+  Layers, Brain, X, Send, Clock, Download,
 } from "lucide-react";
 import { useSpaces } from "@/hooks/use-spaces";
 import { useMessages, useUpdateConversation } from "@/hooks/use-chat";
@@ -40,13 +40,12 @@ interface Preset {
 
 const PRESETS: Record<ToolKind, Preset[]> = {
   visualize: [
-    { id: "auto", title: "Auto format", subtitle: "Let Gradelys choose", icon: Sparkles, visualType: "auto", prompt: "Give me a visual overview of the most important ideas in this space." },
-    { id: "infographic", title: "Infographic", subtitle: "Rich visual page", icon: ImageIcon, visualType: "infographic", prompt: "Create a rich visual infographic summarizing the key ideas." },
-    { id: "diagram", title: "Diagrams", subtitle: "Flows, timelines & networks", icon: Network, visualType: "diagram", prompt: "Create a diagram showing how the key parts connect." },
-    { id: "mindmap", title: "Mind maps", subtitle: "Ideas & connections", icon: GitBranch, visualType: "mindmap", prompt: "Create a mind map branching out from the central idea." },
-    { id: "chart", title: "Charts", subtitle: "Data & comparisons", icon: PieChartIcon, visualType: "chart", prompt: "Create a chart comparing the key figures or categories." },
-    { id: "timeline", title: "Timeline", subtitle: "Chronological events", icon: Clock, visualType: "timeline", prompt: "Create a timeline of the key stages or events in order." },
-    { id: "comparison", title: "Comparison", subtitle: "Side-by-side contrast", icon: GitCompare, visualType: "comparison", prompt: "Compare the key concepts side by side, highlighting differences." },
+    { id: "auto", title: "Auto — AI choisit", subtitle: "Gemini choisit le meilleur style", icon: Sparkles, visualType: "auto", prompt: "Génère une image visuelle qui illustre les concepts clés de ce cours." },
+    { id: "illustration", title: "Illustration", subtitle: "Illustration éducative", icon: Palette, visualType: "illustration", prompt: "Crée une illustration éducative des concepts principaux." },
+    { id: "schema", title: "Schéma", subtitle: "Schéma explicatif", icon: BookOpen, visualType: "schema", prompt: "Crée un schéma visuel qui explique le contenu du cours." },
+    { id: "realistic", title: "Réaliste", subtitle: "Image photo-réaliste", icon: ImageIcon, visualType: "realistic", prompt: "Génère une image réaliste qui représente le sujet du cours." },
+    { id: "scientific", title: "Scientifique", subtitle: "Visualisation scientifique", icon: Microscope, visualType: "scientific", prompt: "Crée une visualisation scientifique précise du contenu." },
+    { id: "creative", title: "Créatif", subtitle: "Style artistique unique", icon: Wand2, visualType: "creative", prompt: "Crée une image artistique et créative qui capture l'essence du sujet." },
   ],
   studio: [
     { id: "notes", title: "Study notes", subtitle: "Structured & exam-ready", icon: FileText, visualType: "notes", prompt: "Write clear, structured study notes covering the key material." },
@@ -374,15 +373,50 @@ function ToolMessageBubble({
             <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
             <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
           </div>
-        ) : structured?.kind === "visualize" ? (
+        ) : structured?.kind === "visualize" || structured?.kind === "image" ? (
           <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            <p className="text-body-md font-medium text-text-primary">{structured.title}</p>
-            <Link
-              href={`/visualize/${structured.visualizeId}`}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-label-lg font-medium text-white hover:bg-primary-hover"
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Open Visualization
-            </Link>
+            <p className="text-body-md font-medium text-text-primary mb-3">{structured.title}</p>
+            {structured.imageUrl && (
+              <div className="relative overflow-hidden rounded-lg border border-border-subtle mb-3">
+                <img
+                  src={structured.imageUrl || structured.output?.imageUrl}
+                  alt={structured.title}
+                  className="w-full max-h-[400px] object-cover"
+                  loading="lazy"
+                />
+              </div>
+            )}
+            {structured.output?.imageUrl && !structured.imageUrl && (
+              <div className="relative overflow-hidden rounded-lg border border-border-subtle mb-3">
+                <img
+                  src={structured.output.imageUrl}
+                  alt={structured.title}
+                  className="w-full max-h-[400px] object-cover"
+                  loading="lazy"
+                />
+              </div>
+            )}
+            {structured.promptUsed && (
+              <p className="text-label-md text-text-muted mb-3 italic">Style: {structured.style || structured.output?.style}</p>
+            )}
+            <div className="flex gap-2">
+              <Link
+                href={`/visualize/${structured.visualizeId}`}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-label-lg font-medium text-white hover:bg-primary-hover"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Voir en grand
+              </Link>
+              {(structured.imageUrl || structured.output?.imageUrl) && (
+                <a
+                  href={structured.imageUrl || structured.output?.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-label-lg text-text-secondary hover:bg-hover"
+                >
+                  <Download className="h-3.5 w-3.5" /> Télécharger
+                </a>
+              )}
+            </div>
           </div>
         ) : structured?.kind === "studio" ? (
           <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
