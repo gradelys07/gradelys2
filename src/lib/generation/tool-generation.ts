@@ -248,12 +248,18 @@ RULES:
 - Make it look like a premium Canva/Pitch template.
 
 BACKGROUND IMAGE INTEGRATION (CRITICAL):
-- You MUST use Pollinations to generate a gorgeous background image for at least 3-4 of the slides.
-- Do NOT let Pollinations write any text on the images! You must add the word "no_text_no_letters_blank_background" in the prompt.
-- Syntax for the image URL: https://image.pollinations.ai/prompt/{URL_ENCODED_DETAILED_PROMPT_WITHOUT_TEXT}?width=960&height=540&nologo=true
-- Place this image as the background-image in the slide's main div: <div style="background-image: url('...'); background-size: cover; position: relative;">
-- Add a dark or colored overlay using an inner div or background-color with rgba so the text (which you add in HTML) remains highly readable!
-- Example: <div style="width:100%; height:100%; background: url('https://image.pollinations.ai/prompt/abstract_blue_gradient_background_no_text?width=960&height=540&nologo=true'); background-size: cover;"><div style="background: rgba(0,0,0,0.6); width: 100%; height: 100%; padding: 40px; color: white;">...your html text here...</div></div>
+- You MUST use Pollinations to generate a gorgeous background image for EVERY SINGLE SLIDE.
+- Do NOT let Pollinations write any text on the images! Always add "no_text_no_letters_blank_background" in the prompt.
+- Syntax for the image URL: https://image.pollinations.ai/prompt/{URL_ENCODED_PROMPT}?width=960&height=540&nologo=true
+- CRITICAL: You MUST replace all spaces in the prompt with "%20" or "-". Never use raw spaces in the URL.
+- Place this image using an absolutely positioned img tag behind the text:
+  <div style="position:relative; width:100%; height:100%; overflow:hidden;">
+    <img src="https://image.pollinations.ai/prompt/abstract%20blue%20background%20no%20text?width=960&height=540&nologo=true" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;" />
+    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1;"></div>
+    <div style="position:relative; z-index:2; padding:40px; color:white; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center;">
+       <!-- your slide text content here -->
+    </div>
+  </div>
 
 VISUAL ELEMENTS TO USE (mix and match for uniqueness):
 - CSS gradients (linear-gradient, radial-gradient) for backgrounds when not using pollinations images.

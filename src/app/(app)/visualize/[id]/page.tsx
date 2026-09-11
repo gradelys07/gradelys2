@@ -70,7 +70,7 @@ export default function VisualizePage() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-base px-4 sm:px-6">
         <div className="flex items-center">
           <Link
-            href="/explore"
+            href="/visualize"
             className="mr-4 flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-hover hover:text-text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
