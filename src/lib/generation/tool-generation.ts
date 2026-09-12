@@ -102,27 +102,7 @@ Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infogra
   let title = prompt.slice(0, 60);
 
   if (useImage) {
-    // ── AI IMAGE GENERATION (Imagen 3 + Gemini text overlay) ──────────
-    // Step 1: Gemini creates a super detailed image prompt from the sources
-    const promptGenPrompt = `You are an expert image prompt engineer. A student has uploaded course material and wants a HIGH QUALITY visual image generated from it.
-
-YOUR TASK:
-1. Read the MATERIAL below VERY carefully — extract every key concept, term, process, and visual element.
-2. Read the master instruction: "${enhancedPromptText}"
-3. Write an EXTREMELY detailed image generation prompt in English (150-200 words). Include:
-   - The exact scene/composition to depict
-   - Specific objects, elements, labels referencing the material
-   - Colors, lighting, perspective
-   - Visual style (the one that best fits this educational content)
-4. Also decide the best visual style. Choose ONE: "photorealistic photograph", "detailed educational illustration", "scientific diagram with labels", "3D rendered visualization", "watercolor painting", "digital art", "technical blueprint".
-5. Write a short title for this visualization.
-
-${extraInstruction}
-
-MATERIAL (source of truth — base EVERYTHING on THIS):
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}
-
-Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "style": "chosen style", "title": "Short title", "overlayTexts": [{"text": "Label or annotation", "position": "top-left|top-right|bottom-left|bottom-right|center", "size": "large|medium|small"}]}`;
+    const promptGenPrompt = `${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "style": "chosen style", "title": "Short title", "overlayTexts": [{"text": "Label or annotation", "position": "top-left|top-right|bottom-left|bottom-right|center", "size": "large|medium|small"}]}`;
 
     const raw = await generateContent(promptGenPrompt, {
       jsonMode: true,
@@ -180,57 +160,20 @@ Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt...", "s
       style: parsed.style,
     };
   } else if (useHtml) {
-    // ── HTML INFOGRAPHIC ──────────────────────────────────────────────
-    const genPrompt = `You are building a polished, self-contained HTML infographic/visual explainer for a student, based on the master instruction: "${enhancedPromptText}".
-${GROUNDING_RULE}
-${LANGUAGE_RULE}
-${extraInstruction}
-
-Return ONLY a single self-contained HTML fragment (no <html>/<head>/<body> tags, no markdown fences, no commentary) using inline <style> and semantic markup: headings, cards, colored callouts, icons made of emoji or simple SVG/CSS shapes (no external image URLs — they will not load). Use a clean modern layout with CSS flexbox/grid, rounded cards, and a light color palette (white/light-gray backgrounds, one accent color). Make it visually rich but load instantly with zero external dependencies.
-
-MATERIAL:
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
+    const genPrompt = `${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY a single self-contained HTML fragment (no <html>/<head>/<body> tags, no markdown fences). Use inline <style>.`;
     const html = await generateContent(genPrompt, { temperature: 0.6, images: ctx.files.length ? ctx.files : undefined });
     outputData = { kind: "html", code: html.replace(/```html|```/g, "").trim() };
   } else if (useMermaid) {
-    // ── MERMAID DIAGRAMS ──────────────────────────────────────────────
-    const genPrompt = `Produce a Mermaid.js diagram (type: ${type === "auto" ? "choose the best fit — flowchart, mindmap, or timeline" : type}) that visually explains the following instruction: "${enhancedPromptText}".
-${GROUNDING_RULE} Use the actual terms, steps, and labels found in the material as node labels — not generic placeholders like "Step 1" or "Concept A".
-${LANGUAGE_RULE}
-${extraInstruction}
-
-CRITICAL MERMAID SYNTAX RULES — follow these exactly or the diagram will fail to render:
-- ALL node labels that contain parentheses, brackets, colons, commas, quotes, accented characters, or any special characters MUST be wrapped in double quotes. Example: A["Label (with parens)"] not A[Label (with parens)]
-- For mindmap nodes, wrap multi-word labels or labels with special chars in double quotes on the same line.
-- Do NOT use HTML tags or <br> in labels.
-- Use only ASCII arrows: -->, --->, -.->, ---|label|
-- Avoid excessively long labels (max ~40 characters per label).
-- Do not use emoji or unicode symbols in node IDs or labels.
-
-MATERIAL:
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}
-
-Return ONLY valid Mermaid syntax, no markdown fences, no commentary. Keep it readable (max ~15 nodes).`;
+    const genPrompt = `${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY valid Mermaid.js syntax, no markdown fences. For labels with special chars, wrap them in double quotes.`;
     const mermaidCode = await generateContent(genPrompt, { temperature: 0.4, images: ctx.files.length ? ctx.files : undefined });
     let cleanCode = mermaidCode.replace(/```mermaid|```/g, "").trim();
     cleanCode = sanitizeMermaidCode(cleanCode);
-    if (cleanCode.toLowerCase().includes("usable material")) {
-      throw new Error("No usable material provided by the sources. Please upload documents with relevant data to generate this diagram.");
-    }
     if (!cleanCode.match(/^(graph|flowchart|mindmap|timeline|sequenceDiagram|gantt|classDiagram|stateDiagram|pie|journey|erDiagram|requirementDiagram|gitGraph|C4Context|quadrantChart|xychart|block-beta)/i)) {
       throw new Error("The AI failed to generate a valid diagram from the available material.");
     }
     outputData = { kind: "mermaid", code: cleanCode };
   } else {
-    // ── CHARTS ────────────────────────────────────────────────────────
-    const genPrompt = `Given the instruction "${enhancedPromptText}" and the material below, produce chart-ready data as JSON only, shaped exactly like:
-{"chartType":"bar|line|pie","title":"...","data":[{"name":"...","value":0}]}
-${GROUNDING_RULE} Use real figures, categories, or comparisons drawn from the material — not invented placeholder numbers.
-${LANGUAGE_RULE} (the "title" and "name" fields must be in that language)
-5-8 data points, no commentary, no markdown fences.${extraInstruction}
-
-MATERIAL:
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
+    const genPrompt = `${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY JSON shaped exactly like: {"chartType":"bar|line|pie","title":"...","data":[{"name":"...","value":0}]}. No markdown fences.`;
     const raw = await generateContent(genPrompt, { jsonMode: true, temperature: 0.5, images: ctx.files.length ? ctx.files : undefined });
     const parsed = parseCleanJson(raw);
     outputData = { kind: "chart", ...parsed };
@@ -241,54 +184,6 @@ ${ctx.text || "(no text extracted — read the attached file(s) directly)"}`;
 }
 
 
-const TYPE_INSTRUCTIONS: Record<string, string> = {
-  notes: "Write highly structured, comprehensive, university-level study notes. Use a clear hierarchy of headings (H1, H2, H3). Bold all key terms and provide precise definitions. Include bulleted lists for enumerations, and highlight critical formulas, dates, and examples pulled directly from the material. The output must look like a premium, professionally formatted cheat sheet.",
-  report: "Write a highly professional, meticulously organized formal report. It MUST include an Executive Summary, a clear Introduction, deeply detailed Body Sections with logical subheadings, and a strong Conclusion. Use a formal, objective, and analytical tone suitable for a corporate or academic setting. Support every claim with specific data, quotes, and facts from the material.",
-  summary: "Write an ultra-dense, comprehensive, and highly professional executive summary. Capture every critical idea, specific fact, and nuance from the material without any fluff or generic filler. Synthesize the information elegantly, using bullet points for key takeaways where appropriate, ensuring a high-level academic or professional standard.",
-  essay: "Write a masterfully crafted, university-level essay. It MUST feature a compelling and clear thesis statement in the introduction, highly structured body paragraphs with seamless transitions and rigorous argumentation, and a profound conclusion. The tone must be scholarly, objective, and deeply analytical. Every argument must be substantiated by specific evidence from the material.",
-  slides: `You are generating a complete slide deck in structured JSON.
-CRITICAL LANGUAGE RULE: Write all slide content in the language of the provided material.
-${GROUNDING_RULE}
-
-RULES:
-- Create 6-10 slides. Each slide MUST be a UNIQUE visual design — different layout, different color scheme, different arrangement.
-- Each slide's "html" field is a SELF-CONTAINED HTML snippet that will be rendered inside a 960x540px container (16:9 ratio).
-- Use ONLY inline styles. No external CSS, no external fonts.
-- Make it look like a premium Canva/Pitch template.
-
-BACKGROUND IMAGE INTEGRATION (CRITICAL):
-- You MUST use Pollinations to generate a gorgeous background image for EVERY SINGLE SLIDE.
-- Do NOT let Pollinations write any text on the images! Always add "no_text_no_letters_blank_background" in the prompt.
-- Syntax for the image URL: https://image.pollinations.ai/prompt/{URL_ENCODED_PROMPT}?width=960&height=540&nologo=true
-- CRITICAL: You MUST replace all spaces in the prompt with "%20" or "-". Never use raw spaces in the URL.
-- Place this image using an absolutely positioned img tag behind the text:
-  <div style="position:relative; width:100%; height:100%; overflow:hidden;">
-    <img src="https://image.pollinations.ai/prompt/abstract%20blue%20background%20no%20text?width=960&height=540&nologo=true" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;" />
-    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1;"></div>
-    <div style="position:relative; z-index:2; padding:40px; color:white; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center;">
-       <!-- your slide text content here -->
-    </div>
-  </div>
-
-VISUAL ELEMENTS TO USE (mix and match for uniqueness):
-- CSS gradients (linear-gradient, radial-gradient) for backgrounds when not using pollinations images.
-- Flexbox and CSS Grid for layouts.
-- Different layout types per slide: split (left/right), grid cards, centered hero, timeline vertical, stats row, comparison columns, quote highlight.
-- Typography: use font-weight, font-size, letter-spacing, text-transform for hierarchy. Titles should be large and bold. Details should be smaller and lighter.
-
-SLIDE TYPES TO INCLUDE (vary the layouts):
-1. TITLE slide: Large centered title, subtitle, awesome pollinations background image.
-2. OVERVIEW slide: 3-4 cards in a grid showing key themes.
-3. CONTENT slides: Mix of split layouts (text + visual), card grids, timeline, numbered lists.
-4. STATS slide: Big numbers with labels in a row.
-5. CONCLUSION slide: Key takeaways with a strong visual close.
-
-ALSO provide "title" and "keyPoints" (array of strings) for each slide for PPTX export.
-
-Return EXACTLY this JSON format (no markdown fences):
-{"title":"Presentation Title","slides":[{"html":"<div style='width:100%;height:100%;...'>...</div>","title":"Slide Title","keyPoints":["Point 1","Point 2"]}]}`,
-};
-
 export async function generateStudioContent(
   supabase: any,
   spaceId: string,
@@ -297,7 +192,6 @@ export async function generateStudioContent(
   customPrompt?: string
 ) {
   const ctx = await getSpaceContext(supabase, spaceId);
-  const instruction = customPrompt || TYPE_INSTRUCTIONS[type] || TYPE_INSTRUCTIONS.notes;
 
   // ── OPENAI MASTER PROMPT ENGINEER ───────────────────────────────
   const enhancedTopic = await enhancePromptWithOpenAI(
@@ -306,30 +200,11 @@ export async function generateStudioContent(
     ctx.text ? ctx.text.slice(0, 6000) : ""
   );
 
-  let formatInstruction = `Format the output in clean, highly visual Markdown:
-- Start with a single # title.
-- CRITICAL: You MUST include at least one relevant, highly professional header image right after the title, and 1-2 inline images if the document is long. 
-  Generate the image using this exact markdown syntax: ![Description](https://image.pollinations.ai/prompt/{URL_ENCODED_DETAILED_PROMPT}?width=1200&height=600&nologo=true)
-  (Replace {URL_ENCODED_DETAILED_PROMPT} with a detailed, url-encoded english description of the image you want, e.g., "A_professional_corporate_report_on_a_desk_with_graphs").
-- Use blockquotes (\`> \`) extensively for key insights, definitions, or critical takeaways so they render as premium callouts.
-- Include external links if referencing common concepts.`;
+  let fullPrompt = enhancedTopic;
   
   if (type === "slides") {
-    formatInstruction = ""; // We already requested JSON in the slides instruction
+    fullPrompt += `\n\nTECHNICAL REQUIREMENT: Return EXACTLY this JSON format (no markdown fences):\n{"title":"Presentation Title","slides":[{"html":"<div style='width:100%;height:100%;...'>...</div>","title":"Slide Title","keyPoints":["Point 1","Point 2"]}]}`;
   }
-
-  const fullPrompt = `${instruction}
-
-Master Instruction / Focus specifically on: 
-${enhancedTopic}
-
-${GROUNDING_RULE}
-${LANGUAGE_RULE}
-
-MATERIAL (this is the student's own course material — treat it as the ONLY source of truth):
-${ctx.text || "(no text extracted — read the attached file(s) directly)"}
-
-${formatInstruction}`;
 
   const isJson = type === "slides";
   const raw = await generateContent(fullPrompt, { jsonMode: isJson, temperature: isJson ? 0.7 : 0.5, images: ctx.files.length ? ctx.files : undefined });
