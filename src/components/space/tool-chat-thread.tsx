@@ -141,11 +141,6 @@ export function ToolChatThread({
 
   async function send(text: string, preset?: Preset) {
     if (!text.trim() || sending) return;
-    if (!spaceId) {
-      setAttachOpen(true);
-      toast.error("Pick a space first — this generates from its sources.");
-      return;
-    }
     setSending(true);
     setInput("");
     const userMsgId = `local-${Date.now()}`;
@@ -196,11 +191,6 @@ export function ToolChatThread({
   function handlePresetClick(preset: Preset) {
     // For slides, navigate directly to the presentation editor without generating
     if (preset.id === "slides") {
-      if (!spaceId) {
-        setAttachOpen(true);
-        toast.error("Pick a space first — this generates from its sources.");
-        return;
-      }
       // Save any typed prompt so the editor can use it
       const promptToSave = input.trim() || preset.prompt;
       sessionStorage.setItem("gradelys:presentation-prompt", promptToSave);

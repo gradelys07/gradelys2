@@ -70,7 +70,7 @@ export function ToolPage({ kind, title, description }: { kind: ToolKind; title: 
 
       <div className="flex-1 overflow-hidden">
         {activeSession ? (
-          <ToolChatThread kind={kind} conversationId={activeSession.id} initialSpaceId={activeSession.spaceId || undefined} hidePresets={kind === "studio"} />
+          <ToolChatThread kind={kind} conversationId={activeSession.id} initialSpaceId={searchParams.get("spaceId") || activeSession.spaceId || undefined} hidePresets={kind === "studio"} />
         ) : (
           <ToolDashboard kind={kind} title={title} description={description} spaceId={null} />
         )}
