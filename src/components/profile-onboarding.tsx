@@ -29,7 +29,7 @@ export function ProfileOnboarding() {
 
   useEffect(() => {
     if (user && !name) setName(user.name || "");
-  }, [user]);
+  }, [user, name]);
 
   useEffect(() => {
     if (user && !isDemo && !isCompleted) {

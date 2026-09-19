@@ -378,14 +378,14 @@ export function MobileNav() {
             </button>
           ) : (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover text-left">
+              <DropdownMenuTrigger>
+                <div className="w-full flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover text-left cursor-pointer">
                   <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
                     <div className="truncate text-label-md text-text-muted">{user?.email}</div>
                   </div>
-                </button>
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[240px]" align="start" side="top">
                 <DropdownMenuItem onClick={() => { setOpen(false); router.push("/settings"); }}>

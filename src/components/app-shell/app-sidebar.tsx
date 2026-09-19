@@ -64,7 +64,7 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Do not auto-collapse if the user hasn't completed the onboarding tour
     const hasSeenTour = localStorage.getItem("gradelys:onboarding_completed");
     if (!hasSeenTour) {
@@ -92,7 +92,7 @@ export function AppSidebar() {
       setShowAuthModal(true);
       return;
     }
-    
+
     router.push("/chat");
   }
 
@@ -144,16 +144,16 @@ export function AppSidebar() {
 
   if (collapsed) {
     return (
-      <aside className={cn("hidden h-[calc(100vh-1rem)] w-[68px] shrink-0 flex-col items-center border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 py-4 lg:flex shadow-lg transition-transform duration-300 ease-in-out", historySidebarOpen ? "-translate-x-[150%] absolute" : "translate-x-0 relative")}>
+      <aside className={cn("hidden h-[calc(100vh-1rem)] w-[68px] shrink-0 flex-col items-center border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 py-4 lg:flex shadow-lg transition-transform duration-300 ease-in-out z-40", historySidebarOpen ? "-translate-x-[150%] absolute" : "translate-x-0 relative")}>
         <Link href="/chat" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md overflow-hidden">
           <img src="/favicon.png" alt="Gradelys" className="h-full w-full object-contain" />
         </Link>
-        
+
         <div className="mt-5 flex flex-col items-center gap-4 w-full">
           <button onClick={() => setCommandPaletteOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover hover:text-text-primary transition-colors" title="Search (⌘K)">
             <Search className="h-4 w-4" />
           </button>
-          
+
           <button onClick={handleNewChat} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm hover:bg-primary-hover transition-colors" title="New Chat">
             <Plus className="h-4.5 w-4.5" />
           </button>
@@ -203,7 +203,7 @@ export function AppSidebar() {
 
         <div className="flex flex-col items-center gap-3 w-full pb-2">
           {user?.isAnonymous ? (
-            <button 
+            <button
               onClick={() => useAuthStore.getState().setShowAuthModal(true)}
               className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-hover hover:text-primary transition-colors"
               title="S'inscrire / Se connecter"
@@ -217,7 +217,7 @@ export function AppSidebar() {
                   <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="start" side="right" sideOffset={15}>
+              <DropdownMenuContent className="w-56" align="start" side="top">
                 <DropdownMenuItem onClick={() => router.push("/settings")}>
                   <Settings className="h-4 w-4" /> Settings
                 </DropdownMenuItem>
@@ -249,7 +249,7 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className={cn("hidden h-[calc(100vh-1rem)] w-[230px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 lg:flex shadow-lg transition-transform duration-300 ease-in-out", historySidebarOpen ? "-translate-x-[110%] absolute" : "translate-x-0 relative")}>
+    <aside className={cn("hidden h-[calc(100vh-1rem)] w-[230px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 lg:flex shadow-lg transition-transform duration-300 ease-in-out z-40", historySidebarOpen ? "-translate-x-[110%] absolute" : "translate-x-0 relative")}>
       <div className="flex h-16 items-center justify-between px-4 pt-2">
         <Link id="tour-logo" href="/chat" className="flex items-center gap-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md overflow-hidden">
@@ -460,7 +460,7 @@ export function AppSidebar() {
 
       <div id="tour-profile" className="p-2">
         {user?.isAnonymous ? (
-          <button 
+          <button
             onClick={() => useAuthStore.getState().setShowAuthModal(true)}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-medium text-white shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5"
           >
@@ -533,7 +533,7 @@ export function AppSidebar() {
           </button>
         </form>
       </Dialog>
-      
+
       <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
     </aside>
   );
