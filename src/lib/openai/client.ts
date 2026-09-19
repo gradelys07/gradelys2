@@ -1143,3 +1143,151 @@ ${sourceMaterial}
     return userQuery; 
   }
 }
+
+/**
+ * OpenAI Debate & Script System for Visualize "auto" mode.
+ *
+ * OpenAI runs a quick internal debate to decide whether:
+ * - An AI-generated IMAGE is the best visual medium, or
+ * - A CODED visual (HTML infographic, Mermaid diagram, or Chart) is better.
+ *
+ * Then it writes a detailed script/prompt for Gemini to execute.
+ */
+export async function debateAndScriptWithOpenAI(
+  userQuery: string,
+  sourceMaterial: string
+): Promise<{ debate: string; bestType: string; geminiScript: string; imageModel: string | null }> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.warn("OPENAI_API_KEY not set — falling back to infographic.");
+    return {
+      debate: "No API key — defaulting to infographic.",
+      bestType: "infographic",
+      geminiScript: userQuery,
+      imageModel: null,
+    };
+  }
+
+  const systemPrompt = `You are a senior visual design strategist for Gradelys, an AI-powered educational platform.
+
+A student has asked for a visualization. Your job is to:
+
+1. **DEBATE** internally (in 3-5 sentences) which visual medium will communicate the information MOST EFFECTIVELY. Consider these options:
+   - "image": A full AI-generated image (best for: artistic representations, realistic scenes, visual metaphors, posters, creative concepts, geographic maps, anatomical diagrams, historical scenes).
+   - "infographic": A coded HTML infographic (best for: structured summaries, multi-section overviews, text-heavy content with cards/icons/lists, study sheets, revision guides, "fiche de synthèse").
+   - "mermaid": A Mermaid.js diagram (best for: flowcharts, mind maps, timelines, sequence diagrams, process steps, hierarchies, cause-effect chains, system architectures).
+   - "chart": A data chart (best for: numerical comparisons, statistics, percentages, trends over time, distributions).
+   - "both": A hybrid output containing BOTH an AI-generated image AND a coded HTML infographic (best for: comprehensive requests that need BOTH a beautiful illustration AND detailed structured text/code).
+
+   Think about: Does the content have NUMBERS → chart. Does it describe a PROCESS/FLOW → mermaid. Does it need ARTISTIC/REALISTIC depiction → image. Is it a STRUCTURED TEXTUAL SUMMARY → infographic. Does it need BOTH art and detailed text → both.
+
+2. **IMAGE MODEL SELECTION**: If you choose "image" or "both", you must also decide which image generation model to use:
+   - "gpt-image-1-low": Choose this for simple illustrations, basic concepts, flat designs, or images that do NOT require a high level of intricate detail.
+   - "imagen-3-fast": Choose this for complex scenes, highly detailed diagrams, photorealistic images, or visuals requiring high fidelity.
+
+3. **CHOOSE** the single best type, and the image model if applicable.
+
+4. **WRITE** an extremely detailed production script/prompt that will be sent to Google Gemini (or DALL-E if image). This script must be specific enough to generate the final output with no ambiguity.
+
+USER'S REQUEST:
+${userQuery}
+
+SOURCE MATERIAL:
+${sourceMaterial || "(No source material provided)"}
+
+Return ONLY a JSON object (no markdown fences) shaped exactly like:
+{
+  "debate": "Your 3-5 sentence internal reasoning...",
+  "bestType": "image" | "infographic" | "mermaid" | "chart" | "both",
+  "imageModel": "gpt-image-1-low" | "imagen-3-fast" | null,
+  "geminiScript": "The extremely detailed production prompt..."
+}`;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "system", content: systemPrompt }],
+        temperature: 0.5,
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("OpenAI debate failed:", err);
+      return { debate: "API error — defaulting.", bestType: "infographic", geminiScript: userQuery, imageModel: null };
+    }
+
+    const data = await response.json();
+    const raw = data.choices?.[0]?.message?.content;
+    if (!raw) {
+      return { debate: "Empty response — defaulting.", bestType: "infographic", geminiScript: userQuery, imageModel: null };
+    }
+
+    const parsed = JSON.parse(raw);
+    const validTypes = ["image", "infographic", "mermaid", "chart", "both"];
+    if (!validTypes.includes(parsed.bestType)) {
+      parsed.bestType = "infographic";
+    }
+
+    return {
+      debate: parsed.debate || "",
+      bestType: parsed.bestType,
+      geminiScript: parsed.geminiScript || userQuery,
+      imageModel: parsed.imageModel || null,
+    };
+  } catch (error) {
+    console.error("Error in OpenAI debate:", error);
+    return { debate: "Exception — defaulting.", bestType: "infographic", geminiScript: userQuery, imageModel: null };
+  }
+}
+
+/**
+ * Image Generation via OpenAI GPT-Image-1
+ * (Using gpt-image-1-low as requested by the user, representing OpenAI's natively multimodal image generation model).
+ */
+export async function generateImageWithOpenAI(
+  prompt: string,
+  model: string = "gpt-image-1-low"
+): Promise<{ base64: string; mimeType: string }> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+
+  const res = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: model,
+      prompt: prompt.slice(0, 4000),
+      n: 1,
+      size: "1024x1024",
+      response_format: "b64_json",
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`OpenAI Image API error (${res.status}): ${errText}`);
+  }
+
+  const data = await res.json();
+  const b64Data = data.data?.[0]?.b64_json;
+  
+  if (!b64Data) {
+    throw new Error("No image generated by DALL-E");
+  }
+
+  return {
+    base64: b64Data,
+    mimeType: "image/png",
+  };
+}

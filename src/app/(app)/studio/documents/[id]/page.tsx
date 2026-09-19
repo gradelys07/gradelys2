@@ -1,16 +1,20 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { ArrowLeft, Download, Loader2, Pencil, Eye } from "lucide-react";
 import { useStudioDocument, useUpdateDocument } from "@/hooks/use-studio";
 import { Textarea } from "@/components/ui/input";
 import { Markdown } from "@/components/markdown";
-import { SlideViewer, exportToPptx } from "@/components/studio/slide-viewer";
+import { PresentationEditor } from "@/components/studio/presentation/PresentationEditor";
+import { exportToPptx } from "@/components/studio/presentation/export-pptx";
 
 export default function StudioDocumentPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const conversationId = searchParams.get("conversationId");
+  const spaceId = searchParams.get("spaceId");
   const id = params.id as string;
   const { data: doc, isLoading } = useStudioDocument(id);
   const update = useUpdateDocument();
@@ -34,7 +38,7 @@ export default function StudioDocumentPage() {
     if (doc.type === "slides") {
       try {
         const parsed = JSON.parse(content);
-        exportToPptx(parsed.title || doc.title, parsed.slides || []);
+        exportToPptx(parsed);
       } catch (e) {
         console.error("Failed to parse slides for export", e);
       }
@@ -54,7 +58,92 @@ export default function StudioDocumentPage() {
     return <div className="flex h-full items-center justify-center text-text-muted"><Loader2 className="h-5 w-5 animate-spin" /></div>;
   }
 
-  const isSlides = doc?.type === "slides";
+  let isSlides = doc?.type === "slides";
+  let parsedData: any = null;
+
+  // AI robustness: If the document is saved as 'notes' or 'report' but the content is actually 
+  // JSON slides (possibly wrapped in markdown), we force it to open in the Presentation Editor.
+  // CRITICAL FIX: Use doc.content instead of 'content' state to prevent data-loss race condition on first render!
+  const actualContent = doc?.content || "";
+  let cleanContent = actualContent;
+  
+  if (cleanContent && typeof cleanContent === "string") {
+    // Attempt to extract json_presentation or json block if AI wrapped it in conversational text
+    const jsonBlockMatch = cleanContent.match(/```(?:json|json_presentation)\n([\s\S]*?)\n```/i);
+    if (jsonBlockMatch) {
+      cleanContent = jsonBlockMatch[1].trim();
+    } else {
+      // If no explicit block, maybe it's just raw JSON, or maybe it has some leading text.
+      // Let's strip standard markdown formatting.
+      cleanContent = cleanContent.replace(/```(?:json|json_presentation)?\n?/gi, "").replace(/```/g, "").trim();
+      
+      // If it has conversational text before the JSON, try to extract just the JSON part
+      const firstBrace = cleanContent.indexOf("{");
+      const lastBrace = cleanContent.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanContent = cleanContent.substring(firstBrace, lastBrace + 1);
+      }
+    }
+
+    if (cleanContent.startsWith("{")) {
+      try {
+        const maybeJson = JSON.parse(cleanContent);
+        if (maybeJson && Array.isArray(maybeJson.slides)) {
+          isSlides = true;
+          parsedData = maybeJson;
+        }
+      } catch (e) {
+        // Not a valid JSON presentation
+      }
+    }
+  }
+
+  if (isSlides) {
+    if (!parsedData && cleanContent) {
+      try {
+        parsedData = JSON.parse(cleanContent);
+      } catch (e) {
+        console.error("Failed to parse slides data");
+      }
+    }
+
+    if (!parsedData || !parsedData.slides) {
+      // Provide a default empty presentation structure
+      const { nanoid } = require("nanoid");
+      parsedData = {
+        theme: {
+          fontFamily: "Inter",
+          primaryColor: "#000000",
+          secondaryColor: "#666666",
+          backgroundColor: "#ffffff"
+        },
+        slides: [
+          {
+            id: nanoid(),
+            layout: "blank",
+            background: { type: "solid", value: "#ffffff" },
+            elements: []
+          }
+        ]
+      };
+    }
+
+    return (
+      <PresentationEditor 
+        documentId={id}
+        conversationId={conversationId}
+        spaceId={spaceId}
+        initialDoc={parsedData} 
+        onSave={(data) => {
+          clearTimeout(saveTimeout.current);
+          saveTimeout.current = setTimeout(() => {
+            update.mutate({ id, content: JSON.stringify(data) });
+          }, 800);
+        }}
+        activeSlideId={parsedData?.slides?.[0]?.id}
+      />
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -80,16 +169,7 @@ export default function StudioDocumentPage() {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-6">
-        {isSlides ? (
-          (() => {
-            try {
-              const parsed = JSON.parse(content);
-              return <SlideViewer title={parsed.title || doc.title} slides={parsed.slides || []} onExport={handleExport} />;
-            } catch (e) {
-              return <div className="text-red">Failed to parse slides data.</div>;
-            }
-          })()
-        ) : editMode ? (
+        {editMode ? (
           <Textarea
             value={content}
             onChange={(e) => handleChange(e.target.value)}

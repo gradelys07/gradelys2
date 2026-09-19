@@ -6,7 +6,7 @@ export default function NotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-void px-6 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-xl overflow-hidden">
         <img
-          src="/favicon.svg"
+          src="/favicon.png"
           alt="Logo Gradelys"
           width={48}
           height={48}

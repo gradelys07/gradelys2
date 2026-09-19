@@ -28,7 +28,7 @@ export function SiteFooter() {
             <Link href="/" className="flex items-center gap-2" aria-label="Accueil Gradelys">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
                 <img
-                  src="/favicon.svg"
+                  src="/favicon.png"
                   alt="Logo officiel Gradelys"
                   width={32}
                   height={32}

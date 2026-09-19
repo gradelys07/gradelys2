@@ -14,6 +14,7 @@ import { formatRelativeDate, truncate } from "@/lib/utils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/locale-provider";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function NotesPage() {
   const { data: notes, isLoading } = useNotes();
@@ -57,6 +58,7 @@ export default function NotesPage() {
   }, [current?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
+    if (title === "Untitled note" && content === "") return;
     if (!current) return;
     clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
@@ -68,6 +70,11 @@ export default function NotesPage() {
   }, [title, content]);
 
   async function handleCreate() {
+    if (useAuthStore.getState().user?.isAnonymous) {
+      toast("Création de compte requise", { description: "Veuillez créer un compte pour commencer." });
+      useAuthStore.getState().setShowAuthModal(true);
+      return;
+    }
     const res = await createNote.mutateAsync({ title: "Untitled note", content: "" });
     setView("notebook");
     setTimeout(() => setIndex(0), 0);

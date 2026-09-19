@@ -80,7 +80,7 @@ function ProfileTab() {
   return (
     <form onSubmit={handleSave} className="space-y-5">
       <div className="flex items-center gap-4">
-        <Avatar name={user?.name || "?"} src={user?.avatarUrl} size="xl" />
+        <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="xl" />
         <div>
           <p className="text-body-sm font-medium text-text-primary">{user?.email}</p>
           <p className="text-label-md text-text-muted">Member since {user && new Date(user.createdAt).toLocaleDateString()}</p>

@@ -1,6 +1,6 @@
 import { generateContent, generateImage } from "@/lib/gemini/client";
 import { getSpaceContext } from "@/lib/supabase/space-context";
-import { enhancePromptWithOpenAI } from "@/lib/openai/client";
+import { debateAndScriptWithOpenAI, enhancePromptWithOpenAI, generateImageWithOpenAI } from "@/lib/openai/client";
 
 const MERMAID_TYPES = ["mindmap", "flowchart", "timeline", "concept-map", "diagram", "auto"];
 
@@ -55,48 +55,51 @@ export async function generateVisualizeContent(
   spaceId: string,
   prompt: string,
   type: string,
-  customPrompt?: string
+  customPrompt?: string,
+  learningProfile?: any
 ) {
   const ctx = await getSpaceContext(supabase, spaceId);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
   let finalType = type;
 
-  // ── AUTO SELECTION ──────────────────────────────────────────────
+  // ── AUTO SELECTION via OpenAI DEBATE ─────────────────────────────
+  // OpenAI debates internally, picks the best visual medium, and writes
+  // a detailed script for Gemini — all in one call.
+  let debateGeminiScript: string | null = null;
+  let chosenImageModel = "gpt-image-1-low";
+
   if (type === "auto") {
-    const autoPrompt = `You are a visual medium selector. A student wants a visualization for: "${prompt}".
-Based on the material and request, select the BEST medium. 
-- "image": Best for realistic scenes, metaphors, or artistic representations.
-- "mermaid": Best for flowcharts, mindmaps, timelines, architecture, or process steps.
-- "chart": Best for numerical data, statistics, or direct comparisons.
-- "infographic": Best for rich HTML summaries with cards, icons, and structured text.
-
-MATERIAL:
-${ctx.text ? ctx.text.slice(0, 3000) : "(no text)"}
-
-Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infographic"}`;
-
-    const raw = await generateContent(autoPrompt, { jsonMode: true, temperature: 0.2, images: ctx.files.length ? ctx.files : undefined });
-    try {
-      const parsed = parseCleanJson(raw);
-      if (["image", "mermaid", "chart", "infographic"].includes(parsed.bestType)) {
-        finalType = parsed.bestType;
-      }
-    } catch (e) {
-      finalType = "mermaid"; // fallback
-    }
+    const debateResult = await debateAndScriptWithOpenAI(
+      prompt,
+      ctx.text ? ctx.text.slice(0, 6000) : ""
+    );
+    finalType = debateResult.bestType;
+    debateGeminiScript = debateResult.geminiScript;
+    if (debateResult.imageModel) chosenImageModel = debateResult.imageModel;
+    console.log(`[Visualize] OpenAI debate chose: ${finalType} with image model: ${chosenImageModel}`);
+    console.log(`[Visualize] Debate reasoning: ${debateResult.debate.slice(0, 200)}...`);
   }
 
   const useMermaid = MERMAID_TYPES.includes(finalType) && finalType !== "auto";
   const useHtml = finalType === "infographic" || finalType === "html";
   const useImage = IMAGE_TYPES.includes(finalType);
+  const useBoth = finalType === "both";
 
   // ── OPENAI MASTER PROMPT ENGINEER ───────────────────────────────
-  // Enhance the user's original prompt with gpt-4o-mini for maximum detail
-  const enhancedPromptText = await enhancePromptWithOpenAI(
-    prompt,
-    finalType,
-    ctx.text ? ctx.text.slice(0, 6000) : ""
-  );
+  // If the debate already produced a geminiScript, use it directly.
+  // Otherwise, enhance with the standard per-type prompt engineer.
+  let enhancedPromptText = debateGeminiScript
+    ? debateGeminiScript
+    : await enhancePromptWithOpenAI(
+        prompt,
+        finalType,
+        ctx.text ? ctx.text.slice(0, 6000) : ""
+      );
+
+  if (learningProfile) {
+    const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+    enhancedPromptText = calibratePrompt(enhancedPromptText, learningProfile);
+  }
 
   let outputData: any;
   let title = prompt.slice(0, 60);
@@ -120,9 +123,18 @@ Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infogra
       throw new Error("The AI could not produce a valid image prompt from the available material.");
     }
 
-    // Step 2: Generate image with Gemini 3.1 Flash Image (Cheap and Powerful)
+    // Step 2: Generate image with selected model
     const fullImagePrompt = `${parsed.imagePrompt}, ${parsed.style}, ultra high quality, sharp details, professional, 8K`;
-    const { base64, mimeType } = await generateImage(fullImagePrompt);
+    let base64, mimeType;
+    if (chosenImageModel === "imagen-3-fast") {
+      const res = await generateImage(fullImagePrompt);
+      base64 = res.base64;
+      mimeType = res.mimeType;
+    } else {
+      const res = await generateImageWithOpenAI(fullImagePrompt, "gpt-image-1-low");
+      base64 = res.base64;
+      mimeType = res.mimeType;
+    }
 
     // Step 3: Create HTML overlay with the image as base + text annotations from Gemini
     const overlays = parsed.overlayTexts || [];
@@ -159,6 +171,39 @@ Return ONLY a JSON object: {"bestType": "image" | "mermaid" | "chart" | "infogra
       promptUsed: parsed.imagePrompt,
       style: parsed.style,
     };
+  } else if (useBoth) {
+    // Generate an image prompt AND an HTML infographic structure in one go
+    const promptGenPrompt = `${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY JSON (no fences): {"imagePrompt": "extremely detailed prompt to illustrate this topic", "title": "Short title"}`;
+    const rawJson = await generateContent(promptGenPrompt, { jsonMode: true, temperature: 0.6, images: ctx.files.length ? ctx.files : undefined });
+    let imagePrompt = "A professional educational illustration";
+    try {
+      const parsed = parseCleanJson(rawJson);
+      if (parsed.imagePrompt) imagePrompt = parsed.imagePrompt;
+      if (parsed.title) title = parsed.title;
+    } catch (e) {
+      // fallback
+    }
+
+    // Run both generation tasks concurrently
+    const finalImgPrompt = imagePrompt + ", professional, ultra high quality, clean educational style";
+    const imagePromise = chosenImageModel === "imagen-3-fast" 
+      ? generateImage(finalImgPrompt)
+      : generateImageWithOpenAI(finalImgPrompt, "gpt-image-1-low");
+
+    const [imageRes, htmlRes] = await Promise.all([
+      imagePromise,
+      generateContent(`${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY a single self-contained HTML fragment (no <html>/<head>/<body> tags, no markdown fences). Use inline <style>. Make sure it looks like a beautiful educational summary card/infographic.`, { temperature: 0.6, images: ctx.files.length ? ctx.files : undefined })
+    ]);
+
+    const htmlCode = htmlRes.replace(/```html|```/g, "").trim();
+    
+    // Combine them into a single HTML structure
+    const code = `<div style="display:flex;flex-direction:column;gap:24px;width:100%;max-width:800px;margin:0 auto;font-family:-apple-system,Inter,Segoe UI,sans-serif;">
+      <img src="data:${imageRes.mimeType};base64,${imageRes.base64}" style="width:100%;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);" alt="${title}" />
+      <div>${htmlCode}</div>
+    </div>`;
+
+    outputData = { kind: "html", code };
   } else if (useHtml) {
     const genPrompt = `${enhancedPromptText}\n\nTECHNICAL REQUIREMENT: Return ONLY a single self-contained HTML fragment (no <html>/<head>/<body> tags, no markdown fences). Use inline <style>.`;
     const html = await generateContent(genPrompt, { temperature: 0.6, images: ctx.files.length ? ctx.files : undefined });
@@ -189,33 +234,78 @@ export async function generateStudioContent(
   spaceId: string,
   topic: string,
   type: string,
-  customPrompt?: string
+  customPrompt?: string,
+  learningProfile?: any
 ) {
   const ctx = await getSpaceContext(supabase, spaceId);
 
+  let finalType = type;
+  if (type === "auto") {
+    const autoPrompt = `You are a document type selector. A student wants a document for: "${topic}".
+Based on the request, select the BEST type.
+- "notes": Best for general study notes.
+- "report": Best for formal write-ups.
+- "summary": Best for dense summaries.
+- "essay": Best for argued essays.
+- "slides": Best for presentations, slideshows, or slide outlines.
+
+Return ONLY a JSON object: {"bestType": "notes" | "report" | "summary" | "essay" | "slides"}`;
+
+    const raw = await generateContent(autoPrompt, { jsonMode: true, temperature: 0.2 });
+    try {
+      const parsed = parseCleanJson(raw);
+      if (["notes", "report", "summary", "essay", "slides"].includes(parsed.bestType)) {
+        finalType = parsed.bestType;
+      }
+    } catch (e) {
+      finalType = "notes";
+    }
+  }
+
   // ── OPENAI MASTER PROMPT ENGINEER ───────────────────────────────
-  const enhancedTopic = await enhancePromptWithOpenAI(
+  let enhancedTopic = await enhancePromptWithOpenAI(
     topic,
-    type,
+    finalType,
     ctx.text ? ctx.text.slice(0, 6000) : ""
   );
 
-  let fullPrompt = enhancedTopic;
-  
-  if (type === "slides") {
-    fullPrompt += `\n\nTECHNICAL REQUIREMENT: Return EXACTLY this JSON format (no markdown fences):\n{"title":"Presentation Title","slides":[{"html":"<div style='width:100%;height:100%;...'>...</div>","title":"Slide Title","keyPoints":["Point 1","Point 2"]}]}`;
+  if (learningProfile) {
+    const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+    enhancedTopic = calibratePrompt(enhancedTopic, learningProfile);
   }
 
-  const isJson = type === "slides";
+  let fullPrompt = enhancedTopic;
+  
+  if (finalType === "slides") {
+    fullPrompt += `\n\nTECHNICAL REQUIREMENT: Return EXACTLY this JSON format for a presentation (no markdown fences). Ensure coordinates (x, y) and dimensions (width, height) fit within a 1280x720 canvas. For images, use Pollination AI (image.pollinations.ai/prompt/[description]) with a highly detailed prompt encoded in the URL.
+{
+  "metadata": { "title": "Presentation Title" },
+  "theme": { "fontFamily": "Inter", "primaryColor": "#000000", "secondaryColor": "#666666", "backgroundColor": "#ffffff" },
+  "slides": [
+    {
+      "id": "slide_1",
+      "layout": "blank",
+      "background": { "type": "solid", "value": "#ffffff" },
+      "elements": [
+        { "id": "text_1", "type": "text", "x": 100, "y": 100, "width": 800, "height": 100, "rotation": 0, "zIndex": 10, "properties": { "content": "Slide Title", "fontSize": 48, "fontWeight": "bold", "color": "#000000", "alignment": "left", "lineHeight": 1.2 } },
+        { "id": "img_1", "type": "image", "x": 100, "y": 250, "width": 400, "height": 300, "rotation": 0, "zIndex": 1, "properties": { "src": "https://image.pollinations.ai/prompt/detailed%20illustration%20of%20...", "objectFit": "cover", "opacity": 1, "borderRadius": 8 } }
+      ]
+    }
+  ]
+}`;
+  }
+
+  const isJson = finalType === "slides";
   const raw = await generateContent(fullPrompt, { jsonMode: isJson, temperature: isJson ? 0.7 : 0.5, images: ctx.files.length ? ctx.files : undefined });
 
   let content = raw;
   let docTitle = topic.slice(0, 60);
+  let returnedDocType = finalType;
 
   if (isJson) {
     try {
       const parsed = parseCleanJson(raw);
-      docTitle = parsed.title || docTitle;
+      docTitle = parsed.metadata?.title || docTitle;
       content = JSON.stringify(parsed); // Save the stringified JSON
     } catch (e) {
       // fallback
@@ -226,7 +316,7 @@ export async function generateStudioContent(
     if (titleLine) docTitle = titleLine.replace(/^#\\s*/, "");
   }
 
-  return { title: docTitle, content };
+  return { title: docTitle, content, returnedDocType };
 }
 
 export async function generateQuizContent(

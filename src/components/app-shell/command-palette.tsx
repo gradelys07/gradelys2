@@ -1,11 +1,9 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import {
-  MessageSquare, NotebookPen, Brain, Sparkles, FileStack, FolderKanban,
-  ScanLine, Settings, Plus, Search,
-} from "lucide-react";
+import { MessageSquare, NotebookPen, Brain, FileStack, Folder, ScanLine, Settings, Plus, Search } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { useConversations, useCreateConversation } from "@/hooks/use-chat";
 import { useNotes } from "@/hooks/use-notes";
@@ -117,7 +115,7 @@ export function CommandPalette() {
           {filteredSpaces.length > 0 && (
             <CommandSection title="Spaces">
               {filteredSpaces.map((s) => (
-                <CommandRow key={s.id} icon={FolderKanban} label={`${s.emoji} ${s.name}`} onClick={() => go(`/spaces/${s.id}`)} />
+                <CommandRow key={s.id} icon={Folder} label={`${s.emoji} ${s.name}`} onClick={() => go(`/spaces/${s.id}`)} />
               ))}
             </CommandSection>
           )}

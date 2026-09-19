@@ -59,3 +59,11 @@ export function useSecurityEvents() {
     select: (d) => d.events,
   });
 }
+
+export function useAdminFeedbacks() {
+  return useQuery({
+    queryKey: ["admin-feedbacks"],
+    queryFn: () => apiFetch<{ feedbacks: any[] }>("/api/admin/feedbacks"),
+    select: (d) => d.feedbacks,
+  });
+}

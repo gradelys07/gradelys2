@@ -1,11 +1,9 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
-import {
-  ArrowLeft, Plus, FileText, Link2, Youtube, Type, Trash2, NotebookPen, Upload, Loader2,
-  ChevronUp, Sparkles, PenTool, LayoutDashboard, MessageSquare, Wrench, Brain, Check
-} from "lucide-react";
+import { ArrowLeft, Plus, FileText, Link2, Youtube, Type, Trash2, NotebookPen, Upload, Loader2, ChevronUp, PenTool, LayoutDashboard, MessageSquare, Wrench, Brain, Check } from "lucide-react";
 import {
   useAddSource, useDeleteSource, useDeleteSpace, useSources, useSpaces, useUploadSource,
 } from "@/hooks/use-spaces";

@@ -19,6 +19,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } = await supabase.auth.getUser();
 
       if (!authUser) {
+        const isDemo = typeof document !== 'undefined' && document.cookie.includes("gradelys_demo=true");
+        if (isDemo) {
+          const user: User = {
+            id: "demo-user",
+            email: "demo@gradelys.com",
+            name: "Demo User",
+            level: "High School",
+            avatarUrl: null,
+            lang: "fr",
+            educationSystem: "international",
+            role: "user",
+            status: "active",
+            banReason: undefined,
+            createdAt: new Date().toISOString(),
+            lastActiveAt: new Date().toISOString(),
+            isAnonymous: true,
+          };
+          const sub: Subscription = {
+            userId: "demo-user",
+            plan: "free",
+            status: "active",
+            creditsRemaining: 10,
+            creditsMax: 10,
+            resetDate: new Date().toISOString(),
+            currentPeriodEnd: new Date().toISOString(),
+            whopSubscriptionId: undefined,
+          };
+          setSession(user, sub);
+          setInitialized(true);
+          return;
+        }
+
         clear();
         setInitialized(true);
         return;
@@ -43,6 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           banReason: profile.ban_reason,
           createdAt: profile.created_at,
           lastActiveAt: profile.last_active_at,
+          isAnonymous: authUser.is_anonymous,
+          learningProfile: profile.learning_profile,
         };
         const sub: Subscription | null = subscription
           ? {

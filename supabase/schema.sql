@@ -24,6 +24,8 @@ create table if not exists profiles (
   last_active_at timestamptz not null default now()
 );
 
+alter table profiles add column if not exists learning_profile jsonb default '{}'::jsonb;
+
 create or replace function handle_new_user()
 returns trigger as $$
 begin
@@ -183,7 +185,7 @@ create table if not exists practice_sessions (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid not null references profiles (id) on delete cascade,
   space_id uuid references spaces (id) on delete set null,
-  mode text not null check (mode in ('quiz', 'exam', 'flashcards')),
+  mode text not null check (mode in ('quiz', 'exam', 'flashcards', 'focus')),
   subject text not null,
   score real not null default 0,
   total_questions integer not null default 0,
@@ -248,6 +250,16 @@ create table if not exists badges (
   unique (user_id, type)
 );
 
+-- ── FEEDBACKS ────────────────────────────────────────────────────
+create table if not exists feedbacks (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references profiles (id) on delete cascade,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  message text not null,
+  team_message text,
+  created_at timestamptz not null default now()
+);
+
 -- ── ADMIN / SECURITY ─────────────────────────────────────────────
 create table if not exists audit_log (
   id uuid primary key default uuid_generate_v4(),
@@ -293,6 +305,7 @@ alter table badges enable row level security;
 alter table audit_log enable row level security;
 alter table security_events enable row level security;
 alter table exams enable row level security;
+alter table feedbacks enable row level security;
 
 create or replace function is_admin()
 returns boolean as $$
@@ -374,6 +387,11 @@ create policy "audit_log_admin" on audit_log for all using (is_admin());
 drop policy if exists "security_events_admin" on security_events;
 create policy "security_events_admin" on security_events for all using (is_admin());
 
+drop policy if exists "feedbacks_insert" on feedbacks;
+create policy "feedbacks_insert" on feedbacks for insert with check (auth.uid() = user_id);
+drop policy if exists "feedbacks_select_admin" on feedbacks;
+create policy "feedbacks_select_admin" on feedbacks for select using (is_admin());
+
 -- ═══════════════════════════════════════════════════════════════
 -- INDEXES
 -- ═══════════════════════════════════════════════════════════════
@@ -389,6 +407,7 @@ create index if not exists idx_sources_space on space_sources (space_id);
 create index if not exists idx_studio_user on studio_documents (user_id, updated_at desc);
 create index if not exists idx_visualize_user on visualize_outputs (user_id, created_at desc);
 create index if not exists idx_practice_user on practice_sessions (user_id, completed_at desc);
+create index if not exists idx_feedbacks_created_at on feedbacks (created_at desc);
 
 -- ═══════════════════════════════════════════════════════════════
 -- STORAGE BUCKETS (run once — safe if already created)

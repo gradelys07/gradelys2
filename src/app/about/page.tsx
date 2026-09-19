@@ -37,7 +37,7 @@ const aboutSchema = {
     "@type": "Organization",
     name: "Gradelys",
     url: "https://gradelys.com",
-    logo: "https://gradelys.com/favicon.svg",
+    logo: "https://gradelys.com/favicon.png",
   },
 };
 
@@ -69,7 +69,7 @@ export default function AboutPage() {
       <main className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
         <div className="h-8 w-8 rounded-lg overflow-hidden">
           <img
-            src="/favicon.svg"
+            src="/favicon.png"
             alt="Logo officiel Gradelys"
             width={32}
             height={32}

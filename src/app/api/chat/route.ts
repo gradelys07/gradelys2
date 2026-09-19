@@ -147,6 +147,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Fetch learning profile for calibration
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("learning_profile")
+    .eq("id", user!.id)
+    .single();
+
+  const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+  systemInstruction = calibratePrompt(systemInstruction, profileData?.learning_profile);
+
+  // Background track learning profile
+  import("@/lib/ai/learning-profile").then((m) => {
+    m.trackChatInteraction(supabase, user!.id);
+    m.updateProfileDescription(supabase, user!.id, message);
+  }).catch(() => {});
+
   const prompt = `${contextText}${spaceContext}${searchContext}\n\nTutor:`;
   const allFiles = [...(image ? [image] : []), ...spaceFiles];
 

@@ -38,11 +38,22 @@ export async function POST(req: NextRequest) {
   if (!input) return errorResponse("topic, sourceText, or a spaceId with sources is required");
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${sanitizePromptInput(customPrompt, 1000)}` : "";
 
-  const prompt = `Generate exactly ${n} high-quality flashcards (question + answer pairs) for a student studying the material below.${extraInstruction}
-Return ONLY a JSON array like [{"question": "...", "answer": "..."}]. No markdown, no commentary.
+  let prompt = `Generate exactly ${n} high-quality flashcards (question + answer pairs) for a student studying the material below.${extraInstruction}
 
 MATERIAL:
-${input}`;
+${input}
+`;
+
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("learning_profile")
+    .eq("id", user!.id)
+    .single();
+
+  const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+  prompt = calibratePrompt(prompt, profileData?.learning_profile);
+
+  prompt += `\nReturn ONLY a JSON array like [{"question": "...", "answer": "..."}]. No markdown, no commentary.`;
 
   let cards: { question: string; answer: string }[];
   try {

@@ -41,8 +41,11 @@ export async function middleware(request: NextRequest) {
   );
 
   const {
-    data: { user },
+    data: { user: authUser },
   } = await supabase.auth.getUser();
+
+  const isDemo = request.cookies.get("gradelys_demo")?.value === "true";
+  const user = authUser || (isDemo ? { id: "demo-user", is_anonymous: true } : null);
 
   const { pathname } = request.nextUrl;
 
@@ -59,6 +62,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json(
         { error: "Too many requests. Please slow down." },
         { status: 429, headers: { "Retry-After": String(result.retryAfterSeconds) } }
+      );
+    }
+
+    // Demo Mode Restriction: Block all state-changing API calls for anonymous users
+    if (user?.is_anonymous && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
+      return NextResponse.json(
+        { error: "Demo mode: Action not allowed. Please create an account to use this feature." },
+        { status: 403 }
       );
     }
   }

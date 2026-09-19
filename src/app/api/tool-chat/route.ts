@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));
-  const { conversationId, message, spaceId, visualType, subKind, customPrompt, count } = body;
+  const { conversationId, message, spaceId, visualType, subKind, customPrompt, count, isPersonalized } = body;
   if (!conversationId || !message || !spaceId) {
     return errorResponse("conversationId, message, and spaceId are required");
   }
@@ -45,6 +45,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  let learningProfile;
+  if (isPersonalized !== false) {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("learning_profile")
+      .eq("id", user!.id)
+      .single();
+    learningProfile = profileData?.learning_profile;
+  }
+
   await supabase.from("messages").insert({ conversation_id: conversationId, role: "user", content: message });
 
   if (conversation.title === "New conversation") {
@@ -54,7 +64,7 @@ export async function POST(req: NextRequest) {
   try {
     if (conversation.kind === "visualize") {
       const type = visualType || "auto";
-      const { title, outputData } = await generateVisualizeContent(supabase, spaceId, message, type, customPrompt);
+      const { title, outputData } = await generateVisualizeContent(supabase, spaceId, message, type, customPrompt, learningProfile);
 
       const { data: visDoc, error: visError } = await supabase.from("visualize_outputs").insert({
         user_id: user!.id, space_id: spaceId, type: outputData.kind || type, prompt: message, title, output_data: outputData,
@@ -92,12 +102,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (conversation.kind === "studio") {
-      const docType = visualType || "notes";
-      const { title, content } = await generateStudioContent(supabase, spaceId, message, docType, customPrompt);
+      const docType = visualType || "auto";
+      const { title, content, returnedDocType } = await generateStudioContent(supabase, spaceId, message, docType, customPrompt, learningProfile);
+
+      const finalDocType = returnedDocType || (visualType || "notes");
 
       const { data: doc } = await supabase
         .from("studio_documents")
-        .insert({ user_id: user!.id, space_id: spaceId, type: docType, title, content })
+        .insert({ user_id: user!.id, space_id: spaceId, type: finalDocType, title, content })
         .select()
         .single();
 
@@ -106,8 +118,8 @@ export async function POST(req: NextRequest) {
         .insert({
           conversation_id: conversationId,
           role: "assistant",
-          content,
-          structured: { kind: "studio", documentId: doc?.id, title, docType },
+          content: finalDocType === "slides" ? "Generated Presentation Outline" : content,
+          structured: { kind: "studio", documentId: doc?.id, title, docType: finalDocType },
         })
         .select()
         .single();

@@ -1,18 +1,15 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import * as React from "react";
 import Link from "next/link";
-import {
-  ArrowUp, Paperclip, Sparkles, Check, ChevronRight, FolderKanban,
-  Network, GitBranch, PieChart as PieChartIcon, Clock, GitCompare, Image as ImageIcon,
-  Palette, BookOpen, Microscope, Wand2,
-  FileText, ScrollText, FileStack, PenTool, Presentation,
-  Layers, Brain, X, Send, Download,
-} from "lucide-react";
+import { ArrowUp, Paperclip, Check, ChevronRight, Folder, Network, GitBranch, PieChart as PieChartIcon, Clock, GitCompare, Image as ImageIcon, Palette, BookOpen, Microscope, Wand2, FileText, ScrollText, FileStack, PenTool, Presentation, Layers, Brain, X, Send, Download } from "lucide-react";
 import { useSpaces } from "@/hooks/use-spaces";
 import { useMessages, useUpdateConversation } from "@/hooks/use-chat";
 import { apiFetch } from "@/lib/api-fetch";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { Markdown } from "@/components/markdown";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { ChartRenderer } from "@/components/chart-renderer";
@@ -28,7 +25,7 @@ import type { QuizQuestion } from "@/types";
 
 export type ToolKind = "visualize" | "studio" | "practice";
 
-interface Preset {
+export interface Preset {
   id: string;
   title: string;
   subtitle: string;
@@ -39,7 +36,7 @@ interface Preset {
   difficulty?: string;
 }
 
-const PRESETS: Record<ToolKind, Preset[]> = {
+export const PRESETS: Record<ToolKind, Preset[]> = {
   visualize: [
     { id: "auto", title: "Auto format", subtitle: "Let Gradelys choose", icon: Sparkles, visualType: "auto", prompt: "Give me a visual overview of the most important ideas in this space." },
     { id: "infographic", title: "Infographic", subtitle: "Rich visual page", icon: ImageIcon, visualType: "infographic", prompt: "Create a rich visual infographic summarizing the key ideas." },
@@ -85,13 +82,18 @@ export function ToolChatThread({
   initialSpaceId,
   lockSpace,
   renderInputToolbar,
+  initialPrompt,
+  hidePresets,
 }: {
   kind: ToolKind;
   conversationId: string;
   initialSpaceId?: string;
   lockSpace?: boolean;
   renderInputToolbar?: () => React.ReactNode;
+  initialPrompt?: string;
+  hidePresets?: boolean;
 }) {
+  const router = useRouter();
   const { t } = useTranslation();
   const { data: spaces } = useSpaces();
   const { data: serverMessages } = useMessages(conversationId);
@@ -102,8 +104,9 @@ export function ToolChatThread({
 
   const [spaceId, setSpaceId] = React.useState<string | undefined>(initialSpaceId);
   const [attachOpen, setAttachOpen] = React.useState(false);
-  const [input, setInput] = React.useState("");
+  const [input, setInput] = React.useState(initialPrompt || "");
   const [sending, setSending] = React.useState(false);
+  const [isPersonalized, setIsPersonalized] = React.useState(true);
   const [localMessages, setLocalMessages] = React.useState<LocalMessage[]>([]);
   const bottomRef = React.useRef<HTMLDivElement>(null);
 
@@ -118,6 +121,23 @@ export function ToolChatThread({
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [localMessages]);
+
+  // Auto-send a message queued from the tool dashboard.
+  React.useEffect(() => {
+    const key = `gradelys:pending-message:${conversationId}`;
+    const pending = sessionStorage.getItem(key);
+    if (pending) {
+      sessionStorage.removeItem(key);
+      const isPers = sessionStorage.getItem(`${key}:personalized`);
+      if (isPers !== null) {
+        setIsPersonalized(isPers === "true");
+        sessionStorage.removeItem(`${key}:personalized`);
+      }
+      // Wait a tick so state settles before sending
+      setTimeout(() => send(pending), 50);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
 
   async function send(text: string, preset?: Preset) {
     if (!text.trim() || sending) return;
@@ -146,11 +166,19 @@ export function ToolChatThread({
           visualType: preset?.visualType,
           subKind: preset?.subKind,
           difficulty: preset?.difficulty,
+          isPersonalized,
         }),
       });
       setLocalMessages((prev) =>
         prev.map((m) => (m.id === assistantMsgId ? { id: res.message.id, role: "assistant", content: res.message.content, structured: res.message.structured } : m))
       );
+      
+      if (res.message.structured?.docType === "slides" && res.message.structured?.documentId) {
+        router.push(`/studio/documents/${res.message.structured.documentId}?conversationId=${conversationId}&spaceId=${spaceId}`);
+      } else if (res.message.structured?.kind === "visualize" || res.message.structured?.kind === "image") {
+        router.push(`/visualize/${res.message.structured.visualizeId}?conversationId=${conversationId}&spaceId=${spaceId}`);
+      }
+      
       recordActivity.mutate();
       // Track feature engagement based on tool kind
       if (kind === "visualize") trackVisualizationCreated(preset?.visualType || "auto");
@@ -166,6 +194,19 @@ export function ToolChatThread({
   }
 
   function handlePresetClick(preset: Preset) {
+    // For slides, navigate directly to the presentation editor without generating
+    if (preset.id === "slides") {
+      if (!spaceId) {
+        setAttachOpen(true);
+        toast.error("Pick a space first — this generates from its sources.");
+        return;
+      }
+      // Save any typed prompt so the editor can use it
+      const promptToSave = input.trim() || preset.prompt;
+      sessionStorage.setItem("gradelys:presentation-prompt", promptToSave);
+      router.push(`/studio/presentation?conversationId=${conversationId}&spaceId=${spaceId}`);
+      return;
+    }
     setAttachOpen(false);
     send(preset.prompt, preset);
   }
@@ -275,20 +316,22 @@ export function ToolChatThread({
                   </div>
                 </>
               )}
-              <div className={cn(!lockSpace && "mt-2 border-t border-border-subtle pt-2")}>
-                <span className="px-0.5 text-label-sm uppercase text-text-muted">{t("tool.quickPrompts")}</span>
-                <div className="mt-1 space-y-0.5">
-                  {presets.map((preset) => (
-                    <button
-                      key={preset.id}
-                      onClick={() => handlePresetClick(preset)}
-                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-body-sm text-text-secondary hover:bg-hover"
-                    >
-                      <preset.icon className="h-3.5 w-3.5 shrink-0 text-primary" /> {preset.title}
-                    </button>
-                  ))}
+              {!hidePresets && (
+                <div className={cn(!lockSpace && "mt-2 border-t border-border-subtle pt-2")}>
+                  <span className="px-0.5 text-label-sm uppercase text-text-muted">{t("tool.quickPrompts")}</span>
+                  <div className="mt-1 space-y-0.5">
+                    {presets.map((preset) => (
+                      <button
+                        key={preset.id}
+                        onClick={() => handlePresetClick(preset)}
+                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-body-sm text-text-secondary hover:bg-hover"
+                      >
+                        <preset.icon className="h-3.5 w-3.5 shrink-0 text-primary" /> {preset.title}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -301,7 +344,7 @@ export function ToolChatThread({
           >
             {selectedSpace && (
               <div className="flex items-center gap-1.5 px-2 pb-1 pt-0.5">
-                <FolderKanban className="h-3 w-3 text-primary" />
+                <Folder className="h-3 w-3 text-primary" />
                 <span className="text-label-md text-text-muted">{selectedSpace.emoji} {selectedSpace.name}</span>
               </div>
             )}
@@ -370,10 +413,20 @@ function ToolMessageBubble({
       </div>
       <div className="min-w-0 flex-1">
         {message.pending && !message.content ? (
-          <div className="flex gap-1 rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
-            <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
-            <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
+          <div className="flex items-center gap-3 py-2">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            >
+              <Sparkles className="h-4 w-4 text-primary" />
+            </motion.div>
+            <motion.span
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="text-body-sm font-semibold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent"
+            >
+              Generating response...
+            </motion.span>
           </div>
         ) : structured?.kind === "visualize" || structured?.kind === "image" ? (
           <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
@@ -421,7 +474,7 @@ function ToolMessageBubble({
           </div>
         ) : structured?.kind === "studio" ? (
           <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            {structured.docType === "slides" ? (
+            {structured.docType === "slides" || (message.content.includes('"slides"') && message.content.includes('{')) ? (
               <p className="text-body-md font-medium text-text-primary">{structured.title}</p>
             ) : (
               <Markdown content={message.content} />

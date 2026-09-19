@@ -45,7 +45,17 @@ export async function POST(req: NextRequest) {
   let title: string;
 
   try {
-    const result = await generateVisualizeContent(supabase, spaceId, input, type, extraPrompt);
+    let learningProfile;
+    if (body.isPersonalized !== false) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("learning_profile")
+        .eq("id", user!.id)
+        .single();
+      learningProfile = profileData?.learning_profile;
+    }
+
+    const result = await generateVisualizeContent(supabase, spaceId, input, type, extraPrompt, learningProfile);
     outputData = result.outputData;
     title = result.title;
   } catch (err: any) {

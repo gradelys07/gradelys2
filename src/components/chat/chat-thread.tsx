@@ -1,16 +1,15 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import * as React from "react";
-import {
-  ArrowUp, Paperclip, Sparkles, Globe, ThumbsUp, ThumbsDown, Copy,
-  Brain, X, ChevronDown, Check, NotebookPen,
-} from "lucide-react";
+import { ArrowUp, Paperclip, Globe, ThumbsUp, ThumbsDown, Copy, Brain, X, ChevronDown, Check, NotebookPen } from "lucide-react";
 import { useMessages, useSetMessageFeedback, useUpdateConversation, useConversations } from "@/hooks/use-chat";
 import { useQueryClient } from "@tanstack/react-query";
 import { Markdown } from "@/components/markdown";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { useCreateDeck, useGenerateFlashcards } from "@/hooks/use-flashcards";
 import { useCreateNote } from "@/hooks/use-notes";
 import { useRecordActivity } from "@/hooks/use-gamification";
@@ -370,10 +369,20 @@ function MessageBubble({
       </div>
       <div className="min-w-0 flex-1">
         {message.pending && !message.content ? (
-          <div className="flex gap-1 rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
-            <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
-            <span className="typing-dot h-2 w-2 rounded-full bg-text-muted" />
+          <div className="flex items-center gap-3 py-2">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            >
+              <Sparkles className="h-4 w-4 text-primary" />
+            </motion.div>
+            <motion.span
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="text-body-sm font-semibold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent"
+            >
+              Generating response...
+            </motion.span>
           </div>
         ) : (
           <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">

@@ -1,13 +1,10 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
-import {
-  NotebookPen, Brain, Sparkles, FileStack, ScanLine,
-  ChevronsLeft, ChevronsRight, ChevronDown, Plus, GraduationCap, LogOut,
-  CreditCard, Search, Settings, TrendingUp, Shield, Trash2, Pin, PinOff, LayoutGrid, MessageSquare
-} from "lucide-react";
+import { NotebookPen, Brain, FileStack, ScanLine, ChevronsLeft, ChevronsRight, ChevronDown, Plus, GraduationCap, LogOut, CreditCard, Search, Settings, TrendingUp, Shield, Trash2, Pin, PinOff, LayoutGrid, MessageSquare, MessageSquareHeart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -24,6 +21,7 @@ import { useCreateSpace, useDeleteSpace, useSpaces } from "@/hooks/use-spaces";
 import { SPACE_TEMPLATES, type SpaceTemplateOption } from "@/lib/space-templates";
 import { useTranslation } from "@/i18n/locale-provider";
 import { toast } from "sonner";
+import { FeedbackModal } from "@/components/feedback-modal";
 
 const TOP_ITEMS = [
   { href: "/scan", key: "nav.scan", icon: ScanLine },
@@ -42,10 +40,12 @@ export function AppSidebar() {
   const router = useRouter();
   const { t } = useTranslation();
   const collapsed = useUIStore((s) => s.sidebarCollapsed);
+  const historySidebarOpen = useUIStore((s) => s.historySidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const setCommandPaletteOpen = useUIStore((s) => s.setCommandPaletteOpen);
   const newSpaceOpen = useUIStore((s) => s.newSpaceOpen);
   const setNewSpaceOpen = useUIStore((s) => s.setNewSpaceOpen);
+  const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
   const user = useAuthStore((s) => s.user);
   const subscription = useAuthStore((s) => s.subscription);
   const createConversation = useCreateConversation();
@@ -62,7 +62,24 @@ export function AppSidebar() {
   const [template, setTemplate] = React.useState<SpaceTemplateOption>(SPACE_TEMPLATES[0]);
   const [activeTab, setActiveTab] = React.useState<"browse" | "chat">("browse");
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Do not auto-collapse if the user hasn't completed the onboarding tour
+    const hasSeenTour = localStorage.getItem("gradelys:onboarding_completed");
+    if (!hasSeenTour) {
+      return;
+    }
+
+    // Auto-collapse the sidebar after 10 seconds to guarantee focus
+    const timer = setTimeout(() => {
+      useUIStore.setState({ sidebarCollapsed: true });
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
   async function handleLogout() {
+    document.cookie = "gradelys_demo=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -70,12 +87,21 @@ export function AppSidebar() {
   }
 
   async function handleNewChat() {
-    const res = await createConversation.mutateAsync({});
-    router.push(`/chat/${res.conversation.id}`);
+    const setShowAuthModal = useAuthStore.getState().setShowAuthModal;
+    if (user?.isAnonymous) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    router.push("/chat");
   }
 
   async function handleCreateSpace(e: React.FormEvent) {
     e.preventDefault();
+    if (user?.isAnonymous) {
+      useAuthStore.getState().setShowAuthModal(true);
+      return;
+    }
     if (!spaceName.trim()) return;
     try {
       const res = await createSpace.mutateAsync({
@@ -118,27 +144,116 @@ export function AppSidebar() {
 
   if (collapsed) {
     return (
-      <aside className="hidden h-[calc(100vh-1rem)] w-[68px] shrink-0 flex-col items-center border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 ml-2 py-4 lg:flex shadow-lg">
-        <Link href="/chat" className="flex h-8 w-8 items-center justify-center rounded-md overflow-hidden">
-          <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+      <aside className={cn("hidden h-[calc(100vh-1rem)] w-[68px] shrink-0 flex-col items-center border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 py-4 lg:flex shadow-lg transition-transform duration-300 ease-in-out", historySidebarOpen ? "-translate-x-[150%] absolute" : "translate-x-0 relative")}>
+        <Link href="/chat" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md overflow-hidden">
+          <img src="/favicon.png" alt="Gradelys" className="h-full w-full object-contain" />
         </Link>
-        <button onClick={handleNewChat} className="mt-4 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm hover:bg-primary-hover">
-          <Plus className="h-4 w-4" />
-        </button>
+        
+        <div className="mt-5 flex flex-col items-center gap-4 w-full">
+          <button onClick={() => setCommandPaletteOpen(true)} className="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover hover:text-text-primary transition-colors" title="Search (⌘K)">
+            <Search className="h-4 w-4" />
+          </button>
+          
+          <button onClick={handleNewChat} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm hover:bg-primary-hover transition-colors" title="New Chat">
+            <Plus className="h-4.5 w-4.5" />
+          </button>
+        </div>
+
+        <div className="mt-6 flex flex-col items-center gap-3 w-full">
+          <div className="w-6 border-t border-border/60 mb-2"></div>
+          {TOP_ITEMS.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={t(item.key) === item.key ? item.key.split(".")[1] : t(item.key)}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+                  isActive ? "bg-[var(--primary-subtle)] text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+                )}
+              >
+                <item.icon className="h-4.5 w-4.5" />
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-col items-center gap-3 w-full">
+          <div className="w-6 border-t border-border/60 mb-2"></div>
+          {STUDIO_ITEMS.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={t(item.key) === item.key ? item.key.split(".")[1] : t(item.key)}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+                  isActive ? "bg-[var(--primary-subtle)] text-primary" : "text-text-secondary hover:bg-hover hover:text-text-primary"
+                )}
+              >
+                <item.icon className="h-4.5 w-4.5" />
+              </Link>
+            );
+          })}
+        </div>
+
         <div className="flex-1" />
-        <button onClick={toggleSidebar} className="mb-4 flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover">
-          <ChevronsRight className="h-4 w-4" />
-        </button>
+
+        <div className="flex flex-col items-center gap-3 w-full pb-2">
+          {user?.isAnonymous ? (
+            <button 
+              onClick={() => useAuthStore.getState().setShowAuthModal(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-hover hover:text-primary transition-colors"
+              title="S'inscrire / Se connecter"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+            </button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer" title={user?.name || "Profile"}>
+                  <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start" side="right" sideOffset={15}>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <Settings className="h-4 w-4" /> Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings?tab=subscription")}>
+                  <CreditCard className="h-4 w-4" /> Billing & plans
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFeedbackModalOpen(true)}>
+                  <MessageSquareHeart className="h-4 w-4" /> Add a feedback
+                </DropdownMenuItem>
+                {user?.role === "admin" && (
+                  <DropdownMenuItem onClick={() => router.push("/admin")}>
+                    <Shield className="h-4 w-4" /> Admin
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} danger>
+                  <LogOut className="h-4 w-4" /> Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          <button onClick={toggleSidebar} className="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover transition-colors" title="Expand Sidebar">
+            <ChevronsRight className="h-4 w-4" />
+          </button>
+        </div>
       </aside>
     );
   }
 
   return (
-    <aside className="hidden h-[calc(100vh-1rem)] w-[230px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 ml-2 lg:flex shadow-lg">
-      <div className="flex h-16 items-center justify-between px-5 pt-2">
-        <Link href="/chat" className="flex items-center gap-2">
+    <aside className={cn("hidden h-[calc(100vh-1rem)] w-[230px] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 lg:flex shadow-lg transition-transform duration-300 ease-in-out", historySidebarOpen ? "-translate-x-[110%] absolute" : "translate-x-0 relative")}>
+      <div className="flex h-16 items-center justify-between px-4 pt-2">
+        <Link id="tour-logo" href="/chat" className="flex items-center gap-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md overflow-hidden">
-            <img src="/favicon.svg" alt="Gradelys" className="h-full w-full object-contain" />
+            <img src="/favicon.png" alt="Gradelys" className="h-full w-full object-contain" />
           </div>
           <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
         </Link>
@@ -147,8 +262,9 @@ export function AppSidebar() {
         </button>
       </div>
 
-      <div className="px-4 mt-4">
+      <div className="px-2 mt-4">
         <button
+          id="tour-search"
           onClick={() => setCommandPaletteOpen(true)}
           className="flex w-full items-center justify-between rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 text-label-sm text-text-muted transition-colors hover:border-border hover:text-text-primary"
         >
@@ -163,7 +279,7 @@ export function AppSidebar() {
       </div>
 
       {/* Segmented Control */}
-      <div className="px-4 mt-5 mb-4 shrink-0">
+      <div id="tour-switcher" className="px-2 mt-5 mb-4 shrink-0">
         <div className="flex bg-surface p-1 rounded-md border border-border-subtle/50">
           <button
             onClick={() => setActiveTab("browse")}
@@ -180,10 +296,11 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4 mt-2">
+      <div className="flex-1 overflow-y-auto px-2 pb-4 mt-2">
         {activeTab === "chat" ? (
           <>
             <button
+              id="tour-new-chat"
               onClick={handleNewChat}
               className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium bg-primary text-white shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5"
             >
@@ -231,12 +348,13 @@ export function AppSidebar() {
           </>
         ) : (
           <>
-            <nav className="space-y-0.5">
+            <nav id="tour-tools" className="space-y-0.5">
               {TOP_ITEMS.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href);
                 return (
                   <Link
                     key={item.href}
+                    id={`tour-${item.href.replace("/", "")}`}
                     href={item.href}
                     className={cn(
                       "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors",
@@ -250,7 +368,7 @@ export function AppSidebar() {
               })}
             </nav>
 
-            <div className="mt-6 px-2.5 text-label-sm uppercase text-text-muted flex items-center justify-between">
+            <div id="tour-studio" className="mt-6 px-2.5 text-label-sm uppercase text-text-muted flex items-center justify-between">
               Studio
             </div>
             <nav className="mt-1 space-y-0.5">
@@ -259,6 +377,7 @@ export function AppSidebar() {
                 return (
                   <Link
                     key={item.href}
+                    id={`tour-${item.href.replace("/", "")}`}
                     href={item.href}
                     className={cn(
                       "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors",
@@ -272,8 +391,8 @@ export function AppSidebar() {
               })}
             </nav>
 
-            {/* SPACES */}
             <button
+              id="tour-spaces"
               onClick={() => setSpacesOpen(!spacesOpen)}
               className="mt-6 flex w-full items-center justify-between px-2.5 text-label-sm uppercase text-text-muted"
             >
@@ -317,7 +436,7 @@ export function AppSidebar() {
       </div>
 
       {subscription && (
-        <div className="mx-3 mb-3 rounded-md border border-border bg-surface p-3">
+        <div className="mx-2 mb-3 rounded-md border border-border bg-surface p-3">
           <div className="flex items-center justify-between text-label-lg">
             <span className="text-text-secondary">Credits</span>
             <Badge variant={subscription.plan === "free" ? "default" : "primary"}>{subscription.plan}</Badge>
@@ -339,35 +458,47 @@ export function AppSidebar() {
         </div>
       )}
 
-      <div className="p-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <div className="flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover">
-              <Avatar name={user?.name || "?"} src={user?.avatarUrl} size="sm" />
-              <div className="min-w-0 flex-1 text-left">
-                <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
-                <div className="truncate text-label-md text-text-muted">{user?.email}</div>
+      <div id="tour-profile" className="p-2">
+        {user?.isAnonymous ? (
+          <button 
+            onClick={() => useAuthStore.getState().setShowAuthModal(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-medium text-white shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5"
+          >
+            S'inscrire / Se connecter
+          </button>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <div className="flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover">
+                <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
+                <div className="min-w-0 flex-1 text-left">
+                  <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
+                  <div className="truncate text-label-md text-text-muted">{user?.email}</div>
+                </div>
               </div>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="start" side="top">
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <Settings className="h-4 w-4" /> Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/settings?tab=subscription")}>
-              <CreditCard className="h-4 w-4" /> Billing & plans
-            </DropdownMenuItem>
-            {user?.role === "admin" && (
-              <DropdownMenuItem onClick={() => router.push("/admin")}>
-                <Shield className="h-4 w-4" /> Admin
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="start" side="top">
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <Settings className="h-4 w-4" /> Settings
               </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} danger>
-              <LogOut className="h-4 w-4" /> Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem onClick={() => router.push("/settings?tab=subscription")}>
+                <CreditCard className="h-4 w-4" /> Billing & plans
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFeedbackModalOpen(true)}>
+                <MessageSquareHeart className="h-4 w-4" /> Add a feedback
+              </DropdownMenuItem>
+              {user?.role === "admin" && (
+                <DropdownMenuItem onClick={() => router.push("/admin")}>
+                  <Shield className="h-4 w-4" /> Admin
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} danger>
+                <LogOut className="h-4 w-4" /> Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <Dialog open={newSpaceOpen} onOpenChange={setNewSpaceOpen} title="New space">
@@ -402,6 +533,8 @@ export function AppSidebar() {
           </button>
         </form>
       </Dialog>
+      
+      <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
     </aside>
   );
 }

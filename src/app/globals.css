@@ -67,17 +67,21 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
+
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
+
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
 *::-webkit-scrollbar-thumb {
   background-color: var(--border-strong);
   border-radius: 8px;
 }
+
 *::-webkit-scrollbar-thumb:hover {
   background-color: var(--text-muted);
 }
@@ -91,12 +95,10 @@ body {
 
 /* Skeleton shimmer */
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--bg-hover) 25%,
-    var(--border-strong) 37%,
-    var(--bg-hover) 63%
-  );
+  background: linear-gradient(90deg,
+      var(--bg-hover) 25%,
+      var(--border-strong) 37%,
+      var(--bg-hover) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -106,12 +108,15 @@ body {
   transition: transform 400ms ease-in-out;
   transform-style: preserve-3d;
 }
+
 .flip-card-inner.flipped {
   transform: rotateY(180deg);
 }
+
 .flip-card-face {
   backface-visibility: hidden;
 }
+
 .flip-card-back {
   transform: rotateY(180deg);
 }
@@ -122,6 +127,7 @@ body {
   font-size: 14px;
   line-height: 1.7;
 }
+
 .prose-gradelys h1 {
   color: var(--text-primary);
   font-size: 28px;
@@ -129,33 +135,40 @@ body {
   margin: 32px 0 16px;
   letter-spacing: -0.02em;
 }
+
 .prose-gradelys h2 {
   color: var(--text-primary);
   font-size: 24px;
   font-weight: 600;
   margin: 24px 0 12px;
 }
+
 .prose-gradelys h3 {
   color: var(--text-secondary);
   font-size: 20px;
   font-weight: 600;
   margin: 16px 0 8px;
 }
+
 .prose-gradelys p {
   margin-bottom: 12px;
 }
+
 .prose-gradelys ul,
 .prose-gradelys ol {
   padding-left: 20px;
   margin-bottom: 12px;
 }
+
 .prose-gradelys li {
   margin-bottom: 4px;
 }
+
 .prose-gradelys ul li::marker,
 .prose-gradelys ol li::marker {
   color: var(--text-muted);
 }
+
 .prose-gradelys code {
   background: var(--bg-hover);
   color: var(--accent-green);
@@ -164,6 +177,7 @@ body {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 13px;
 }
+
 .prose-gradelys pre {
   background: #0d0d14;
   border: 1px solid var(--border-subtle);
@@ -172,11 +186,13 @@ body {
   overflow-x: auto;
   margin-bottom: 12px;
 }
+
 .prose-gradelys pre code {
   background: transparent;
   color: var(--text-secondary);
   padding: 0;
 }
+
 .prose-gradelys blockquote {
   border-left: 4px solid var(--primary);
   background: var(--bg-hover);
@@ -186,22 +202,25 @@ body {
   margin-bottom: 20px;
   font-size: 15px;
   font-weight: 500;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
+
 .prose-gradelys img {
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-subtle);
   margin: 24px auto;
   max-width: 100%;
   display: block;
 }
+
 .prose-gradelys table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 12px;
   font-size: 13px;
 }
+
 .prose-gradelys th {
   background: var(--bg-hover);
   text-align: left;
@@ -209,21 +228,26 @@ body {
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
 }
+
 .prose-gradelys td {
   padding: 8px 12px;
   border: 1px solid var(--border-subtle);
 }
+
 .prose-gradelys strong {
   color: var(--text-primary);
   font-weight: 600;
 }
+
 .prose-gradelys a {
   color: var(--accent-blue);
   text-decoration: none;
 }
+
 .prose-gradelys a:hover {
   text-decoration: underline;
 }
+
 .prose-gradelys hr {
   border-color: var(--border-subtle);
   margin: 24px 0;
@@ -233,9 +257,11 @@ body {
 .typing-dot {
   animation: pulse-dot 1.4s ease-in-out infinite;
 }
+
 .typing-dot:nth-child(2) {
   animation-delay: 0.2s;
 }
+
 .typing-dot:nth-child(3) {
   animation-delay: 0.4s;
 }
@@ -249,5 +275,87 @@ body {
 @media print {
   body {
     background: white;
+  }
+}
+
+/* Custom Animations */
+@keyframes carousel-vertical {
+
+  0%,
+  26.66% {
+    transform: translateY(0);
+  }
+
+  33.33%,
+  60% {
+    transform: translateY(-25%);
+  }
+
+  66.66%,
+  93.33% {
+    transform: translateY(-50%);
+  }
+
+  100% {
+    transform: translateY(-75%);
+  }
+}
+
+.animate-carousel-vertical {
+  animation: carousel-vertical 15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* VISUALIZE PDF EXPORT — Print Styles                            */
+/* ═══════════════════════════════════════════════════════════════ */
+@media print {
+  /* Hide everything except the canvas content */
+  body.visualize-printing header,
+  body.visualize-printing [data-toolbar],
+  body.visualize-printing .absolute.left-3,
+  body.visualize-printing .absolute.right-4.bottom-4,
+  body.visualize-printing .absolute.left-3.bottom-4,
+  body.visualize-printing .absolute.right-0.top-0 {
+    display: none !important;
+  }
+
+  body.visualize-printing {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove the dot grid background */
+  body.visualize-printing .absolute.inset-0.overflow-hidden {
+    background-image: none !important;
+    background: white !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  /* Let the canvas content flow naturally */
+  body.visualize-printing .absolute.origin-top-left {
+    position: static !important;
+    transform: none !important;
+  }
+
+  /* Reset all fixed/absolute positioning for print */
+  body.visualize-printing .fixed.inset-0 {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  /* Ensure iframes fill available width */
+  body.visualize-printing iframe {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100% !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 1cm;
   }
 }

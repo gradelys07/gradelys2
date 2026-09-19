@@ -1,10 +1,11 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
-import { ArrowLeft, Plus, Sparkles, RotateCw, Trash2 } from "lucide-react";
-import { useAddCard, useCards, useDeleteCard, useGenerateFlashcards, useReviewCard } from "@/hooks/use-flashcards";
-import { useDecks } from "@/hooks/use-flashcards";
+import { ArrowLeft, Plus, RotateCw, Trash2 } from "lucide-react";
+import { useAddCard, useCards, useDeleteCard, useGenerateFlashcards, useReviewCard, useDecks } from "@/hooks/use-flashcards";
+import { useSaveSession } from "@/hooks/use-practice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/input";
@@ -25,6 +26,7 @@ export default function DeckDetailPage() {
   const deleteCard = useDeleteCard(deckId);
   const generateFlashcards = useGenerateFlashcards();
   const recordActivity = useRecordActivity();
+  const saveSession = useSaveSession();
 
   const [mode, setMode] = React.useState<"list" | "review">("list");
   const [reviewIndex, setReviewIndex] = React.useState(0);
@@ -36,16 +38,20 @@ export default function DeckDetailPage() {
   const dueCards = React.useMemo(() => {
     if (!cards) return [];
     const now = new Date();
-    return cards.filter((c) => new Date(c.nextReviewAt) <= now);
+    return cards.filter((c) => !c.nextReviewAt || new Date(c.nextReviewAt) <= now);
   }, [cards]);
 
   const [userAnswer, setUserAnswer] = React.useState("");
   const [verified, setVerified] = React.useState(false);
+  const [sessionStartTime, setSessionStartTime] = React.useState<number | null>(null);
+  const [correctAnswers, setCorrectAnswers] = React.useState(0);
 
   function startReview() {
     setReviewIndex(0);
     setVerified(false);
     setUserAnswer("");
+    setCorrectAnswers(0);
+    setSessionStartTime(Date.now());
     setMode("review");
   }
 
@@ -53,15 +59,38 @@ export default function DeckDetailPage() {
     setVerified(true);
   }
 
-  function handleRate(rating: Rating) {
+  async function handleRate(rating: Rating) {
     const card = dueCards[reviewIndex];
     reviewCard.mutate({ id: card.id, rating });
     recordActivity.mutate();
+    
+    const isCorrect = rating === "good" || rating === "easy";
+    const finalCorrectAnswers = correctAnswers + (isCorrect ? 1 : 0);
+    
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+    }
+
     if (reviewIndex < dueCards.length - 1) {
       setReviewIndex(reviewIndex + 1);
       setVerified(false);
       setUserAnswer("");
     } else {
+      // Create a practice session record for the Progress page
+      const timeTakenSeconds = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
+      const totalQuestions = dueCards.length;
+      const score = Math.round((finalCorrectAnswers / totalQuestions) * 100);
+
+      await saveSession.mutateAsync({
+        mode: "flashcards",
+        subject: deck?.subject || "Flashcards",
+        score,
+        totalQuestions,
+        correctAnswers: finalCorrectAnswers,
+        timeTakenSeconds,
+        spaceId: (deck as any)?.spaceId || null,
+      });
+
       setMode("list");
       toast.success("Review session complete 🎉");
     }
@@ -97,54 +126,83 @@ export default function DeckDetailPage() {
     return (
       <div className="mx-auto max-w-xl px-4 py-10">
         <div className="mb-6 flex items-center justify-between">
-          <button onClick={() => setMode("list")} className="flex items-center gap-1.5 text-body-sm text-text-muted hover:text-text-primary">
-            <ArrowLeft className="h-3.5 w-3.5" /> Exit review
+          <button 
+            onClick={async () => {
+              if (reviewIndex > 0) {
+                const timeTakenSeconds = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
+                await saveSession.mutateAsync({
+                  mode: "flashcards",
+                  subject: deck?.subject || "Flashcards",
+                  score: Math.round((correctAnswers / reviewIndex) * 100),
+                  totalQuestions: reviewIndex,
+                  correctAnswers: correctAnswers,
+                  timeTakenSeconds,
+                  spaceId: (deck as any)?.spaceId || null,
+                });
+                toast.success("Partial session saved");
+              }
+              setMode("list");
+            }} 
+            className="flex items-center gap-1.5 text-body-sm font-medium text-text-muted hover:text-text-primary transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Exit review
           </button>
-          <span className="text-body-sm text-text-muted">{reviewIndex + 1} / {dueCards.length}</span>
+          <span className="rounded-full bg-surface-elevated px-3 py-1 text-label-sm font-bold text-primary shadow-sm border border-border">
+            {reviewIndex + 1} / {dueCards.length}
+          </span>
         </div>
 
-        <div className="rounded-xl border border-border-strong bg-surface p-6 sm:p-8">
-          <span className="text-label-md uppercase text-text-muted">Question</span>
-          <p className="mt-2 text-heading-lg text-text-primary">{card.question}</p>
+        <div className="relative rounded-2xl border border-white/20 bg-gradient-to-br from-surface to-surface-elevated p-8 shadow-xl overflow-hidden">
+          <div className="absolute top-0 right-0 h-32 w-32 -translate-y-1/2 translate-x-1/2 rounded-full bg-primary/5 blur-3xl"></div>
+          
+          <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-label-xs font-bold uppercase tracking-wider text-primary mb-4">Question</span>
+          <p className="text-heading-lg font-bold text-text-primary leading-tight">{card.question}</p>
 
-          <div className="mt-5">
-            <label className="mb-1.5 block text-label-lg text-text-secondary">Your answer</label>
+          <div className="mt-8">
+            <label className="mb-2 block text-label-md font-semibold text-text-secondary">Your answer</label>
             <Textarea
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
               disabled={verified}
               placeholder="Type your answer…"
               rows={3}
+              className="resize-none rounded-xl border-border bg-black/5 p-4 text-body-md focus:border-primary/50 focus:ring-primary/20"
               autoFocus
             />
           </div>
 
           {!verified ? (
-            <Button className="mt-4 w-full" onClick={handleVerify}>
-              Verify
+            <Button className="mt-6 w-full rounded-xl py-6 text-label-lg shadow-lg hover:shadow-primary/25 transition-all" onClick={handleVerify}>
+              Verify Answer
             </Button>
           ) : (
-            <div className="mt-4 rounded-md border border-primary/30 bg-[var(--primary-subtle)] p-4">
-              <span className="text-label-md uppercase text-primary">Correct answer</span>
-              <p className="mt-1 text-body-md text-text-primary">{card.answer}</p>
+            <div className="mt-6 rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 p-5 shadow-inner">
+              <span className="flex items-center gap-2 text-label-sm font-bold uppercase tracking-wider text-emerald-600 mb-2">
+                <Sparkles className="h-4 w-4" /> Correct answer
+              </span>
+              <p className="text-body-lg font-medium text-text-primary">{card.answer}</p>
             </div>
           )}
         </div>
 
         {verified && (
-          <div className="mt-6">
-            <p className="mb-2 text-center text-body-sm text-text-muted">How did you do?</p>
-            <div className="grid grid-cols-4 gap-2">
-              <button onClick={() => handleRate("again")} className="rounded-md border border-red/40 bg-[var(--accent-red-subtle)] py-3 text-body-sm font-medium text-red hover:brightness-110">
+          <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <p className="mb-3 text-center text-label-md font-bold text-text-muted">How did you do?</p>
+            <div className="grid grid-cols-4 gap-3">
+              <button onClick={() => handleRate("again")} className="flex flex-col items-center justify-center gap-1 rounded-xl border border-red/20 bg-gradient-to-br from-red/10 to-red/5 py-4 text-label-md font-bold text-red shadow-sm transition-all hover:scale-105 hover:bg-red/10 hover:shadow-md">
+                <span className="text-2xl mb-1">😓</span>
                 Again
               </button>
-              <button onClick={() => handleRate("hard")} className="rounded-md border border-yellow/40 bg-[var(--accent-yellow-subtle)] py-3 text-body-sm font-medium text-yellow hover:brightness-110">
+              <button onClick={() => handleRate("hard")} className="flex flex-col items-center justify-center gap-1 rounded-xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-orange-500/5 py-4 text-label-md font-bold text-orange-500 shadow-sm transition-all hover:scale-105 hover:bg-orange-500/10 hover:shadow-md">
+                <span className="text-2xl mb-1">🤔</span>
                 Hard
               </button>
-              <button onClick={() => handleRate("good")} className="rounded-md border border-primary/40 bg-[var(--primary-subtle)] py-3 text-body-sm font-medium text-primary hover:brightness-110">
+              <button onClick={() => handleRate("good")} className="flex flex-col items-center justify-center gap-1 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 py-4 text-label-md font-bold text-primary shadow-sm transition-all hover:scale-105 hover:bg-primary/10 hover:shadow-md">
+                <span className="text-2xl mb-1">👍</span>
                 Good
               </button>
-              <button onClick={() => handleRate("easy")} className="rounded-md border border-green/40 bg-[var(--accent-green-subtle)] py-3 text-body-sm font-medium text-green hover:brightness-110">
+              <button onClick={() => handleRate("easy")} className="flex flex-col items-center justify-center gap-1 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 py-4 text-label-md font-bold text-emerald-500 shadow-sm transition-all hover:scale-105 hover:bg-emerald-500/10 hover:shadow-md">
+                <span className="text-2xl mb-1">😎</span>
                 Easy
               </button>
             </div>
@@ -155,54 +213,99 @@ export default function DeckDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <button onClick={() => router.push("/practice")} className="flex items-center gap-1.5 text-body-sm text-text-muted hover:text-text-primary">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Practice
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <button onClick={() => router.push("/practice")} className="flex items-center gap-1.5 text-label-sm font-medium text-text-muted hover:text-text-primary transition-colors">
+        <ArrowLeft className="h-4 w-4" /> Back to Practice
       </button>
 
-      <div className="mt-4 flex items-start justify-between">
+      <div className="mt-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-display-md text-text-primary">{deck?.name || "Deck"}</h1>
-          <p className="mt-1 text-body-md text-text-secondary">{deck?.subject}</p>
+          <h1 className="text-display-lg font-black text-text-primary tracking-tight">{deck?.name || "Deck"}</h1>
+          <p className="mt-2 inline-flex items-center rounded-full bg-surface-elevated border border-border px-3 py-1 text-label-sm font-medium text-text-secondary shadow-sm">
+            {deck?.subject}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={handleGenerateMore} loading={generating} icon={<Sparkles className="h-4 w-4" />}>
+        <div className="flex w-full gap-3 sm:w-auto">
+          <Button variant="secondary" className="flex-1 rounded-xl shadow-sm hover:shadow-md transition-all sm:flex-none" onClick={handleGenerateMore} loading={generating} icon={<Sparkles className="h-4 w-4" />}>
             Generate more
           </Button>
-          <Button onClick={() => setAddOpen(true)} icon={<Plus className="h-4 w-4" />}>
+          <Button className="flex-1 rounded-xl shadow-sm hover:shadow-md transition-all sm:flex-none" onClick={() => setAddOpen(true)} icon={<Plus className="h-4 w-4" />}>
             Add card
           </Button>
         </div>
       </div>
 
-      <div className="mt-6 rounded-lg border border-border bg-surface p-5">
-        <div className="flex items-center justify-between">
+      <div className="mt-8 rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 via-surface to-surface-elevated p-6 shadow-md relative overflow-hidden">
+        <div className="absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/3 rounded-full bg-primary/10 blur-3xl"></div>
+        <div className="relative z-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div>
-            <p className="text-heading-sm text-text-primary">{dueCards.length} cards due for review</p>
-            <p className="text-body-sm text-text-muted">{cards?.length || 0} total cards in this deck</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner">
+                <RotateCw className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-heading-md font-bold text-text-primary">{dueCards.length} cards due</p>
+                <p className="text-body-sm font-medium text-text-muted">{cards?.length || 0} total cards in this deck</p>
+              </div>
+            </div>
           </div>
-          <Button onClick={startReview} disabled={dueCards.length === 0} icon={<RotateCw className="h-4 w-4" />}>
-            Start review
+          <Button 
+            size="lg"
+            className="w-full sm:w-auto rounded-xl shadow-lg hover:shadow-primary/25 transition-all text-label-md" 
+            onClick={startReview} 
+            disabled={dueCards.length === 0} 
+            icon={<RotateCw className="h-5 w-5" />}
+          >
+            Start review session
           </Button>
         </div>
       </div>
 
-      <div className="mt-6 space-y-2">
-        {isLoading && <p className="text-body-sm text-text-muted">Loading cards…</p>}
-        {cards?.map((card) => (
-          <div key={card.id} className="group flex items-start justify-between gap-3 rounded-md border border-border-subtle bg-surface p-4">
-            <div className="min-w-0">
-              <p className="text-body-sm font-medium text-text-primary">{card.question}</p>
-              <p className="mt-1 text-body-sm text-text-muted">{card.answer}</p>
-            </div>
-            <button
-              onClick={() => deleteCard.mutate(card.id)}
-              className="shrink-0 rounded p-1 text-text-muted opacity-0 hover:bg-hover hover:text-red group-hover:opacity-100"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+      <div className="mt-10">
+        <h2 className="mb-6 text-heading-md font-bold text-text-primary flex items-center gap-2">
+          Flashcards <span className="rounded-full bg-black/5 px-2 py-0.5 text-label-sm text-text-muted">{cards?.length || 0}</span>
+        </h2>
+        
+        {isLoading && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-48 rounded-2xl border border-border/50 bg-surface-elevated animate-pulse"></div>
+            ))}
           </div>
-        ))}
+        )}
+        
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {cards?.map((card) => (
+            <div 
+              key={card.id} 
+              className="group relative flex h-full flex-col justify-between rounded-2xl border border-border/60 bg-gradient-to-b from-surface to-surface-elevated p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:border-primary/30"
+            >
+              <div className="absolute top-4 right-4">
+                <button
+                  onClick={() => deleteCard.mutate(card.id)}
+                  className="rounded-full bg-white/50 p-2 text-text-muted opacity-0 shadow-sm backdrop-blur-sm transition-all hover:bg-red/10 hover:text-red group-hover:opacity-100 border border-border/50"
+                  title="Delete card"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <span className="mb-3 inline-block rounded-full bg-black/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-text-muted group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                  Question
+                </span>
+                <p className="text-body-md font-bold text-text-primary line-clamp-4">{card.question}</p>
+              </div>
+              
+              <div className="mt-auto border-t border-border-subtle pt-4">
+                <span className="mb-2 inline-block rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                  Answer
+                </span>
+                <p className="text-body-sm font-medium text-text-muted line-clamp-3 group-hover:text-text-secondary transition-colors">{card.answer}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen} title="Add a flashcard">

@@ -128,6 +128,16 @@ const config: Config = {
         "marquee-reverse": {
           from: { transform: "translateX(calc(-50% - 12px))" },
           to: { transform: "translateX(0)" },
+        },
+        "marquee-vertical": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(calc(-50% - 8px))" }, // 16px gap = 8px half
+        },
+        "carousel-vertical": {
+          "0%, 26.66%": { transform: "translateY(0)" },
+          "33.33%, 60%": { transform: "translateY(-25%)" },
+          "66.66%, 93.33%": { transform: "translateY(-50%)" },
+          "100%": { transform: "translateY(-75%)" },
         }
       },
       animation: {
@@ -139,6 +149,8 @@ const config: Config = {
         pop: "pop 600ms ease-out",
         marquee: "marquee 40s linear infinite",
         "marquee-reverse": "marquee-reverse 40s linear infinite",
+        "marquee-vertical": "marquee-vertical 20s linear infinite",
+        "carousel-vertical": "carousel-vertical 15s cubic-bezier(0.4, 0, 0.2, 1) infinite",
       },
     },
   },

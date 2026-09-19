@@ -13,7 +13,21 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query.order("completed_at", { ascending: false }).limit(100);
   if (error) return errorResponse(error.message, 500);
-  return NextResponse.json({ sessions: data });
+
+  const camelCaseData = data.map((s: any) => ({
+    id: s.id,
+    userId: s.user_id,
+    spaceId: s.space_id,
+    mode: s.mode,
+    subject: s.subject,
+    score: s.score,
+    totalQuestions: s.total_questions,
+    correctAnswers: s.correct_answers,
+    timeTakenSeconds: s.time_taken_seconds,
+    completedAt: s.completed_at,
+  }));
+
+  return NextResponse.json({ sessions: camelCaseData });
 }
 
 export async function POST(req: NextRequest) {
@@ -37,5 +51,31 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return errorResponse(error.message, 500);
-  return NextResponse.json({ session: data }, { status: 201 });
+
+  // Background track learning profile (fire-and-forget)
+  import("@/lib/ai/learning-profile").then((m) => {
+    m.trackPracticeSession(
+      supabase,
+      user!.id,
+      body.mode,
+      body.score,
+      body.totalQuestions,
+      body.timeTakenSeconds
+    );
+  }).catch(() => {});
+
+  const camelCaseData = {
+    id: data.id,
+    userId: data.user_id,
+    spaceId: data.space_id,
+    mode: data.mode,
+    subject: data.subject,
+    score: data.score,
+    totalQuestions: data.total_questions,
+    correctAnswers: data.correct_answers,
+    timeTakenSeconds: data.time_taken_seconds,
+    completedAt: data.completed_at,
+  };
+
+  return NextResponse.json({ session: camelCaseData }, { status: 201 });
 }

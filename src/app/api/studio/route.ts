@@ -58,7 +58,20 @@ export async function POST(req: NextRequest) {
   const instruction = customPrompt ? sanitizePromptInput(customPrompt, 2000) : TYPE_INSTRUCTIONS[type] || TYPE_INSTRUCTIONS.notes;
   const spaceContext = await getSpaceContextText(supabase, spaceId);
 
-  const prompt = `${instruction}\n\nFocus: ${input}\n\nGround your answer strictly in the material below — this is the student's own course material.\n\n${spaceContext}\n\nFormat the output in clean Markdown starting with a single # title.`;
+  let prompt = `${instruction}\n\nFocus: ${input}\n\nGround your answer strictly in the material below — this is the student's own course material.\n\n${spaceContext}`;
+
+  if (body.isPersonalized !== false) {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("learning_profile")
+      .eq("id", user!.id)
+      .single();
+
+    const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+    prompt = calibratePrompt(prompt, profileData?.learning_profile);
+  }
+
+  prompt += `\n\nFormat the output in clean Markdown starting with a single # title.`;
 
   let content: string;
   try {

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Users, DollarSign, Activity, Ban, Search, Shield, AlertTriangle } from "lucide-react";
+import { Users, DollarSign, Activity, Ban, Search, Shield, AlertTriangle, MessageSquare, Star } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown";
 import {
-  useAdminStats, useAdminUsers, useAuditLog, useSecurityEvents, useUpdateAdminUser,
+  useAdminStats, useAdminUsers, useAuditLog, useSecurityEvents, useUpdateAdminUser, useAdminFeedbacks,
 } from "@/hooks/use-admin";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { toast } from "sonner";
@@ -30,11 +30,13 @@ export default function AdminPage() {
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="audit">Audit log</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="feedbacks">Feedback</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
         <TabsContent value="users" className="mt-6"><UsersTab /></TabsContent>
         <TabsContent value="audit" className="mt-6"><AuditTab /></TabsContent>
         <TabsContent value="security" className="mt-6"><SecurityTab /></TabsContent>
+        <TabsContent value="feedbacks" className="mt-6"><FeedbackTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -240,3 +242,55 @@ function SecurityTab() {
     </div>
   );
 }
+
+function FeedbackTab() {
+  const { data, isLoading } = useAdminFeedbacks();
+
+  return (
+    <div className="space-y-4">
+      {isLoading && <p className="text-body-sm text-text-muted">Loading feedbacks…</p>}
+      {!isLoading && (!data || data.length === 0) && (
+        <p className="text-body-sm text-text-muted">No feedback submitted yet.</p>
+      )}
+      
+      <div className="grid gap-4">
+        {data?.map((fb: any) => (
+          <div key={fb.id} className="rounded-lg border border-border bg-surface p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar name={fb.profiles?.name || "User"} src={fb.profiles?.avatar_url} size="sm" />
+                <div>
+                  <div className="text-body-sm text-text-primary">{fb.profiles?.name || "Unknown"}</div>
+                  <div className="text-label-md text-text-muted">{fb.profiles?.email}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1 text-yellow">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={cn("h-4 w-4", i < fb.rating ? "fill-current" : "text-border")} />
+                  ))}
+                </div>
+                <div className="mt-1 text-label-md text-text-muted">{formatRelativeDate(fb.created_at)}</div>
+              </div>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="text-label-sm font-medium text-text-secondary uppercase tracking-wider">Message</p>
+                <p className="mt-1 text-body-sm text-text-primary whitespace-pre-wrap">{fb.message}</p>
+              </div>
+              {fb.team_message && (
+                <div className="rounded-md bg-hover p-3">
+                  <p className="text-label-sm font-medium text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" /> Note for team
+                  </p>
+                  <p className="mt-1 text-body-sm text-text-primary whitespace-pre-wrap">{fb.team_message}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

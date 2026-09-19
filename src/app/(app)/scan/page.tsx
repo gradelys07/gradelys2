@@ -42,6 +42,11 @@ export default function ScanPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (useAuthStore.getState().user?.isAnonymous) {
+      toast("Création de compte requise", { description: "Veuillez créer un compte pour commencer." });
+      useAuthStore.getState().setShowAuthModal(true);
+      return;
+    }
     if (!file || !subject.trim()) return;
     try {
       const res = await createScan.mutateAsync({ subject, chapter, imageBase64: file.base64, mimeType: file.mimeType });
@@ -147,6 +152,11 @@ function ScanResult({ scan, onBack }: { scan: any; onBack: () => void }) {
   const [saving, setSaving] = React.useState(false);
 
   async function handleSaveFlashcards() {
+    if (useAuthStore.getState().user?.isAnonymous) {
+      toast("Création de compte requise", { description: "Veuillez créer un compte pour commencer." });
+      useAuthStore.getState().setShowAuthModal(true);
+      return;
+    }
     if (!diagnostic?.flashcards?.length) return;
     setSaving(true);
     try {

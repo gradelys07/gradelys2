@@ -1,8 +1,9 @@
 "use client";
 
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import * as React from "react";
 import Link from "next/link";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCheckoutUrl } from "@/lib/whop/client";

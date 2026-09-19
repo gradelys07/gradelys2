@@ -12,18 +12,20 @@ export function TrackingCTA({
   variant = "primary",
   source,
   showArrow = false,
+  className,
 }: {
   href: string;
   label: string;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "outline" | "ghost";
   source: string;
   showArrow?: boolean;
+  className?: string;
 }) {
   return (
     <Link href={href} onClick={() => trackLead(source)}>
-      <Button variant={variant} size="lg">
+      <Button variant={variant} size="lg" className={className}>
         {label}
-        {showArrow && <ArrowRight className="ml-2 h-4 w-4" />}
+        {showArrow && <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />}
       </Button>
     </Link>
   );

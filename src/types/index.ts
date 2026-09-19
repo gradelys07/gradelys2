@@ -13,7 +13,7 @@ export interface User {
   email: string;
   name: string;
   level: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   lang: string;
   educationSystem: string;
   role: UserRole;
@@ -21,6 +21,21 @@ export interface User {
   banReason?: string;
   createdAt: string;
   lastActiveAt: string;
+  isAnonymous?: boolean;
+  learningProfile?: LearningProfile;
+}
+
+export interface LearningProfile {
+  interactions: number;
+  fastResponses: number;
+  slowResponses: number;
+  successByHour: Record<string, { correct: number; total: number }>;
+  formatPreference: { flashcard: number; quiz: number; explain: number };
+  recurringWeaknesses: string[];
+  analogyReaction: { positive: number; negative: number; neutral: number };
+  lastActiveHour?: number;
+  detailedDescription?: string;
+  onboardingCompleted?: boolean;
 }
 
 export interface Subscription {

@@ -53,9 +53,20 @@ export async function POST(req: NextRequest) {
     .single();
   if (scanError) return errorResponse(scanError.message, 500);
 
-  const prompt = `You are grading a student's ${subject} exam/homework (chapter: ${chapter || "unspecified"}) from the attached photo.
+  let prompt = `You are grading a student's ${subject} exam/homework (chapter: ${chapter || "unspecified"}) from the attached photo.
 Analyze the handwritten or printed work: identify what's correct, what's wrong, and what's weak.
-Return ONLY JSON matching exactly this shape (no markdown fences, no commentary):
+`;
+
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("learning_profile")
+    .eq("id", user!.id)
+    .single();
+
+  const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+  prompt = calibratePrompt(prompt, profileData?.learning_profile);
+
+  prompt += `\nReturn ONLY JSON matching exactly this shape (no markdown fences, no commentary):
 ${DIAGNOSTIC_SCHEMA}`;
 
   try {

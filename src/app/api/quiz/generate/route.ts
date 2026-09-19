@@ -31,13 +31,23 @@ export async function POST(req: NextRequest) {
   const spaceContext = await getSpaceContextText(supabase, spaceId);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${sanitizePromptInput(customPrompt, 1000)}` : "";
 
-  const prompt = `Create exactly ${n} multiple-choice questions (${difficulty} difficulty) about: ${input}
+  let prompt = `Create exactly ${n} multiple-choice questions (${difficulty} difficulty) about: ${input}
 Ground every question strictly in the material below — do not invent facts outside of it.${extraInstruction}
 
 MATERIAL:
 ${spaceContext}
+`;
 
-Return ONLY a JSON array of objects shaped exactly like:
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("learning_profile")
+    .eq("id", user!.id)
+    .single();
+
+  const { calibratePrompt } = await import("@/lib/ai/personalize-prompt");
+  prompt = calibratePrompt(prompt, profileData?.learning_profile);
+
+  prompt += `\nReturn ONLY a JSON array of objects shaped exactly like:
 [{"id":"q1","question":"...","type":"mcq","options":["...","...","...","..."],"correct":"<must match one option exactly>","explanation":"...","difficulty":"easy|medium|hard"}]
 No markdown fences, no commentary — JSON only.`;
 
