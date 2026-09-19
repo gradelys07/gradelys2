@@ -50,22 +50,38 @@ export function DropdownMenuContent({
   children: React.ReactNode;
   className?: string;
   align?: "start" | "end";
-  side?: "top" | "bottom";
+  side?: "top" | "bottom" | "right" | "left";
 }) {
   const ctx = React.useContext(DropdownContext);
   if (!ctx) throw new Error("Must be used within DropdownMenu");
+
+  const isHorizontal = side === "right" || side === "left";
+  const initialAnim = isHorizontal
+    ? { opacity: 0, x: side === "left" ? 4 : -4, scale: 0.98 }
+    : { opacity: 0, y: side === "top" ? 4 : -4, scale: 0.98 };
+  const exitAnim = initialAnim;
+
+  const positionClasses = isHorizontal
+    ? cn(
+        side === "right" ? "left-full ml-1.5" : "right-full mr-1.5",
+        align === "end" ? "bottom-0" : "top-0"
+      )
+    : cn(
+        side === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
+        align === "end" ? "right-0" : "left-0"
+      );
+
   return (
     <AnimatePresence>
       {ctx.open && (
         <motion.div
-          initial={{ opacity: 0, y: side === "top" ? 4 : -4, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: side === "top" ? 4 : -4, scale: 0.98 }}
+          initial={initialAnim}
+          animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+          exit={exitAnim}
           transition={{ duration: 0.12 }}
           className={cn(
             "absolute z-50 min-w-[180px] rounded-md border border-border-strong bg-elevated shadow-l3 py-1",
-            side === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            align === "end" ? "right-0" : "left-0",
+            positionClasses,
             className
           )}
         >
