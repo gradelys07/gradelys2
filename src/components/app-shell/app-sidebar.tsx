@@ -479,7 +479,7 @@ export function AppSidebar() {
                           </div>
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="center" side="top">
+                      <DropdownMenuContent className="w-56" align="start" side="top">
                         <DropdownMenuItem onClick={() => router.push("/settings")}>
                           <Settings className="h-4 w-4" /> Settings
                         </DropdownMenuItem>
