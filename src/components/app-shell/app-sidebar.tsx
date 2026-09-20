@@ -144,7 +144,7 @@ export function AppSidebar() {
 
     return (
     <aside className={cn(
-      "hidden h-[calc(100vh-1rem)] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 lg:flex shadow-lg transition-all duration-300 ease-in-out z-40 overflow-hidden relative",
+      "hidden h-[calc(100vh-1rem)] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 lg:flex shadow-lg transition-all duration-300 ease-in-out z-40 relative",
       collapsed ? "w-[68px] items-center py-4" : "w-[230px]",
       historySidebarOpen ? (collapsed ? "-translate-x-[150%] absolute" : "-translate-x-[110%] absolute") : "translate-x-0 relative"
     )}>
@@ -217,7 +217,7 @@ export function AppSidebar() {
                       </button>
                     ) : (
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        <DropdownMenuTrigger>
                           <button className="flex h-9 w-9 items-center justify-center rounded-full hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer outline-none" title={user?.name || "Profile"}>
                             <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                           </button>
@@ -470,7 +470,7 @@ export function AppSidebar() {
                     </button>
                   ) : (
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger>
                         <button className="flex w-full items-center gap-2.5 rounded-md p-1.5 hover:bg-hover cursor-pointer outline-none text-left">
                           <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                           <div className="min-w-0 flex-1 text-left">
