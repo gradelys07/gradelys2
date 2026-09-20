@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { planLimits } from "@/lib/config";
 import type { Subscription, User } from "@/types";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -78,13 +79,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAnonymous: authUser.is_anonymous,
           learningProfile: profile.learning_profile,
         };
+        let isExpired = false;
+        if (subscription && subscription.plan !== "free" && subscription.current_period_end) {
+          isExpired = new Date(subscription.current_period_end) < new Date();
+        }
+
         const sub: Subscription | null = subscription
           ? {
               userId: subscription.user_id,
-              plan: subscription.plan,
-              status: subscription.status,
-              creditsRemaining: subscription.credits_remaining,
-              creditsMax: subscription.credits_max,
+              plan: isExpired ? "free" : subscription.plan,
+              status: isExpired ? "expired" : subscription.status,
+              creditsRemaining: isExpired ? planLimits.free.creditsMax : subscription.credits_remaining,
+              creditsMax: isExpired ? planLimits.free.creditsMax : subscription.credits_max,
               resetDate: subscription.reset_date,
               currentPeriodEnd: subscription.current_period_end,
               whopSubscriptionId: subscription.whop_subscription_id,
