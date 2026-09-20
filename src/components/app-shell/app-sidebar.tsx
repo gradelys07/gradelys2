@@ -217,12 +217,12 @@ export function AppSidebar() {
                       </button>
                     ) : (
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer" title={user?.name || "Profile"}>
+                        <DropdownMenuTrigger asChild>
+                          <button className="flex h-9 w-9 items-center justify-center rounded-full hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer outline-none" title={user?.name || "Profile"}>
                             <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
-                          </div>
+                          </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="end" side="right">
+                        <DropdownMenuContent className="w-56" align="end" side="right" sideOffset={16}>
                           <DropdownMenuItem onClick={() => router.push("/settings")}>
                             <Settings className="h-4 w-4" /> Settings
                           </DropdownMenuItem>
@@ -470,16 +470,16 @@ export function AppSidebar() {
                     </button>
                   ) : (
                     <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <div className="flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover">
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex w-full items-center gap-2.5 rounded-md p-1.5 hover:bg-hover cursor-pointer outline-none text-left">
                           <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                           <div className="min-w-0 flex-1 text-left">
                             <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
                             <div className="truncate text-label-md text-text-muted">{user?.email}</div>
                           </div>
-                        </div>
+                        </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="end" side="right">
+                      <DropdownMenuContent className="w-56" align="center" side="top" sideOffset={8}>
                         <DropdownMenuItem onClick={() => router.push("/settings")}>
                           <Settings className="h-4 w-4" /> Settings
                         </DropdownMenuItem>
