@@ -137,7 +137,7 @@ export function ToolChatThread({
     const presetStr = sessionStorage.getItem(`gradelys:pending-preset:${conversationId}`);
     if (pending) {
       sessionStorage.removeItem(key);
-      let presetData;
+      let presetData: Preset | undefined;
       if (presetStr) {
         presetData = JSON.parse(presetStr);
         sessionStorage.removeItem(`gradelys:pending-preset:${conversationId}`);
