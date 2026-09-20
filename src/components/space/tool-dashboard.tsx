@@ -61,6 +61,9 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
         router.push(`/studio/presentation?conversationId=${res.conversation.id}&spaceId=${localSpaceId || ""}`);
         return;
       }
+      if (preset) {
+        sessionStorage.setItem(`gradelys:pending-preset:${res.conversation.id}`, JSON.stringify(preset));
+      }
       sessionStorage.setItem(`gradelys:pending-message:${res.conversation.id}:personalized`, String(isPersonalized));
       sessionStorage.setItem(`gradelys:pending-message:${res.conversation.id}`, text || (preset ? preset.prompt : ""));
       router.push(`?c=${res.conversation.id}${localSpaceId ? `&spaceId=${localSpaceId}` : ""}`);

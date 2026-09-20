@@ -153,20 +153,23 @@ export function ExamPaper({ exam }: { exam: Exam }) {
             </div>
             
             <div className="space-y-8 pl-4 border-l-2 border-border-subtle">
-              {ex.questions?.map((q: any, qIdx: number) => (
-                <div key={q.id || qIdx}>
-                  <div className="text-body-md text-text-primary mb-3">
-                    <span className="font-semibold text-text-secondary mr-2">{qIdx + 1}.</span>
-                    <Markdown content={q.text || q.question} /> <span className="text-text-muted text-body-sm">({q.points} pts)</span>
+              {ex.questions?.map((q: any, qIdx: number) => {
+                const qKey = `${ex.id || exIdx}-${q.id || qIdx}`;
+                return (
+                  <div key={qKey}>
+                    <div className="text-body-md text-text-primary mb-3">
+                      <span className="font-semibold text-text-secondary mr-2">{qIdx + 1}.</span>
+                      <Markdown content={q.text || q.question} /> <span className="text-text-muted text-body-sm">({q.points} pts)</span>
+                    </div>
+                    <textarea
+                      value={answers[qKey] || ""}
+                      onChange={(e) => setAnswers({ ...answers, [qKey]: e.target.value })}
+                      placeholder="Write your answer here, or write on paper and take a photo below..."
+                      className="w-full min-h-[100px] rounded-lg border border-border bg-base px-4 py-3 text-body-md text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
                   </div>
-                  <textarea
-                    value={answers[q.id || qIdx] || ""}
-                    onChange={(e) => setAnswers({ ...answers, [q.id || qIdx]: e.target.value })}
-                    placeholder="Write your answer here, or write on paper and take a photo below..."
-                    className="w-full min-h-[100px] rounded-lg border border-border bg-base px-4 py-3 text-body-md text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}

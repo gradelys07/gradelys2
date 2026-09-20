@@ -110,7 +110,7 @@ export default function DeckDetailPage() {
       await generateFlashcards.mutateAsync({
         deckId,
         topic: deck?.subject || deck?.name || "this topic",
-        spaceId: (deck as any)?.spaceId || undefined,
+        spaceId: (deck as any)?.space_id || (deck as any)?.spaceId || undefined,
         count: 8,
       });
       toast.success("8 more flashcards added");

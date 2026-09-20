@@ -114,7 +114,15 @@ export function ToolChatThread({
 
   React.useEffect(() => {
     if (serverMessages) {
-      setLocalMessages(serverMessages.map((m) => ({ id: m.id, role: m.role, content: m.content, structured: m.structured })));
+      setLocalMessages((prev) => {
+        const pendingMessages = prev.filter((m) => m.pending || m.id.startsWith("local-"));
+        const serverIds = new Set(serverMessages.map((m) => m.id));
+        const remainingPending = pendingMessages.filter((m) => !serverIds.has(m.id));
+        return [
+          ...serverMessages.map((m) => ({ id: m.id, role: m.role, content: m.content, structured: m.structured })),
+          ...remainingPending
+        ];
+      });
     }
   }, [serverMessages]);
 
@@ -126,15 +134,21 @@ export function ToolChatThread({
   React.useEffect(() => {
     const key = `gradelys:pending-message:${conversationId}`;
     const pending = sessionStorage.getItem(key);
+    const presetStr = sessionStorage.getItem(`gradelys:pending-preset:${conversationId}`);
     if (pending) {
       sessionStorage.removeItem(key);
+      let presetData;
+      if (presetStr) {
+        presetData = JSON.parse(presetStr);
+        sessionStorage.removeItem(`gradelys:pending-preset:${conversationId}`);
+      }
       const isPers = sessionStorage.getItem(`${key}:personalized`);
       if (isPers !== null) {
         setIsPersonalized(isPers === "true");
         sessionStorage.removeItem(`${key}:personalized`);
       }
       // Wait a tick so state settles before sending
-      setTimeout(() => send(pending), 50);
+      setTimeout(() => send(pending, presetData), 50);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);

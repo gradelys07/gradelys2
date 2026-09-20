@@ -12,12 +12,14 @@ export function Dialog({
   children,
   className,
   title,
+  fullScreen,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
   className?: string;
   title?: string;
+  fullScreen?: boolean;
 }) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -41,7 +43,7 @@ export function Dialog({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className={cn("fixed inset-0 z-50 flex items-center justify-center", fullScreen ? "p-0" : "p-4")}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -55,7 +57,8 @@ export function Dialog({
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.15 }}
             className={cn(
-              "relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-border-strong bg-elevated shadow-l3",
+              "relative z-10 w-full overflow-y-auto bg-elevated shadow-l3 flex flex-col",
+              fullScreen ? "h-screen max-h-screen max-w-none rounded-none border-0" : "max-w-lg max-h-[90vh] rounded-lg border border-border-strong",
               className
             )}
           >
