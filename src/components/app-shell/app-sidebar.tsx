@@ -222,7 +222,7 @@ export function AppSidebar() {
                             <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56" align="end" side="right" sideOffset={16}>
+                        <DropdownMenuContent className="w-56" align="end" side="right">
                           <DropdownMenuItem onClick={() => router.push("/settings")}>
                             <Settings className="h-4 w-4" /> Settings
                           </DropdownMenuItem>
@@ -479,7 +479,7 @@ export function AppSidebar() {
                           </div>
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="center" side="top" sideOffset={8}>
+                      <DropdownMenuContent className="w-56" align="center" side="top">
                         <DropdownMenuItem onClick={() => router.push("/settings")}>
                           <Settings className="h-4 w-4" /> Settings
                         </DropdownMenuItem>
