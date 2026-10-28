@@ -239,11 +239,17 @@ export interface StudioDocument {
   updatedAt: string;
 }
 
-export interface ScanError {
+export interface DiagnosticQuestion {
   id: string;
-  title: string;
-  description: string;
-  type: "error" | "weak" | "correct";
+  questionText: string;
+  status: "correct" | "partial" | "wrong";
+  remark?: string; 
+  trick?: string; 
+  howToFix?: string; 
+  correction?: string; 
+  whyErrorMade?: string; 
+  howToHandleFuture?: string; 
+  stepByStep?: string;
 }
 
 export interface Scan {
@@ -259,7 +265,7 @@ export interface Scan {
 export interface Diagnostic {
   currentGrade: number;
   potentialGrade: number;
-  errors: ScanError[];
+  questions: DiagnosticQuestion[];
   flashcards: { id: string; question: string; answer: string }[];
   globalFeedback: string;
 }
@@ -331,3 +337,104 @@ export interface AdminUserRow {
   createdAt: string;
   lastActiveAt: string;
 }
+
+export interface DzdReceipt {
+  id: string;
+  userId?: string | null;
+  userName: string;
+  userEmail: string;
+  plan: "plus" | "pro";
+  billingInterval: "monthly" | "annual";
+  amountDzd: number;
+  receiptUrl: string;
+  status: "pending" | "approved" | "rejected";
+  adminNotes?: string | null;
+  promoCodeId?: string | null;
+  promoCode?: string | null;
+  originalAmountDzd?: number | null;
+  discountApplied?: number;
+  commissionAmount?: number;
+  createdAt: string;
+  updatedAt: string;
+  userProfile?: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl?: string;
+    subscriptions?: {
+      plan: string;
+      billing_interval?: string;
+      status: string;
+      credits_remaining: number;
+    }[];
+  } | null;
+}
+
+export interface DzdPromoCode {
+  id: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  collaboratorName: string;
+  collaboratorEmail?: string | null;
+  commissionType: "percent" | "fixed";
+  commissionValue: number;
+  secretToken: string;
+  isActive: boolean;
+  maxUses?: number | null;
+  usesCount: number;
+  createdAt: string;
+  updatedAt: string;
+  stats?: {
+    totalRevenueDzd: number;
+    totalCommissionDzd: number;
+    pendingCommissionDzd: number;
+    approvedCount: number;
+    pendingCount: number;
+    rejectedCount: number;
+    planBreakdown: {
+      plusMonthly: number;
+      plusAnnual: number;
+      proMonthly: number;
+      proAnnual: number;
+    };
+  };
+}
+
+export interface PromoValidationResult {
+  valid: boolean;
+  code?: string;
+  discountType?: "percent" | "fixed";
+  discountValue?: number;
+  originalAmount?: number;
+  discountAmount?: number;
+  finalAmount?: number;
+  error?: string;
+}
+
+export interface CollabDashboardData {
+  collaboratorName: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  commissionType: "percent" | "fixed";
+  commissionValue: number;
+  isActive: boolean;
+  stats: {
+    totalSales: number;
+    totalEarnedDzd: number;
+    pendingEarnedDzd: number;
+  };
+  transactions: {
+    id: string;
+    displayId: string;
+    plan: "plus" | "pro";
+    billingInterval: "monthly" | "annual";
+    amountDzd: number;
+    commissionAmount: number;
+    status: "pending" | "approved" | "rejected";
+    createdAt: string;
+  }[];
+}
+
+

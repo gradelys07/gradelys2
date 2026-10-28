@@ -133,3 +133,25 @@ export const rechargePacks = [
   { id: "recharge-200", label: "+200 scans", price: 15.0, badge: "Best value" },
   { id: "recharge-unlimited", label: "+Unlimited (1 month)", price: 24.99 },
 ];
+
+export const dzdPricing = {
+  rip: "00799999004148881975",
+  ripFormatted: "00799 99900 41488819 75",
+  ccpNumber: "41488819 clé 75",
+  activationNotice: "L'activation peut prendre entre 8H à 48H",
+  plus: {
+    monthly: 1500,
+    annual: 9500,
+  },
+  pro: {
+    monthly: 2600,
+    annual: 18000,
+  },
+} as const;
+
+export function isAlgerianUser(countryOrEducationSystem?: string | null): boolean {
+  if (!countryOrEducationSystem) return false;
+  const s = countryOrEducationSystem.toLowerCase().trim();
+  return s.includes("algér") || s.includes("alger") || s === "dz";
+}
+

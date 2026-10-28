@@ -22,6 +22,10 @@ import { useGamification } from "@/hooks/use-gamification";
 import { usePracticeSessions } from "@/hooks/use-practice";
 import { useFocusStore } from "@/stores/focus-store";
 
+
+import { detectChatIntent } from "@/lib/chat-intent";
+import { apiFetch } from "@/lib/api-fetch";
+
 export default function ChatHomePage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -70,6 +74,48 @@ export default function ChatHomePage() {
       setShowAuthModal(true);
       return;
     }
+
+    // ── Intent detection: routes to the right tool, auto-provisions a space and synthesizes source ──
+    const intent = detectChatIntent(text);
+
+    if (intent.type !== "chat") {
+      setLoading(true);
+      const toastId = toast.loading("Création de l'espace et synthèse du contenu avec l'IA...");
+      try {
+        const res = await apiFetch<{
+          success: boolean;
+          toolConversationId: string;
+          spaceId: string;
+          space: { id: string; name: string; emoji: string };
+          targetKind: string;
+          preset?: { visualType?: string; subKind?: string };
+          userPrompt: string;
+        }>("/api/chat/prepare-tool", {
+          method: "POST",
+          body: JSON.stringify({
+            userPrompt: text,
+            intent,
+            spaceId: spaceId || null,
+          }),
+        });
+
+        sessionStorage.setItem(`gradelys:pending-message:${res.toolConversationId}`, text);
+        if (res.preset?.visualType || res.preset?.subKind) {
+          sessionStorage.setItem(`gradelys:pending-preset:${res.toolConversationId}`, JSON.stringify(res.preset));
+        }
+
+        toast.dismiss(toastId);
+        toast.success(`Redirection vers ${res.targetKind === "studio" && intent.type === "presentation" ? "la présentation" : res.targetKind}...`);
+        router.push(`/${res.targetKind}?c=${res.toolConversationId}&spaceId=${res.spaceId}`);
+      } catch (err: any) {
+        toast.dismiss(toastId);
+        toast.error(err.message || "Erreur lors de la redirection vers l'outil");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    // ── End intent detection ─────────────────────────────────────────────────
 
     setLoading(true);
     try {
@@ -323,6 +369,31 @@ export default function ChatHomePage() {
                   <ChevronRight className="h-4 w-4 text-primary" />
                 </div>
               </motion.button>
+            ))}
+          </motion.div>
+
+          {/* Quick Create shortcuts — always available */}
+          <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-body-xs text-text-muted/60 font-medium mr-1">Créer directement →</span>
+            {[
+              { label: "📑 Présentation", prompt: "Crée une présentation sur " },
+              { label: "🗺️ Mind map", prompt: "Crée un mind map sur " },
+              { label: "📊 Schéma", prompt: "Fais un schéma pour " },
+              { label: "🧠 Quiz", prompt: "Crée un quiz sur " },
+              { label: "⚡ Flashcards", prompt: "Génère des flashcards sur " },
+              { label: "📝 Fiche révision", prompt: "Fais une fiche de révision sur " },
+            ].map((chip) => (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => {
+                  setInput(chip.prompt);
+                  document.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+                }}
+                className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/30 px-3 py-1.5 text-label-sm font-medium text-text-secondary backdrop-blur-md transition-all hover:bg-white/60 hover:text-text-primary hover:shadow-sm hover:border-primary/30"
+              >
+                {chip.label}
+              </button>
             ))}
           </motion.div>
 

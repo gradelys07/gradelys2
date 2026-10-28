@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!authUser) {
         const isDemo = typeof document !== 'undefined' && document.cookie.includes("gradelys_demo=true");
         if (isDemo) {
+          const cachedEdu = typeof window !== 'undefined' ? localStorage.getItem("gradelys_education_system") : null;
           const user: User = {
             id: "demo-user",
             email: "demo@gradelys.com",
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             level: "High School",
             avatarUrl: null,
             lang: "fr",
-            educationSystem: "international",
+            educationSystem: cachedEdu || "Standard",
             role: "user",
             status: "active",
             banReason: undefined,
@@ -63,6 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       if (profile) {
+        const cachedEdu = typeof window !== 'undefined' ? localStorage.getItem("gradelys_education_system") : null;
+        const finalEduSystem = profile.education_system || cachedEdu || "Standard";
+
+        if (typeof window !== 'undefined' && profile.education_system) {
+          localStorage.setItem("gradelys_education_system", profile.education_system);
+        }
+
         const user: User = {
           id: profile.id,
           email: profile.email,
@@ -70,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           level: profile.level,
           avatarUrl: profile.avatar_url,
           lang: profile.lang,
-          educationSystem: profile.education_system,
+          educationSystem: finalEduSystem,
           role: profile.role,
           status: profile.status,
           banReason: profile.ban_reason,

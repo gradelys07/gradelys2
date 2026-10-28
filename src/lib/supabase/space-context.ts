@@ -13,13 +13,28 @@ async function fetchFileAsBase64(supabase: any, bucket: string, path: string): P
   return Buffer.from(arrayBuffer).toString("base64");
 }
 
-export async function getSpaceContext(supabase: any, spaceId: string, maxChars = 20000): Promise<SpaceContext> {
-  const { data: sources } = await supabase
+export async function getSpaceContext(
+  supabase: any,
+  spaceId?: string | null,
+  maxChars = 20000,
+  activeSourceIds?: string[]
+): Promise<SpaceContext> {
+  if (!spaceId) return { text: "", files: [], sourceCount: 0 };
+
+  let query = supabase
     .from("space_sources")
-    .select("type, name, content_preview, storage_path, url")
+    .select("id, type, name, content_preview, storage_path, url")
     .eq("space_id", spaceId)
-    .eq("status", "ready")
-    .limit(15);
+    .eq("status", "ready");
+
+  if (Array.isArray(activeSourceIds)) {
+    if (activeSourceIds.length === 0) {
+      return { text: "", files: [], sourceCount: 0 };
+    }
+    query = query.in("id", activeSourceIds);
+  }
+
+  const { data: sources } = await query.limit(15);
 
   if (!sources || sources.length === 0) return { text: "", files: [], sourceCount: 0 };
 

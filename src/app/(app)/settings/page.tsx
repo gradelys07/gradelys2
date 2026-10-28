@@ -14,7 +14,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { validatePassword } from "@/lib/security";
-import { rechargePacks } from "@/lib/config";
+import { rechargePacks, isAlgerianUser } from "@/lib/config";
 import { getCheckoutUrl } from "@/lib/whop/client";
 import { trackClickUpgrade, trackInitiateCheckout } from "@/lib/whop/tracking";
 import Link from "next/link";
@@ -59,22 +59,68 @@ function ProfileTab() {
   const subscription = useAuthStore((s) => s.subscription);
   const [name, setName] = React.useState(user?.name || "");
   const [level, setLevel] = React.useState(user?.level || "High School");
-  const [educationSystem, setEducationSystem] = React.useState(user?.educationSystem || "Standard");
+  const [educationSystem, setEducationSystem] = React.useState(
+    user?.educationSystem ||
+      (typeof window !== "undefined" ? localStorage.getItem("gradelys_education_system") : null) ||
+      "Standard"
+  );
   const [saving, setSaving] = React.useState(false);
+
+  // Sync state when user object loads or updates
+  React.useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.level) setLevel(user.level);
+      if (user.educationSystem) {
+        setEducationSystem(user.educationSystem);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("gradelys_education_system", user.educationSystem);
+        }
+      }
+    } else if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("gradelys_education_system");
+      if (cached) setEducationSystem(cached);
+    }
+  }, [user]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
+
+    // 1. Immediately cache in localStorage for instant persistence across refreshes
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gradelys_education_system", educationSystem);
+    }
+
+    // 2. Call server API to ensure update in Supabase
+    try {
+      await fetch("/api/profiles/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, level, educationSystem }),
+      });
+    } catch (err) {
+      console.warn("API profile update error, falling back to client Supabase:", err);
+    }
+
+    // 3. Also update via Supabase client directly
     const supabase = createClient();
-    const { error } = await supabase.from("profiles").update({ name, level, education_system: educationSystem }).eq("id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ name, level, education_system: educationSystem })
+      .eq("id", user.id);
+
     setSaving(false);
-    if (error) {
+
+    if (error && user.id !== "demo-user") {
       toast.error(error.message);
       return;
     }
+
+    // 4. Update in-memory user session
     setSession({ ...user, name, level, educationSystem }, subscription);
-    toast.success("Profile updated");
+    toast.success("Profil mis à jour avec succès");
   }
 
   return (
@@ -143,11 +189,39 @@ function SubscriptionTab() {
               <Button>Upgrade plan</Button>
             </Link>
           )}
+          {isAlgerianUser(user?.educationSystem) && (
+            <Link href="/pricing?country=dz&dzd=true">
+              <Button variant="outline" className="border-emerald-600/50 text-emerald-500 hover:bg-emerald-500/10">
+                🇩🇿 Payer en DZD (BaridiMob)
+              </Button>
+            </Link>
+          )}
           <a href="https://whop.com/gradelys" target="_blank" rel="noopener noreferrer">
             <Button variant="outline">Gérer l'abonnement</Button>
           </a>
         </div>
       </div>
+
+      {isAlgerianUser(user?.educationSystem) && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">🇩🇿</span>
+            <div className="flex-1">
+              <p className="text-body-sm font-semibold text-text-primary">
+                Paiement local disponible en Dinars Algériens (DZD)
+              </p>
+              <p className="mt-0.5 text-label-md text-text-muted">
+                Vous résidez en Algérie ? Payez facilement votre abonnement via <strong>BaridiMob</strong> (Plus : 1 500 DZD/mois, Pro : 2 600 DZD/mois).
+              </p>
+              <Link href="/pricing?country=dz&dzd=true" className="mt-2 inline-block">
+                <Button size="sm" variant="secondary" className="text-emerald-500">
+                  Voir les forfaits en DZD
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <h3 className="text-heading-sm text-text-primary">Recharge scan credits</h3>

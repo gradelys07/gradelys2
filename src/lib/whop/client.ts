@@ -17,8 +17,8 @@ export function getCheckoutUrl(planKey: string): string | null {
     "recharge-unlimited": process.env.NEXT_PUBLIC_WHOP_CHECKOUT_RECHARGE_UNLIMITED,
   };
   
-  const url = map[planKey];
-  if (!url) return null;
+  const rawUrl = map[planKey];
+  const url = rawUrl && rawUrl.trim().length > 0 ? rawUrl.trim() : "https://whop.com/gradelys";
 
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");

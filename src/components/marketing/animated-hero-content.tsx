@@ -213,7 +213,7 @@ export function AnimatedHeroContent() {
 
       {/* Main Center Content */}
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="mx-auto max-w-4xl text-center pt-24 pb-12 lg:pb-0">
-        <h1 className="mt-8 text-[4rem] sm:text-[5.5rem] lg:text-[6.5rem] leading-[1.05] tracking-tight text-gray-900 font-extrabold flex flex-col items-center justify-center">
+        <h1 className="mt-8 text-[2.6rem] sm:text-[5.5rem] lg:text-[6.5rem] leading-[1.05] tracking-tight text-gray-900 font-extrabold flex flex-col items-center justify-center">
           <div className="flex overflow-hidden px-4">
             {renderLetters(text1)}
           </div>

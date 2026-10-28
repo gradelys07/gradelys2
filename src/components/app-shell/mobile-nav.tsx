@@ -31,8 +31,6 @@ const TOP_ITEMS = [
 ];
 
 const STUDIO_ITEMS = [
-  { href: "/practice", key: "nav.practice", icon: Brain },
-  { href: "/visualize", key: "nav.visualize", icon: Sparkles },
   { href: "/studio", key: "nav.studio", icon: FileStack },
 ];
 

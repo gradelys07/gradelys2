@@ -84,12 +84,16 @@ const breadcrumbSchema = {
   ],
 };
 
+import { Suspense } from "react";
+
 export default function PricingPage() {
   return (
     <>
       <JsonLd schema={[pricingSchema, breadcrumbSchema]} />
       <SiteHeader />
-      <PricingClient />
+      <Suspense fallback={<div className="mx-auto max-w-6xl px-5 py-24 text-center text-text-muted">Chargement des tarifs...</div>}>
+        <PricingClient />
+      </Suspense>
       <SiteFooter />
     </>
   );

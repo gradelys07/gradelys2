@@ -12,21 +12,27 @@ export async function POST(req: NextRequest) {
   if (response) return response;
 
   const body = await req.json().catch(() => ({}));
-  const { conversationId, message, spaceId, visualType, subKind, customPrompt, count, isPersonalized } = body;
-  if (!conversationId || !message || !spaceId) {
-    return errorResponse("conversationId, message, and spaceId are required");
+  const { conversationId, message, spaceId, visualType, subKind, customPrompt, count, isPersonalized, activeSourceIds } = body;
+  if (!conversationId || !message) {
+    return errorResponse("conversationId and message are required");
   }
 
   const { data: conversation } = await supabase
     .from("conversations")
-    .select("id, kind, title, user_id")
+    .select("id, kind, title, user_id, space_id")
     .eq("id", conversationId)
     .eq("user_id", user!.id)
     .single();
   if (!conversation) return errorResponse("Conversation not found", 404);
 
-  const spaceCheck = await requireSpaceWithSource(supabase, user!.id, spaceId);
-  if (!spaceCheck.ok) return spaceCheck.response;
+  const effectiveSpaceId = spaceId || conversation.space_id || null;
+
+  if (effectiveSpaceId) {
+    const spaceCheck = await requireSpaceWithSource(supabase, user!.id, effectiveSpaceId);
+    if (!spaceCheck.ok && spaceCheck.response.status === 404) {
+      return spaceCheck.response;
+    }
+  }
 
   const { data: sub } = await supabase.from("subscriptions").select("plan").eq("user_id", user!.id).single();
   if (sub?.plan === "free" && (conversation.kind === "visualize" || conversation.kind === "practice")) {
@@ -64,10 +70,10 @@ export async function POST(req: NextRequest) {
   try {
     if (conversation.kind === "visualize") {
       const type = visualType || "auto";
-      const { title, outputData } = await generateVisualizeContent(supabase, spaceId, message, type, customPrompt, learningProfile);
+      const { title, outputData } = await generateVisualizeContent(supabase, effectiveSpaceId, message, type, customPrompt, learningProfile, activeSourceIds);
 
       const { data: visDoc, error: visError } = await supabase.from("visualize_outputs").insert({
-        user_id: user!.id, space_id: spaceId, type: outputData.kind || type, prompt: message, title, output_data: outputData,
+        user_id: user!.id, space_id: effectiveSpaceId, type: outputData.kind || type, prompt: message, title, output_data: outputData,
       }).select().single();
 
       if (visError) return errorResponse(`Failed to save visualization: ${visError.message}`, 500);
@@ -103,13 +109,13 @@ export async function POST(req: NextRequest) {
 
     if (conversation.kind === "studio") {
       const docType = visualType || "auto";
-      const { title, content, returnedDocType } = await generateStudioContent(supabase, spaceId, message, docType, customPrompt, learningProfile);
+      const { title, content, returnedDocType } = await generateStudioContent(supabase, effectiveSpaceId, message, docType, customPrompt, learningProfile, activeSourceIds);
 
       const finalDocType = returnedDocType || (visualType || "notes");
 
       const { data: doc } = await supabase
         .from("studio_documents")
-        .insert({ user_id: user!.id, space_id: spaceId, type: finalDocType, title, content })
+        .insert({ user_id: user!.id, space_id: effectiveSpaceId, type: finalDocType, title, content })
         .select()
         .single();
 
@@ -132,10 +138,10 @@ export async function POST(req: NextRequest) {
       const n = Math.min(Math.max(Number(count) || 10, 1), 30);
 
       if (subKind === "flashcards") {
-        const cards = await generateFlashcardsContent(supabase, spaceId, message, n, customPrompt);
+        const cards = await generateFlashcardsContent(supabase, effectiveSpaceId, message, n, customPrompt, activeSourceIds);
         const { data: deck } = await supabase
           .from("flashcard_decks")
-          .insert({ user_id: user!.id, space_id: spaceId, name: message.slice(0, 60), subject: message.slice(0, 60) })
+          .insert({ user_id: user!.id, space_id: effectiveSpaceId, name: message.slice(0, 60), subject: message.slice(0, 60) })
           .select()
           .single();
         await supabase.from("flashcards").insert(cards.map((c) => ({ deck_id: deck.id, question: c.question, answer: c.answer })));
@@ -162,13 +168,13 @@ export async function POST(req: NextRequest) {
         const format = profile?.education_system || "Standard";
         const difficulty = body.difficulty || "Normal";
 
-        const examJson = await generateExamQuestions(supabase, spaceId, message, Math.min(n, 8), format, difficulty, customPrompt);
+        const examJson = await generateExamQuestions(supabase, effectiveSpaceId, message, Math.min(n, 8), format, difficulty, customPrompt, activeSourceIds);
         
         const { data: examData, error: examError } = await supabase
           .from("exams")
           .insert({
             user_id: user!.id,
-            space_id: spaceId,
+            space_id: effectiveSpaceId,
             subject: examJson.subject || message,
             format: examJson.format || format,
             difficulty: examJson.difficulty || difficulty,
@@ -196,7 +202,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: assistantMsg });
       }
 
-      const questions = await generateQuizContent(supabase, spaceId, message, n, "mixed", customPrompt);
+      const questions = await generateQuizContent(supabase, effectiveSpaceId, message, n, "mixed", customPrompt, activeSourceIds);
 
       const { data: assistantMsg, error } = await supabase
         .from("messages")
@@ -215,6 +221,7 @@ export async function POST(req: NextRequest) {
 
     return errorResponse("This conversation is not a tool conversation", 400);
   } catch (err: any) {
+    console.error("TOOL CHAT ERROR:", err);
     return errorResponse(`AI generation failed: ${err.message}`, 502);
   }
 }

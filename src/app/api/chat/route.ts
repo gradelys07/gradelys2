@@ -41,7 +41,24 @@ export async function POST(req: NextRequest) {
   const message = sanitizePromptInput(body.message);
   const conversationId: string = body.conversationId;
   const model = resolveModel(body.model);
-  const image: { mimeType: string; data: string } | undefined = body.image;
+
+  // Parse attached file or image (supports PDF, images, txt, md, csv up to 10MB)
+  const rawAttachment = body.attachment || body.file || (body.image ? { name: "image", mimeType: body.image.mimeType, data: body.image.data } : undefined);
+  let attachment: { name: string; mimeType: string; data: string; size?: number } | undefined;
+
+  if (rawAttachment?.data) {
+    const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10MB
+    const approxBytes = Math.ceil((rawAttachment.data.length * 3) / 4);
+    if (approxBytes > MAX_ATTACHMENT_BYTES || (rawAttachment.size && rawAttachment.size > MAX_ATTACHMENT_BYTES)) {
+      return errorResponse("Le fichier joint dépasse la limite maximale autorisée de 10 Mo.", 400);
+    }
+    attachment = {
+      name: rawAttachment.name || "Fichier joint",
+      mimeType: rawAttachment.mimeType || (rawAttachment.name?.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/octet-stream"),
+      data: rawAttachment.data,
+      size: rawAttachment.size || approxBytes,
+    };
+  }
 
   // Verify the conversation belongs to this user (RLS also enforces this).
   const { data: conversation } = await supabase
@@ -72,12 +89,32 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Determine attachment record for the database
+  const attachmentType = attachment
+    ? attachment.mimeType.startsWith("image/")
+      ? "image"
+      : attachment.mimeType === "application/pdf" || attachment.name.toLowerCase().endsWith(".pdf")
+      ? "pdf"
+      : attachment.name.toLowerCase().endsWith(".docx")
+      ? "docx"
+      : attachment.mimeType === "text/csv" || attachment.name.toLowerCase().endsWith(".csv")
+      ? "csv"
+      : "txt"
+    : undefined;
+
+  const attachmentRecord = attachment && attachmentType ? [{
+    id: `att-${Date.now()}`,
+    type: attachmentType,
+    name: attachment.name,
+    meta: attachment.size ? `${(attachment.size / (1024 * 1024)).toFixed(1)} Mo` : undefined,
+  }] : [];
+
   // Save the user's message.
   await supabase.from("messages").insert({
     conversation_id: conversationId,
     role: "user",
     content: message,
-    attachments: image ? [{ id: "img", type: "image", name: "Attached image" }] : [],
+    attachments: attachmentRecord,
   });
 
   // Pull recent history for context.
@@ -98,12 +135,21 @@ export async function POST(req: NextRequest) {
   const spaceFiles: { mimeType: string; data: string }[] = [];
 
   if (conversation.space_id) {
-    const { data: sources } = await supabase
+    let query = supabase
       .from("space_sources")
-      .select("type, name, content_preview, storage_path, url")
+      .select("id, type, name, content_preview, storage_path, url")
       .eq("space_id", conversation.space_id)
-      .eq("status", "ready")
-      .limit(10);
+      .eq("status", "ready");
+
+    if (Array.isArray(body.activeSourceIds)) {
+      if (body.activeSourceIds.length === 0) {
+        query = query.in("id", ["00000000-0000-0000-0000-000000000000"]);
+      } else {
+        query = query.in("id", body.activeSourceIds);
+      }
+    }
+
+    const { data: sources } = await query.limit(10);
 
     if (sources && sources.length > 0) {
       systemInstruction = SPACE_SCOPED_INSTRUCTION;
@@ -163,8 +209,41 @@ export async function POST(req: NextRequest) {
     m.updateProfileDescription(supabase, user!.id, message);
   }).catch(() => {});
 
-  const prompt = `${contextText}${spaceContext}${searchContext}\n\nTutor:`;
-  const allFiles = [...(image ? [image] : []), ...spaceFiles];
+  // Prepare attachment for Gemini (inline data for PDF/image, or extracted text for docs)
+  let attachmentContext = "";
+  const attachmentFiles: { mimeType: string; data: string }[] = [];
+
+  if (attachment) {
+    const isTextual =
+      attachment.mimeType.startsWith("text/") ||
+      attachment.name.toLowerCase().endsWith(".txt") ||
+      attachment.name.toLowerCase().endsWith(".md") ||
+      attachment.name.toLowerCase().endsWith(".csv") ||
+      attachment.name.toLowerCase().endsWith(".json");
+
+    if (isTextual) {
+      try {
+        const textDecoded = Buffer.from(attachment.data, "base64").toString("utf-8");
+        attachmentContext = `\n\n[DOCUMENT JOINT PAR L'ÉTUDIANT: "${attachment.name}"]:\n${textDecoded.slice(0, 50000)}\n\n`;
+      } catch {
+        attachmentFiles.push({ mimeType: "text/plain", data: attachment.data });
+      }
+    } else {
+      // PDF or Image — Gemini natively parses PDF and images via inline_data
+      const effectiveMime =
+        attachment.mimeType === "application/pdf" || attachment.name.toLowerCase().endsWith(".pdf")
+          ? "application/pdf"
+          : attachment.mimeType.startsWith("image/")
+          ? attachment.mimeType
+          : "application/pdf";
+      attachmentFiles.push({ mimeType: effectiveMime, data: attachment.data });
+    }
+
+    systemInstruction += `\nL'étudiant a joint un document nommé "${attachment.name}". Analyse attentivement son contenu et base tes explications, réponses et résumés dessus. Cite les parties pertinentes ou les numéros de page si nécessaire.`;
+  }
+
+  const prompt = `${contextText}${spaceContext}${searchContext}${attachmentContext}\n\nTutor:`;
+  const allFiles = [...attachmentFiles, ...spaceFiles];
 
   const encoder = new TextEncoder();
   let fullText = "";

@@ -15,7 +15,13 @@ export function useScans() {
 export function useCreateScan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { subject: string; chapter?: string; imageBase64: string; mimeType: string }) =>
+    mutationFn: (body: { 
+      subject: string; 
+      chapter?: string; 
+      workFiles: { base64: string; mimeType: string }[];
+      subjectFiles?: { base64: string; mimeType: string }[];
+      correctionFiles?: { base64: string; mimeType: string }[];
+    }) =>
       apiFetch<{ scan: Scan }>("/api/scans", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["scans"] }),
   });

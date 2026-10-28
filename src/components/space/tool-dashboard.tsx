@@ -40,7 +40,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
 
   async function startChat(text: string, preset?: Preset) {
     if (useAuthStore.getState().user?.isAnonymous) {
-      toast("Création de compte requise", { description: "Veuillez créer un compte pour commencer." });
+      toast(t("studio.toast.accountRequired"), { description: t("studio.toast.accountRequiredDesc") });
       useAuthStore.getState().setShowAuthModal(true);
       return;
     }
@@ -48,7 +48,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
     
     if (!localSpaceId) {
       setAttachOpen(true);
-      toast.error(t("tool.pickSpaceError") || "Pick a space first — this generates from its sources.");
+      toast.error(t("tool.pickSpaceError") || t("studio.toast.pickSpaceError"));
       return;
     }
 
@@ -159,7 +159,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                   startChat(input);
                 }
               }}
-              placeholder={selectedSpace ? `Start creating with ${selectedSpace.name}...` : "What do you want to create?"}
+              placeholder={selectedSpace ? t("studio.inputPlaceholderSpace").replace("{name}", selectedSpace.name) : t("studio.inputPlaceholder")}
               rows={3}
               className="w-full resize-none bg-transparent px-6 py-4 text-body-lg text-text-primary placeholder:text-text-muted/60 focus:outline-none"
             />
@@ -220,7 +220,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                   {selectedSpace ? (
                     <span className="text-label-sm font-medium line-clamp-1 max-w-[120px]">{selectedSpace.emoji} {selectedSpace.name}</span>
                   ) : (
-                    <span className="text-label-sm font-medium">Attach Space</span>
+                    <span className="text-label-sm font-medium">{t("studio.attachSpace")}</span>
                   )}
                 </button>
 
@@ -297,10 +297,38 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
               {/* Bottom Section: Text */}
               <div className={cn("relative z-10", preset.id === "auto" && kind === "visualize" ? "mt-0 flex-1 lg:ml-6" : "mt-2")}>
                 <h3 className={cn("font-bold text-text-primary transition-colors duration-300 group-hover:text-primary", preset.id === "auto" && kind === "visualize" ? "text-heading-lg" : "text-heading-sm")}>
-                  {preset.title}
+                  {(() => {
+                    if (preset.id === "auto") return t("preset.auto.title");
+                    const formatMap: Record<string, string> = {
+                      notes: "study-notes",
+                      slides: "presentation",
+                      flashcards: "flashcard",
+                      "exam-easy": "exam",
+                      "exam-normal": "exam",
+                      "exam-hard": "exam",
+                    };
+                    const formatId = formatMap[preset.id] || preset.id;
+                    const base = t(`format.${formatId}.title`);
+                    if (preset.id === "exam-easy") return `${base} (Easy)`;
+                    if (preset.id === "exam-normal") return `${base} (Normal)`;
+                    if (preset.id === "exam-hard") return `${base} (Hard)`;
+                    return base || preset.title;
+                  })()}
                 </h3>
                 <p className={cn("mt-2 leading-relaxed text-text-secondary/90", preset.id === "auto" && kind === "visualize" ? "text-body-lg" : "text-body-md")}>
-                  {preset.subtitle}
+                  {(() => {
+                    if (preset.id === "auto") return t("preset.auto.subtitle");
+                    const formatMap: Record<string, string> = {
+                      notes: "study-notes",
+                      slides: "presentation",
+                      flashcards: "flashcard",
+                      "exam-easy": "exam",
+                      "exam-normal": "exam",
+                      "exam-hard": "exam",
+                    };
+                    const formatId = formatMap[preset.id] || preset.id;
+                    return t(`format.${formatId}.subtitle`) || preset.subtitle;
+                  })()}
                 </p>
               </div>
 

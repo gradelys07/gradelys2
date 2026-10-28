@@ -20,9 +20,11 @@ import { useOrCreateToolConversation } from "@/hooks/use-or-create-tool-conversa
 import { formatRelativeDate, cn } from "@/lib/utils";
 import { useMessages } from "@/hooks/use-chat";
 import { toast } from "sonner";
-import type { SourceType } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/stores/ui-store";
+import { SpaceSourcesBar } from "@/components/space/space-sources-bar";
+import { useTranslation } from "@/i18n/locale-provider";
+import type { SourceType } from "@/types";
 
 const SPACE_TOOLS = [
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -63,6 +65,44 @@ export default function SpaceDetailPage() {
   const [url, setUrl] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
+
+  const [activeSourceIds, setActiveSourceIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    if (!sources) return;
+    const storageKey = `gradelys:active-sources:${spaceId}`;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed: string[] = JSON.parse(saved);
+        const valid = parsed.filter((id) => sources.some((s) => s.id === id));
+        setActiveSourceIds(valid);
+        return;
+      } catch {}
+    }
+    setActiveSourceIds(sources.map((s) => s.id));
+  }, [sources, spaceId]);
+
+  function handleToggleSource(id: string) {
+    setActiveSourceIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      localStorage.setItem(`gradelys:active-sources:${spaceId}`, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function handleSelectAll() {
+    if (!sources) return;
+    const allIds = sources.map((s) => s.id);
+    setActiveSourceIds(allIds);
+    localStorage.setItem(`gradelys:active-sources:${spaceId}`, JSON.stringify(allIds));
+  }
+
+  function handleDeselectAll() {
+    setActiveSourceIds([]);
+    localStorage.setItem(`gradelys:active-sources:${spaceId}`, JSON.stringify([]));
+  }
 
   const isFullScreen = hasMessages || startedChatting || activeTab !== "chat";
 
@@ -123,27 +163,33 @@ export default function SpaceDetailPage() {
 
   return (
     <div className={cn(
-      "flex h-full flex-col bg-background p-4 sm:p-6 mx-auto w-full relative overflow-hidden transition-all duration-300",
-      isFullScreen ? "max-w-full px-4 sm:px-8" : "max-w-5xl"
+      "flex h-full flex-col bg-background p-2.5 sm:p-6 mx-auto w-full relative overflow-hidden transition-all duration-300 pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+      isFullScreen ? "max-w-full px-2.5 sm:px-8" : "max-w-5xl"
     )}>
 
 
       {/* En-tête de l'espace */}
-      <div className={cn("flex items-center justify-between w-full max-w-3xl mx-auto z-10 relative transition-all duration-500", isFullScreen ? "h-0 mb-0 opacity-0 overflow-hidden" : "h-14 mb-4 opacity-100")}>
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.push("/chat")} className="flex items-center justify-center rounded-full p-2 text-text-muted hover:bg-hover hover:text-text-primary transition-colors">
+      <div className={cn("flex items-center justify-between w-full max-w-3xl mx-auto z-10 relative transition-all duration-500", isFullScreen ? "h-0 mb-0 opacity-0 overflow-hidden" : "h-14 mb-3 sm:mb-4 opacity-100")}>
+        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 pr-2">
+          <button onClick={() => router.push("/chat")} className="flex items-center justify-center rounded-full p-2 text-text-muted hover:bg-hover hover:text-text-primary transition-colors touch-manipulation active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl shadow-sm border border-border-subtle" style={{ backgroundColor: `${space?.color}15` }}>
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl text-lg sm:text-xl shadow-sm border border-border-subtle" style={{ backgroundColor: `${space?.color}15` }}>
               {space?.emoji}
             </div>
-            <div>
-              <h1 className="text-heading-md text-text-primary flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="text-heading-sm sm:text-heading-md text-text-primary truncate max-w-[170px] xs:max-w-[220px] sm:max-w-none">
                 {space?.name}
               </h1>
-              <div className="text-label-sm text-text-muted mt-0.5">
-                {sources?.length || 0} sources • Mis à jour {formatRelativeDate(new Date().toISOString())}
+              <div className="text-[11px] sm:text-label-sm text-text-muted mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span>{sources?.length || 0} sources</span>
+                <span>•</span>
+                <span className={activeSourceIds.length > 0 ? "text-primary font-medium" : "text-text-muted"}>
+                  {activeSourceIds.length} {t("sources.status.active").toLowerCase()}
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span className="hidden sm:inline">Mis à jour {formatRelativeDate(new Date().toISOString())}</span>
               </div>
             </div>
           </div>
@@ -156,7 +202,7 @@ export default function SpaceDetailPage() {
               router.push("/chat");
             }
           }}
-          className="rounded-full p-2 text-text-muted hover:bg-red-50 hover:text-red transition-colors"
+          className="rounded-full p-2 text-text-muted hover:bg-red-50 hover:text-red transition-colors shrink-0 touch-manipulation active:scale-95"
           title="Supprimer l'espace"
         >
           <Trash2 className="h-4 w-4" />
@@ -167,7 +213,7 @@ export default function SpaceDetailPage() {
       <div className="flex-1 min-h-0 flex flex-col relative w-full mx-auto">
         <div className={cn(
           "w-full mx-auto transition-all duration-300 flex flex-col relative",
-          isFullScreen ? "max-w-full flex-1 h-full" : "max-w-3xl h-[500px]"
+          isFullScreen ? "max-w-full flex-1 h-full" : "max-w-3xl flex-1 min-h-[300px] sm:min-h-[460px] h-full"
         )}>
           
           <div className="flex-1 relative min-h-0">
@@ -179,6 +225,7 @@ export default function SpaceDetailPage() {
                   spaceId={spaceId} 
                   placeholder={`Que voulez-vous savoir sur ${space?.name || "cet espace"}…`} 
                   onMessageSent={() => setStartedChatting(true)}
+                  activeSourceIds={activeSourceIds}
                   renderInputToolbar={() => (
                     <DropdownMenu>
                       <DropdownMenuTrigger>
@@ -222,6 +269,7 @@ export default function SpaceDetailPage() {
                   kind="practice" 
                   spaceId={spaceId} 
                   spaceName={space?.name}
+                  activeSourceIds={activeSourceIds}
                   renderInputToolbar={() => (
                     <DropdownMenu>
                       <DropdownMenuTrigger>
@@ -261,6 +309,7 @@ export default function SpaceDetailPage() {
                   kind="visualize" 
                   spaceId={spaceId} 
                   spaceName={space?.name}
+                  activeSourceIds={activeSourceIds}
                   renderInputToolbar={() => (
                     <DropdownMenu>
                       <DropdownMenuTrigger>
@@ -300,6 +349,7 @@ export default function SpaceDetailPage() {
                   kind="studio" 
                   spaceId={spaceId} 
                   spaceName={space?.name}
+                  activeSourceIds={activeSourceIds}
                   renderInputToolbar={() => (
                     <DropdownMenu>
                       <DropdownMenuTrigger>
@@ -346,78 +396,47 @@ export default function SpaceDetailPage() {
       </div>
 
       {/* Rangée des sources en dessous */}
-      <div className="h-32 shrink-0 relative z-10">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="text-label-lg font-semibold text-text-secondary uppercase tracking-wider">
-            Sources Jointes ({sources?.length || 0})
-          </h2>
-        </div>
-        
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
-          <button 
-            onClick={() => setOpen(true)}
-            className="snap-start shrink-0 flex flex-col items-center justify-center h-[90px] w-[110px] rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-colors text-text-muted hover:text-primary group"
-          >
-            <Plus className="h-6 w-6 mb-1 text-text-muted group-hover:text-primary transition-colors" />
-            <span className="text-label-sm font-medium">Ajouter</span>
-          </button>
-          
-          {isLoading && (
-            <div className="flex items-center justify-center h-[90px] w-[110px] rounded-xl border border-border bg-surface">
-              <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
-            </div>
-          )}
-
-          {sources?.map((source) => {
-            const Icon = SOURCE_ICONS[source.type];
-            return (
-              <div key={source.id} className="snap-start shrink-0 relative group flex flex-col items-center justify-center h-[90px] w-[130px] rounded-xl border border-border bg-surface p-2 shadow-sm hover:shadow-md transition-all">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary mb-1">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <p className="w-full truncate text-center text-label-sm font-medium text-text-primary px-1" title={source.name}>
-                  {source.name}
-                </p>
-                <button
-                  onClick={() => deleteSource.mutate(source.id)}
-                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red text-white opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all shadow-sm"
-                  title="Supprimer la source"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
+      <div className="shrink-0 relative z-10 pt-1.5 sm:pt-2 pb-0.5 sm:pb-1">
+        <SpaceSourcesBar
+          spaceId={spaceId}
+          sources={sources}
+          isLoading={isLoading}
+          activeSourceIds={activeSourceIds}
+          onToggleSource={handleToggleSource}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+          onAddClick={() => setOpen(true)}
+          onDeleteSource={(id) => deleteSource.mutate(id)}
+        />
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen} title="Ajouter une source">
-        <div className="p-5">
+      <Dialog open={open} onOpenChange={setOpen} title="Ajouter une source" className="max-w-lg max-h-[86dvh] overflow-y-auto">
+        <div className="p-4 sm:p-5">
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border-strong py-8 text-text-secondary transition-colors hover:border-primary disabled:opacity-60 bg-surface"
+            className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border-strong py-6 sm:py-8 text-text-secondary transition-colors hover:border-primary disabled:opacity-60 bg-surface touch-manipulation active:scale-[0.99]"
           >
             {uploading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Upload className="h-6 w-6 text-text-muted" />}
-            <span className="text-body-sm">{uploading ? "Analyse et extraction en cours…" : "Upload a PDF or image from your device"}</span>
-            {!uploading && <span className="text-label-md text-text-muted">Le contenu sera automatiquement extrait par l'IA</span>}
+            <span className="text-body-sm font-medium">{uploading ? "Analyse et extraction en cours…" : "Upload a PDF or image from your device"}</span>
+            {!uploading && <span className="text-label-xs sm:text-label-md text-text-muted text-center px-2">Le contenu sera automatiquement extrait par l'IA</span>}
           </button>
           <input ref={fileInputRef} type="file" accept="application/pdf,image/*" className="hidden" onChange={handleFilePick} />
 
-          <div className="my-5 flex items-center gap-3">
+          <div className="my-4 sm:my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-subtle" />
-            <span className="text-label-md text-text-muted font-medium">OU AJOUTER UN LIEN / TEXTE</span>
+            <span className="text-[11px] sm:text-label-md text-text-muted font-medium">OU AJOUTER UN LIEN / TEXTE</span>
             <div className="h-px flex-1 bg-border-subtle" />
           </div>
 
-          <form onSubmit={handleAdd} className="space-y-4">
+          <form onSubmit={handleAdd} className="space-y-3.5 sm:space-y-4">
             <div className="flex gap-2">
               {(["text", "url", "youtube"] as SourceType[]).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`flex-1 rounded-md border px-3 py-2 text-body-sm font-medium capitalize transition-colors ${
+                  className={`flex-1 rounded-lg border px-3 py-2 text-body-sm font-medium capitalize transition-colors touch-manipulation active:scale-95 ${
                     type === t ? "border-primary bg-primary/10 text-primary" : "border-border text-text-secondary hover:bg-hover hover:text-text-primary"
                   }`}
                 >
@@ -426,25 +445,45 @@ export default function SpaceDetailPage() {
               ))}
             </div>
             <div>
-              <label className="mb-1.5 block text-label-lg font-medium text-text-secondary">Nom</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="ex: Chapitre 4 résumé" required />
+              <label className="mb-1.5 block text-label-md sm:text-label-lg font-medium text-text-secondary">Nom</label>
+              <Input 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="ex: Chapitre 4 résumé" 
+                required 
+                className="text-[16px] sm:text-body-md"
+              />
             </div>
             {(type === "url" || type === "youtube") && (
               <div>
-                <label className="mb-1.5 block text-label-lg font-medium text-text-secondary">URL</label>
-                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder={type === "youtube" ? "https://youtube.com/watch?v=..." : "https://example.com/article"} type="url" required />
-                <p className="mt-1.5 text-label-md text-text-muted flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" /> Le contenu sera automatiquement extrait par l'IA.
+                <label className="mb-1.5 block text-label-md sm:text-label-lg font-medium text-text-secondary">URL</label>
+                <Input 
+                  value={url} 
+                  onChange={(e) => setUrl(e.target.value)} 
+                  placeholder={type === "youtube" ? "https://youtube.com/watch?v=..." : "https://example.com/article"} 
+                  type="url" 
+                  required 
+                  className="text-[16px] sm:text-body-md"
+                />
+                <p className="mt-1.5 text-label-xs sm:text-label-md text-text-muted flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" /> Le contenu sera automatiquement extrait par l'IA.
                 </p>
               </div>
             )}
             {type === "text" && (
               <div>
-                <label className="mb-1.5 block text-label-lg font-medium text-text-secondary">Contenu</label>
-                <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={4} placeholder="Collez le texte que cette source doit contenir…" required className="resize-none" />
+                <label className="mb-1.5 block text-label-md sm:text-label-lg font-medium text-text-secondary">Contenu</label>
+                <Textarea 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)} 
+                  rows={4} 
+                  placeholder="Collez le texte que cette source doit contenir…" 
+                  required 
+                  className="resize-none text-[16px] sm:text-body-md"
+                />
               </div>
             )}
-            <Button type="submit" className="w-full" disabled={uploading}>
+            <Button type="submit" className="w-full h-10 touch-manipulation active:scale-[0.99]" disabled={uploading}>
               {uploading ? (
                 <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Extraction en cours…</span>
               ) : "Ajouter la source"}
@@ -457,12 +496,13 @@ export default function SpaceDetailPage() {
 }
 
 function SpaceToolTab({ 
-  kind, spaceId, spaceName, renderInputToolbar 
+  kind, spaceId, spaceName, renderInputToolbar, activeSourceIds
 }: { 
   kind: "visualize" | "studio" | "practice"; 
   spaceId: string; 
   spaceName?: string;
   renderInputToolbar?: () => React.ReactNode;
+  activeSourceIds?: string[];
 }) {
   const conversationId = useOrCreateToolConversation(kind, spaceId, `${spaceName || "Space"} ${kind}`, true);
   if (!conversationId) {
@@ -472,7 +512,7 @@ function SpaceToolTab({
       </div>
     );
   }
-  return <ToolChatThread kind={kind} conversationId={conversationId} initialSpaceId={spaceId} lockSpace renderInputToolbar={renderInputToolbar} />;
+  return <ToolChatThread kind={kind} conversationId={conversationId} initialSpaceId={spaceId} lockSpace renderInputToolbar={renderInputToolbar} activeSourceIds={activeSourceIds} />;
 }
 
 function SpaceNotesTab({ spaceId }: { spaceId: string }) {

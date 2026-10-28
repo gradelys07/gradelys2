@@ -84,6 +84,7 @@ export function ToolChatThread({
   renderInputToolbar,
   initialPrompt,
   hidePresets,
+  activeSourceIds,
 }: {
   kind: ToolKind;
   conversationId: string;
@@ -92,6 +93,7 @@ export function ToolChatThread({
   renderInputToolbar?: () => React.ReactNode;
   initialPrompt?: string;
   hidePresets?: boolean;
+  activeSourceIds?: string[];
 }) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -103,6 +105,12 @@ export function ToolChatThread({
   const qc = useQueryClient();
 
   const [spaceId, setSpaceId] = React.useState<string | undefined>(initialSpaceId);
+
+  React.useEffect(() => {
+    if (initialSpaceId && !spaceId) {
+      setSpaceId(initialSpaceId);
+    }
+  }, [initialSpaceId, spaceId]);
   const [attachOpen, setAttachOpen] = React.useState(false);
   const [input, setInput] = React.useState(initialPrompt || "");
   const [sending, setSending] = React.useState(false);
@@ -166,6 +174,14 @@ export function ToolChatThread({
     ]);
 
     try {
+      let effectiveActiveSources = activeSourceIds;
+      if (effectiveActiveSources === undefined && spaceId && typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem(`gradelys:active-sources:${spaceId}`);
+          if (stored) effectiveActiveSources = JSON.parse(stored);
+        } catch {}
+      }
+
       const res = await apiFetch<{ message: any }>("/api/tool-chat", {
         method: "POST",
         body: JSON.stringify({
@@ -176,6 +192,7 @@ export function ToolChatThread({
           subKind: preset?.subKind,
           difficulty: preset?.difficulty,
           isPersonalized,
+          activeSourceIds: effectiveActiveSources,
         }),
       });
       setLocalMessages((prev) =>
@@ -183,9 +200,9 @@ export function ToolChatThread({
       );
       
       if (res.message.structured?.docType === "slides" && res.message.structured?.documentId) {
-        router.push(`/studio/documents/${res.message.structured.documentId}?conversationId=${conversationId}&spaceId=${spaceId}`);
+        router.push(`/studio/documents/${res.message.structured.documentId}?conversationId=${conversationId}${spaceId ? `&spaceId=${spaceId}` : ""}`);
       } else if (res.message.structured?.kind === "visualize" || res.message.structured?.kind === "image") {
-        router.push(`/visualize/${res.message.structured.visualizeId}?conversationId=${conversationId}&spaceId=${spaceId}`);
+        router.push(`/visualize/${res.message.structured.visualizeId}?conversationId=${conversationId}${spaceId ? `&spaceId=${spaceId}` : ""}`);
       }
       
       recordActivity.mutate();
@@ -363,7 +380,7 @@ export function ToolChatThread({
               }}
               placeholder={TOOL_PLACEHOLDER[kind]}
               rows={1}
-              className="max-h-32 w-full resize-none bg-transparent px-2 py-1.5 text-body-md text-text-primary placeholder:text-text-muted focus:outline-none"
+              className="max-h-32 w-full resize-none bg-transparent px-2 py-1.5 text-[16px] sm:text-body-md text-text-primary placeholder:text-text-muted focus:outline-none"
             />
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-1">

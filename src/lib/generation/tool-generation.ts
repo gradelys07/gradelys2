@@ -10,10 +10,16 @@ const LANGUAGE_RULE =
 const GROUNDING_RULE =
   "CRITICAL GROUNDING RULE: Base your output strictly and specifically on the facts, terms, numbers, names, dates, and examples that literally appear in the MATERIAL below (text and/or attached files). Do NOT write generic, textbook-style filler that could apply to any topic — every item must reference something concrete found in the material. If the material only weakly covers a point, skip it rather than inventing detail. If there is no usable material at all, say so instead of fabricating content.";
 
-/** Parse JSON output from the AI safely by stripping markdown blocks */
 function parseCleanJson(raw: string) {
   const clean = raw.replace(/```(?:json)?\n?/gi, "").replace(/```/g, "").trim();
-  return JSON.parse(clean);
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    if (clean.includes("no usable material") || clean.includes("no material") || clean.length < 100) {
+      throw new Error("L'IA n'a pas trouvé assez de contenu dans l'espace pour générer ce document. Veuillez ajouter des fichiers ou des notes.");
+    }
+    throw new Error(`Erreur de génération IA (format invalide). Réessayez.`);
+  }
 }
 
 /** Sanitize common Mermaid syntax issues that cause parse errors. */
@@ -52,13 +58,14 @@ const IMAGE_TYPES = ["image", "ai-image"];
 
 export async function generateVisualizeContent(
   supabase: any,
-  spaceId: string,
+  spaceId: string | null | undefined,
   prompt: string,
   type: string,
   customPrompt?: string,
-  learningProfile?: any
+  learningProfile?: any,
+  activeSourceIds?: string[]
 ) {
-  const ctx = await getSpaceContext(supabase, spaceId);
+  const ctx = await getSpaceContext(supabase, spaceId, 20000, activeSourceIds);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
   let finalType = type;
 
@@ -228,16 +235,16 @@ export async function generateVisualizeContent(
   return { title, outputData };
 }
 
-
 export async function generateStudioContent(
   supabase: any,
-  spaceId: string,
+  spaceId: string | null | undefined,
   topic: string,
   type: string,
   customPrompt?: string,
-  learningProfile?: any
+  learningProfile?: any,
+  activeSourceIds?: string[]
 ) {
-  const ctx = await getSpaceContext(supabase, spaceId);
+  const ctx = await getSpaceContext(supabase, spaceId, 20000, activeSourceIds);
 
   let finalType = type;
   if (type === "auto") {
@@ -312,8 +319,8 @@ Return ONLY a JSON object: {"bestType": "notes" | "report" | "summary" | "essay"
       content = raw.replace(/```(?:json)?\n?/gi, "").replace(/```/g, "").trim();
     }
   } else {
-    const titleLine = content.split("\\n").find((l) => l.startsWith("# "));
-    if (titleLine) docTitle = titleLine.replace(/^#\\s*/, "");
+    const titleLine = content.split("\n").find((l) => l.startsWith("# "));
+    if (titleLine) docTitle = titleLine.replace(/^#\s*/, "");
   }
 
   return { title: docTitle, content, returnedDocType };
@@ -321,18 +328,19 @@ Return ONLY a JSON object: {"bestType": "notes" | "report" | "summary" | "essay"
 
 export async function generateQuizContent(
   supabase: any,
-  spaceId: string,
+  spaceId: string | null | undefined,
   subject: string,
   count: number,
   difficulty: string,
-  customPrompt?: string
+  customPrompt?: string,
+  activeSourceIds?: string[]
 ) {
-  const ctx = await getSpaceContext(supabase, spaceId);
+  const ctx = await getSpaceContext(supabase, spaceId, 20000, activeSourceIds);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
 
   const prompt = `Create exactly ${count} multiple-choice questions (${difficulty} difficulty) about: ${subject}
 
-${GROUNDING_RULE} Every question must test a specific fact, definition, formula, date, or detail that is literally present in the material — never a generic question that could be answered without having read it. The wrong answer options must be plausible distractors related to the same material (e.g. a nearby date, a similar term, a common mix-up), not random unrelated text.
+${ctx.text || ctx.files.length > 0 ? `${GROUNDING_RULE} Every question must test a specific fact, definition, formula, date, or detail that is literally present in the material — never a generic question that could be answered without having read it. The wrong answer options must be plausible distractors related to the same material (e.g. a nearby date, a similar term, a common mix-up), not random unrelated text.` : "Since no specific material was provided, use your extensive general academic knowledge to create an accurate quiz."}
 ${LANGUAGE_RULE} (questions, options, and explanations must all be in that language)
 ${extraInstruction}
 
@@ -351,17 +359,18 @@ No markdown fences, no commentary — JSON only.`;
 
 export async function generateFlashcardsContent(
   supabase: any,
-  spaceId: string,
+  spaceId: string | null | undefined,
   topic: string,
   count: number,
-  customPrompt?: string
+  customPrompt?: string,
+  activeSourceIds?: string[]
 ) {
-  const ctx = await getSpaceContext(supabase, spaceId);
+  const ctx = await getSpaceContext(supabase, spaceId, 20000, activeSourceIds);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
 
   const prompt = `Generate exactly ${count} high-quality flashcards (question + answer pairs) about "${topic}" for a student.
 
-${GROUNDING_RULE} Each question must ask about one specific fact, term, formula, date, or concept that is literally present in the material. Each answer must be short, precise, and match what the material actually says — not a generic textbook definition.
+${ctx.text || ctx.files.length > 0 ? `${GROUNDING_RULE} Each question must ask about one specific fact, term, formula, date, or concept that is literally present in the material. Each answer must be short, precise, and match what the material actually says — not a generic textbook definition.` : "Since no specific material was provided, use your extensive general academic knowledge to create accurate flashcards."}
 ${LANGUAGE_RULE}
 ${extraInstruction}
 
@@ -379,7 +388,7 @@ Return ONLY a JSON array like [{"question": "...", "answer": "..."}]. No markdow
 /** Grades a free-response written exam answer sheet against the space's material, out of 20 (French grading scale). */
 export async function gradeExamContent(
   supabase: any,
-  spaceId: string,
+  spaceId: string | null | undefined,
   examQuestions: string,
   studentAnswers: string,
   images?: { mimeType: string; data: string }[]
@@ -414,19 +423,20 @@ No markdown fences, no commentary — JSON only.`;
 /** Writes a set of open-ended written exam questions (no options) grounded in the space's material. */
 export async function generateExamQuestions(
   supabase: any,
-  spaceId: string,
+  spaceId: string | null | undefined,
   subject: string,
   count: number,
   format: string = "Standard",
   difficulty: string = "Normal",
-  customPrompt?: string
+  customPrompt?: string,
+  activeSourceIds?: string[]
 ) {
-  const ctx = await getSpaceContext(supabase, spaceId);
+  const ctx = await getSpaceContext(supabase, spaceId, 20000, activeSourceIds);
   const extraInstruction = customPrompt ? `\nAdditional instructions: ${customPrompt}` : "";
 
   const prompt = `Write a real school-style written exam about: ${subject}
 
-${GROUNDING_RULE}
+${ctx.text || ctx.files.length > 0 ? GROUNDING_RULE : "Since no specific material was provided, use your extensive general academic knowledge to create an accurate and comprehensive exam on this subject."}
 ${LANGUAGE_RULE}
 
 FORMAT AND CONTEXT:
