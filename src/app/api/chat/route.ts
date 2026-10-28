@@ -68,22 +68,29 @@ export async function POST(req: NextRequest) {
     .single();
   if (!conversation) return errorResponse("Conversation not found", 404);
 
-  // Free plan: 3 messages total, ever.
+  // Free plan limit: 5 messages per day
   const { data: sub } = await supabase
     .from("subscriptions")
     .select("plan")
     .eq("user_id", user!.id)
     .single();
 
-  if (sub?.plan === "free") {
+  const plan = sub?.plan || "free";
+
+  if (plan === "free") {
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
     const { count } = await supabase
       .from("messages")
       .select("id, conversations!inner(user_id)", { count: "exact", head: true })
       .eq("role", "user")
-      .eq("conversations.user_id", user!.id);
-    if ((count ?? 0) >= planLimits.free.messagesTotal) {
+      .eq("conversations.user_id", user!.id)
+      .gte("created_at", startOfDay.toISOString());
+
+    if ((count ?? 0) >= planLimits.free.messagesPerDay) {
       return errorResponse(
-        `You've used all ${planLimits.free.messagesTotal} free messages. Upgrade to Plus or Pro to keep chatting.`,
+        `You've reached your daily limit of ${planLimits.free.messagesPerDay} free messages. Upgrade to Plus or Pro for unlimited chat.`,
         403
       );
     }
@@ -182,6 +189,26 @@ export async function POST(req: NextRequest) {
   let sources: { id: string; title: string; snippet: string; url: string }[] = [];
   let searchContext = "";
   if (conversation.web_search_enabled && integrations.serper) {
+    if (plan === "free") {
+      const startOfDay = new Date();
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      const { count: searchCount } = await supabase
+        .from("messages")
+        .select("id, conversations!inner(user_id)", { count: "exact", head: true })
+        .eq("role", "assistant")
+        .eq("conversations.user_id", user!.id)
+        .neq("sources", "[]")
+        .gte("created_at", startOfDay.toISOString());
+
+      if ((searchCount ?? 0) >= planLimits.free.webSearchesPerDay) {
+        return errorResponse(
+          `You've reached your limit of ${planLimits.free.webSearchesPerDay} web searches per day on the Free plan. Upgrade to Plus or Pro for unlimited web searches.`,
+          403
+        );
+      }
+    }
+
     try {
       const results = await webSearch(message);
       sources = results.map((r, i) => ({ id: `s${i}`, title: r.title, snippet: r.snippet, url: r.link }));

@@ -209,7 +209,7 @@ const TESTIMONIAL_CARDS_ROW_2 = [
 const FAQS = [
   {
     q: "Is Gradelys free to use?",
-    a: "Yes — the Free plan gives you unlimited AI chat, limited daily practice, and 3 lifetime document scans, no credit card required. Plus and Pro unlock higher limits and more scans per month.",
+    a: "Yes — the Free plan gives you 5 AI chat messages per day, web search, 1 space, and 3 lifetime document scans, no credit card required. Plus and Pro unlock unlimited chat, higher limits and more scans per month.",
   },
   {
     q: "What subjects does Gradelys support?",

@@ -13,7 +13,7 @@ import { dzdPricing, isAlgerianUser } from "@/lib/config";
 import { BaridimobPaymentModal } from "@/components/marketing/baridimob-modal";
 
 const FEATURES = [
-  { label: "AI chat", free: "20 msgs/day", plus: "Unlimited", pro: "Unlimited" },
+  { label: "AI chat", free: "5 msgs/day", plus: "Unlimited", pro: "Unlimited" },
   { label: "Web search in chat", free: "5/day", plus: "Unlimited", pro: "Unlimited" },
   { label: "Document scans", free: "3 total", plus: "100/month", pro: "300/month" },
   { label: "Visualizations", free: "1/month", plus: "30/month", pro: "Unlimited" },

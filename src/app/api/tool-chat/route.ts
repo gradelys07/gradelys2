@@ -4,6 +4,7 @@ import { requireSpaceWithSource } from "@/lib/supabase/require-space";
 import {
   generateVisualizeContent, generateStudioContent, generateQuizContent, generateFlashcardsContent, generateExamQuestions,
 } from "@/lib/generation/tool-generation";
+import { planLimits } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -35,19 +36,49 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: sub } = await supabase.from("subscriptions").select("plan").eq("user_id", user!.id).single();
-  if (sub?.plan === "free" && (conversation.kind === "visualize" || conversation.kind === "practice")) {
-    return errorResponse(
-      `${conversation.kind === "visualize" ? "Visualize" : "Practice"} isn't included in the Free plan. Upgrade to Plus or Pro to unlock it.`,
-      403
-    );
+  const plan = sub?.plan || "free";
+
+  if (conversation.kind === "visualize" && (plan === "free" || plan === "plus")) {
+    const limit = plan === "free" ? planLimits.free.visualizePerMonth : planLimits.plus.visualizePerMonth;
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
+    const { count: visCount } = await supabase
+      .from("visualize_outputs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user!.id)
+      .gte("created_at", startOfMonth.toISOString());
+
+    if ((visCount ?? 0) >= limit) {
+      return errorResponse(
+        plan === "free"
+          ? `The Free plan includes ${limit} visualization per month. Upgrade to Plus (30/month) or Pro (Unlimited) for more.`
+          : `You've reached your monthly limit of ${limit} visualizations on the Plus plan. Upgrade to Pro for unlimited visualizations.`,
+        403
+      );
+    }
   }
-  if (sub?.plan === "free" && conversation.kind === "studio") {
+
+  if (conversation.kind === "studio" && (plan === "free" || plan === "plus")) {
+    const limit = plan === "free" ? planLimits.free.studioPerMonth : planLimits.plus.studioPerMonth;
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
     const { count: docCount } = await supabase
       .from("studio_documents")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", user!.id);
-    if ((docCount ?? 0) >= 1) {
-      return errorResponse("The Free plan includes 1 Studio document. Upgrade to Plus or Pro for more.", 403);
+      .eq("user_id", user!.id)
+      .gte("created_at", startOfMonth.toISOString());
+
+    if ((docCount ?? 0) >= limit) {
+      return errorResponse(
+        plan === "free"
+          ? `The Free plan includes ${limit} Studio document per month. Upgrade to Plus (20/month) or Pro (Unlimited) for more.`
+          : `You've reached your monthly limit of ${limit} Studio documents on the Plus plan. Upgrade to Pro for unlimited documents.`,
+        403
+      );
     }
   }
 

@@ -25,6 +25,7 @@ create table if not exists profiles (
 );
 
 alter table profiles add column if not exists learning_profile jsonb default '{}'::jsonb;
+alter table profiles add column if not exists education_system text not null default 'Standard';
 
 create or replace function handle_new_user()
 returns trigger as $$

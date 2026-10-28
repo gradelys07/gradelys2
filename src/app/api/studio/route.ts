@@ -41,14 +41,25 @@ export async function POST(req: NextRequest) {
   if (!spaceCheck.ok) return spaceCheck.response;
 
   const { data: sub } = await supabase.from("subscriptions").select("plan").eq("user_id", user!.id).single();
-  if (sub?.plan === "free") {
+  const plan = sub?.plan || "free";
+
+  if (plan === "free" || plan === "plus") {
+    const limit = plan === "free" ? planLimits.free.studioPerMonth : planLimits.plus.studioPerMonth;
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
     const { count } = await supabase
       .from("studio_documents")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", user!.id);
-    if ((count ?? 0) >= planLimits.free.studioTotal) {
+      .eq("user_id", user!.id)
+      .gte("created_at", startOfMonth.toISOString());
+
+    if ((count ?? 0) >= limit) {
       return errorResponse(
-        `The Free plan includes ${planLimits.free.studioTotal} Studio document. Upgrade to Plus or Pro for more.`,
+        plan === "free"
+          ? `The Free plan includes ${limit} Studio document per month. Upgrade to Plus (20/month) or Pro (Unlimited) for more.`
+          : `You've reached your monthly limit of ${limit} Studio documents on the Plus plan. Upgrade to Pro for unlimited documents.`,
         403
       );
     }

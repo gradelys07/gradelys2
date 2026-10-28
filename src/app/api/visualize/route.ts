@@ -3,6 +3,7 @@ import { requireUser, errorResponse } from "@/lib/supabase/route-helpers";
 import { sanitizePromptInput } from "@/lib/security";
 import { requireSpaceWithSource } from "@/lib/supabase/require-space";
 import { generateVisualizeContent } from "@/lib/generation/tool-generation";
+import { planLimits } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,28 @@ export async function POST(req: NextRequest) {
   if (!spaceCheck.ok) return spaceCheck.response;
 
   const { data: sub } = await supabase.from("subscriptions").select("plan").eq("user_id", user!.id).single();
-  if (sub?.plan === "free") {
-    return errorResponse(
-      "Visualize isn't included in the Free plan. Upgrade to Plus or Pro to generate diagrams, charts, and images.",
-      403
-    );
+  const plan = sub?.plan || "free";
+
+  if (plan === "free" || plan === "plus") {
+    const limit = plan === "free" ? planLimits.free.visualizePerMonth : planLimits.plus.visualizePerMonth;
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
+    const { count } = await supabase
+      .from("visualize_outputs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user!.id)
+      .gte("created_at", startOfMonth.toISOString());
+
+    if ((count ?? 0) >= limit) {
+      return errorResponse(
+        plan === "free"
+          ? `The Free plan includes ${limit} visualization per month. Upgrade to Plus (30/month) or Pro (Unlimited) to generate more.`
+          : `You've reached your monthly limit of ${limit} visualizations on the Plus plan. Upgrade to Pro for unlimited visualizations.`,
+        403
+      );
+    }
   }
 
   const input = sanitizePromptInput(prompt, 2000);

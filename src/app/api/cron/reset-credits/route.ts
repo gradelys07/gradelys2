@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
   const { data: due, error } = await supabase
     .from("subscriptions")
     .select("user_id, plan, credits_max")
+    .neq("plan", "free")
     .lte("reset_date", now);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

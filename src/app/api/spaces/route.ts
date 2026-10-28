@@ -31,14 +31,19 @@ export async function POST(req: NextRequest) {
     .eq("user_id", user!.id)
     .single();
 
-  if (sub?.plan === "free") {
+  const plan = sub?.plan || "free";
+
+  if (plan === "free" || plan === "plus") {
+    const limit = plan === "free" ? planLimits.free.spaces : planLimits.plus.spaces;
     const { count } = await supabase
       .from("spaces")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user!.id);
-    if ((count ?? 0) >= planLimits.free.spaces) {
+    if ((count ?? 0) >= limit) {
       return errorResponse(
-        `The Free plan includes ${planLimits.free.spaces} space. Upgrade to Plus or Pro to create more.`,
+        plan === "free"
+          ? `The Free plan includes ${limit} space. Upgrade to Plus (10 spaces) or Pro (Unlimited) to create more.`
+          : `The Plus plan includes ${limit} spaces. Upgrade to Pro for unlimited spaces.`,
         403
       );
     }
