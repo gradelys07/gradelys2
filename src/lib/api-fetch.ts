@@ -38,6 +38,10 @@ export async function refreshBrowserSession(): Promise<boolean> {
 
 function redirectToLogin() {
   if (typeof window === "undefined") return;
+  // Never redirect to login in demo mode to prevent infinite reload loops with middleware
+  const isDemo = typeof document !== "undefined" && document.cookie.includes("gradelys_demo=true");
+  if (isDemo) return;
+
   const redirect = encodeURIComponent(window.location.pathname + window.location.search);
   window.location.href = `/login?redirect=${redirect}`;
 }
@@ -50,6 +54,12 @@ function redirectToLogin() {
 export async function authFetch(url: string, init?: RequestInit): Promise<Response> {
   let res = await fetch(url, init);
   if (res.status !== 401) return res;
+
+  // In demo mode, do not attempt to refresh session or redirect to login
+  const isDemo = typeof document !== "undefined" && document.cookie.includes("gradelys_demo=true");
+  if (isDemo) {
+    return res;
+  }
 
   const refreshed = await refreshBrowserSession();
   if (refreshed) {

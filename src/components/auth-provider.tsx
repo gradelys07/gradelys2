@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (isDemo) {
           const cachedEdu = typeof window !== 'undefined' ? localStorage.getItem("gradelys_education_system") : null;
           const user: User = {
-            id: "demo-user",
+            id: "00000000-0000-0000-0000-000000000000",
             email: "demo@gradelys.com",
             name: "Demo User",
             level: "High School",
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isAnonymous: true,
           };
           const sub: Subscription = {
-            userId: "demo-user",
+            userId: "00000000-0000-0000-0000-000000000000",
             plan: "free",
             status: "active",
             creditsRemaining: 3,

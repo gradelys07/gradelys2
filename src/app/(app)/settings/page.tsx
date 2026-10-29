@@ -113,7 +113,7 @@ function ProfileTab() {
 
     setSaving(false);
 
-    if (error && user.id !== "demo-user") {
+    if (error && user.id !== "demo-user" && user.id !== "00000000-0000-0000-0000-000000000000" && !user.isAnonymous) {
       toast.error(error.message);
       return;
     }

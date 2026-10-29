@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { planLimits } from "@/lib/config";
+
+export const DEMO_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 export async function requireUser() {
   const supabase = createClient();
@@ -10,6 +13,24 @@ export async function requireUser() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
+    const isDemo = cookies().get("gradelys_demo")?.value === "true";
+    if (isDemo) {
+      const demoUser = {
+        id: DEMO_USER_ID,
+        email: "demo@gradelys.com",
+        user_metadata: { name: "Demo User" },
+        app_metadata: {},
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+        is_anonymous: true,
+      };
+      return {
+        supabase,
+        user: demoUser as any,
+        response: null,
+      };
+    }
+
     return {
       supabase,
       user: null,

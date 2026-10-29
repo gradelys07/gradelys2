@@ -46,6 +46,11 @@ export function OnboardingTour() {
 
   useEffect(() => {
     if (initialized && user) {
+      // Bypasser le tour pour les utilisateurs en mode démo pour ne pas bloquer les interactions avec l'overlay
+      if (user.isAnonymous) {
+        return;
+      }
+
       const hasSeen = localStorage.getItem("gradelys:onboarding_completed");
       
       // Bypasser le tour si l'utilisateur a déjà complété son onboarding de profil dans la base de données

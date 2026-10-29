@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isDemo = request.cookies.get("gradelys_demo")?.value === "true";
-  const user = authUser || (isDemo ? { id: "demo-user", is_anonymous: true } : null);
+  const user = authUser || (isDemo ? { id: "00000000-0000-0000-0000-000000000000", is_anonymous: true } : null);
 
   const { pathname } = request.nextUrl;
 
@@ -84,13 +84,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthPage && user) {
+  if (isAuthPage && user && !user.is_anonymous) {
     const url = request.nextUrl.clone();
     url.pathname = "/chat";
     return NextResponse.redirect(url);
   }
 
-  if (pathname === "/" && user) {
+  if (pathname === "/" && user && !user.is_anonymous) {
     const url = request.nextUrl.clone();
     url.pathname = "/chat";
     return NextResponse.redirect(url);
