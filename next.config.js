@@ -39,21 +39,7 @@ const nextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: "/:path*",
-        has: [
-          {
-            type: "host",
-            value: "www.gradelys.com",
-          },
-        ],
-        destination: "https://gradelys.com/:path*",
-        permanent: true,
-      },
-    ];
-  },
+
   async headers() {
     return [
       {
