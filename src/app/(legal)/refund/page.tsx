@@ -1,18 +1,44 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politique de remboursement | Gradelys",
+  title: {
+    absolute: "Refund Policy | Gradelys",
+  },
   description:
-    "Prenez connaissance des conditions de remboursement de Gradelys : garantie 7 jours sur les abonnements, packs de recharge et gestion simplifiée.",
+    "Understand the Gradelys refund policy: 7-day money-back guarantee on paid plans, subscription cancellations, and support assistance.",
   alternates: {
-    canonical: "/refund",
+    canonical: "https://gradelys.com/refund",
   },
   openGraph: {
-    title: "Politique de remboursement | Gradelys",
+    title: "Refund Policy | Gradelys",
     description:
-      "Prenez connaissance des conditions de remboursement de Gradelys : garantie 7 jours sur les abonnements, packs de recharge et gestion simplifiée.",
+      "Understand the Gradelys refund policy: 7-day money-back guarantee on paid plans, subscription cancellations, and support assistance.",
     url: "https://gradelys.com/refund",
     type: "article",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Refund Policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Refund Policy | Gradelys",
+    description:
+      "Understand the Gradelys refund policy: 7-day money-back guarantee on paid plans, subscription cancellations, and support assistance.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Refund Policy",
+      },
+    ],
   },
 };
 

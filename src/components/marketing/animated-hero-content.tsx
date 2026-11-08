@@ -93,8 +93,8 @@ export function AnimatedHeroContent() {
     }
   };
 
-  const text1 = "Learn smarter.";
-  const text2 = "Not harder.";
+  const text1 = "Stop rereading.";
+  const text2 = "Start remembering.";
 
   // Helper to render letter by letter
   const renderLetters = (text: string) => {
@@ -118,9 +118,9 @@ export function AnimatedHeroContent() {
       {/* Left Floating Content - Pushed further left */}
       <div className="absolute top-24 left-0 xl:left-[2%] 2xl:left-[8%] hidden lg:flex flex-col gap-4 max-w-[280px] z-10 pointer-events-none">
         <motion.div variants={textAnnotationVariants} initial="hidden" animate="visible" className="relative mb-6">
-          <div className="text-blue-500 font-medium text-[1.1rem] rotate-[-12deg] flex flex-col items-center italic">
-            <span>Your AI study</span>
-            <span>companion</span>
+          <div className="text-blue-500 font-medium text-[1.05rem] rotate-[-10deg] flex flex-col items-center italic">
+            <span>Turn every mistake into</span>
+            <span>your next study session</span>
             <svg width="40" height="40" viewBox="0 0 24 24" className="absolute -right-12 -bottom-2 text-blue-400 rotate-45" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <motion.path variants={drawArrow} d="M5 12h14" />
               <motion.path variants={drawArrow} d="m12 5 7 7-7 7" />
@@ -139,8 +139,8 @@ export function AnimatedHeroContent() {
               <MessageSquare className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="font-semibold text-text-primary text-sm">Chat with AI</h4>
-              <p className="text-text-muted text-xs mt-1 leading-snug">Get instant help, explanations and personalized guidance.</p>
+              <h4 className="font-semibold text-text-primary text-sm">AI Study Tool</h4>
+              <p className="text-text-muted text-xs mt-1 leading-snug">Ask questions on your slides, PDFs, or YouTube lectures with citations.</p>
             </div>
           </div>
         </motion.div>
@@ -156,8 +156,8 @@ export function AnimatedHeroContent() {
               <ScanLine className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="font-semibold text-text-primary text-sm">Scan & Solve</h4>
-              <p className="text-text-muted text-xs mt-1 leading-snug">Upload your homework or notes and get step-by-step help.</p>
+              <h4 className="font-semibold text-text-primary text-sm">Homework & Exam Scanner</h4>
+              <p className="text-text-muted text-xs mt-1 leading-snug">Scan graded papers to see where you lost marks and how to improve.</p>
             </div>
           </div>
         </motion.div>
@@ -167,8 +167,8 @@ export function AnimatedHeroContent() {
       <div className="absolute top-28 right-0 xl:right-[2%] 2xl:right-[8%] hidden lg:flex flex-col gap-4 max-w-[280px] z-10 pointer-events-none">
         <motion.div variants={textAnnotationVariants} initial="hidden" animate="visible" className="relative mb-6 flex justify-end pr-4">
           <div className="text-purple-500 font-medium text-[1.1rem] rotate-[8deg] flex flex-col items-center italic">
-            <span>From questions...</span>
-            <span>to understanding</span>
+            <span>From confusion...</span>
+            <span>to exam mastery</span>
             <svg width="40" height="40" viewBox="0 0 24 24" className="absolute -left-10 -bottom-2 text-purple-400 rotate-[135deg]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <motion.path variants={drawArrow} d="M5 12h14" />
               <motion.path variants={drawArrow} d="m12 5 7 7-7 7" />
@@ -187,8 +187,8 @@ export function AnimatedHeroContent() {
               <Zap className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="font-semibold text-text-primary text-sm">Smart Flashcards</h4>
-              <p className="text-text-muted text-xs mt-1 leading-snug">Spaced repetition that adapts to your progress.</p>
+              <h4 className="font-semibold text-text-primary text-sm">Spaced Repetition Flashcards</h4>
+              <p className="text-text-muted text-xs mt-1 leading-snug">SM-2 active recall scheduling so nothing fades before exam revision.</p>
             </div>
           </div>
         </motion.div>
@@ -204,8 +204,8 @@ export function AnimatedHeroContent() {
               <ImageIcon className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="font-semibold text-text-primary text-sm">Visual Learning</h4>
-              <p className="text-text-muted text-xs mt-1 leading-snug">Turn any topic into diagrams, charts and mind maps.</p>
+              <h4 className="font-semibold text-text-primary text-sm">Mind Map Maker & Visuals</h4>
+              <p className="text-text-muted text-xs mt-1 leading-snug">Turn dense course notes into clear concept maps and study notes.</p>
             </div>
           </div>
         </motion.div>
@@ -223,8 +223,7 @@ export function AnimatedHeroContent() {
         </h1>
         
         <motion.p variants={itemVariants} className="mx-auto mt-6 max-w-2xl text-[1.2rem] leading-relaxed text-text-secondary font-medium">
-          Chat with AI, scan your homework for instant feedback, generate flashcards
-          that adapt to your memory, and turn any topic into a visual you'll actually remember.
+          Scan graded exams to pinpoint where you lost marks, master spaced repetition flashcards (SM-2), and build mind maps from your course notes — your active recall study app to retain what you learn.
         </motion.p>
         
         <motion.div variants={itemVariants} className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -234,18 +233,20 @@ export function AnimatedHeroContent() {
           <motion.div 
             whileHover={{ scale: 1.05 }} 
             whileTap={{ scale: 0.95 }}
-            animate={{ 
-              boxShadow: ["0px 0px 0px 0px rgba(99,102,241,0)", "0px 0px 15px 0px rgba(99,102,241,0.4)", "0px 0px 0px 0px rgba(99,102,241,0)"]
-            }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="rounded-full"
+            className="relative rounded-full"
           >
+            {/* Desktop-only subtle pulse using transform/opacity (compositor-only, zero paint cost) */}
+            <motion.div 
+              animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -inset-0.5 rounded-full bg-indigo-500/20 blur-sm pointer-events-none hidden md:block"
+            />
             <Button 
               variant="secondary" 
               size="lg" 
               onClick={handleTryDemo}
               disabled={isDemoLoading}
-              className="!rounded-full px-8 gap-2 bg-white text-gray-900 hover:bg-gray-50 border-border-subtle shadow-sm transition-colors"
+              className="relative !rounded-full px-8 gap-2 bg-white text-gray-900 hover:bg-gray-50 border-border-subtle shadow-sm transition-colors"
             >
               {isDemoLoading && (
                 <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />

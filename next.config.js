@@ -32,10 +32,27 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  trailingSlash: false,
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "**" },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "www.gradelys.com",
+          },
+        ],
+        destination: "https://gradelys.com/:path*",
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [
@@ -50,7 +67,7 @@ const nextConfig = {
         ],
       },
       {
-        source: "/:file(apple-touch-icon.png|favicon-32.png|favicon-96x96.png|favicon.ico|favicon.svg|site.webmanifest|manifest.json)",
+        source: "/:file(apple-touch-icon.png|favicon-32.png|favicon-96x96.png|favicon.ico|favicon.svg|site.webmanifest|manifest.json|og-image.png)",
         headers: [
           { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
         ],

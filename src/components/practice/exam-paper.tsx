@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { compressImage } from "@/lib/image-compression";
 
 export function ExamPaper({ exam }: { exam: Exam }) {
   const searchParams = useSearchParams();
@@ -25,19 +26,28 @@ export function ExamPaper({ exam }: { exam: Exam }) {
 
   const exercises = exam.contentJson.exercises || [];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (ev.target?.result) {
-          setImages((prev) => [...prev, ev.target!.result as string]);
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        try {
+          const compressed = await compressImage(file);
+          setImages((prev) => [...prev, compressed.dataUrl]);
+        } catch {
+          toast.error("Impossible de traiter l'image.");
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (ev.target?.result) {
+            setImages((prev) => [...prev, ev.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
   };
 
   const removeImage = (index: number) => {

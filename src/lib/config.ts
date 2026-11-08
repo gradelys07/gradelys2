@@ -83,8 +83,8 @@ export const integrations = {
 
 export const appConfig = {
   name: "Gradelys",
-  tagline: "Your AI-powered learning workspace.",
-  slogan: "Learn smarter. Not harder.",
+  tagline: "Study smarter, remember more.",
+  slogan: "Stop rereading. Start remembering.",
   url: process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"),
   supportEmail: "support@gradelys.com",
 };

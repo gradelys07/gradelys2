@@ -3,7 +3,7 @@
 import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { motion, useScroll, useTransform, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import { MessageSquare, BrainCircuit, Layers, CheckSquare, LineChart, FileText, Check, ArrowDownRight } from "lucide-react";
-import { useRef, MouseEvent } from "react";
+import { useRef, MouseEvent, useState, useEffect } from "react";
 
 // --- HIGHLY DETAILED MOCKUPS FOR BENTO GRID ---
 
@@ -395,34 +395,38 @@ function FeatureCard({ feature, index }: { feature: any; index: number }) {
     mouseY.set(0);
   }
 
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+  }, []);
+
   return (
     <motion.div
       ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      initial={{ opacity: 0, y: 100, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      onMouseMove={isDesktop ? handleMouseMove : undefined}
+      onMouseLeave={isDesktop ? handleMouseLeave : undefined}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ 
-        duration: 0.8, 
-        delay: index * 0.1,
-        type: "spring",
-        bounce: 0.4
+        duration: 0.6, 
+        delay: index * 0.08,
       }}
-      style={{
+      style={isDesktop ? {
         rotateX,
         rotateY,
         transformStyle: "preserve-3d",
-      }}
-      className={`relative group h-full cursor-default rounded-[32px] bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_rgb(0,0,0,0.1)] transition-all duration-500 ${feature.className}`}
+      } : undefined}
+      className={`relative group h-full cursor-default rounded-[32px] bg-white md:bg-white/70 md:backdrop-blur-xl border border-gray-100 md:border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_40px_80px_rgb(0,0,0,0.1)] transition-all duration-500 ${feature.className}`}
     >
-      {/* Interactive Hover Glow (Follows mouse) */}
+      {/* Interactive Hover Glow (Follows mouse, Desktop only) */}
       <motion.div
-        className="absolute inset-0 z-0 rounded-[32px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        className="absolute inset-0 z-0 rounded-[32px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden md:block"
         style={{ background }}
       />
 
-      <div className={`relative h-full flex z-10 overflow-hidden rounded-[32px] ${feature.horizontal ? 'flex-col md:flex-row' : 'flex-col'}`} style={{ transform: "translateZ(20px)" }}>
+      <div className={`relative h-full flex z-10 overflow-hidden rounded-[32px] ${feature.horizontal ? 'flex-col md:flex-row' : 'flex-col'}`} style={isDesktop ? { transform: "translateZ(20px)" } : undefined}>
         
         {/* Text Content */}
         <div className={`p-8 md:p-10 ${feature.horizontal ? `${feature.textClass} flex flex-col justify-center` : 'pb-0'}`}>
@@ -482,16 +486,16 @@ export function EverythingYouGet() {
   const orb2Y = useTransform(scrollYProgress, [0, 1], ["20%", "-50%"]);
 
   return (
-    <section ref={containerRef} className="py-32 relative overflow-hidden z-10 bg-gradient-to-b from-transparent via-blue-50/10 to-transparent perspective-1000">
+    <section ref={containerRef} className="py-32 relative overflow-hidden z-10 bg-gradient-to-b from-transparent via-blue-50/10 to-transparent md:perspective-1000 [content-visibility:auto] [contain-intrinsic-size:1px_1200px]">
       
-      {/* Scroll-driven floating Background Orbs */}
+      {/* Scroll-driven floating Background Orbs (Desktop only - heavy blur disabled on mobile) */}
       <motion.div 
         style={{ y: orb1Y }} 
-        className="absolute top-10 left-[10%] w-[400px] h-[400px] bg-blue-400/20 rounded-full blur-[120px] -z-10 pointer-events-none" 
+        className="absolute top-10 left-[10%] w-[400px] h-[400px] bg-blue-400/20 rounded-full blur-[120px] -z-10 pointer-events-none hidden md:block" 
       />
       <motion.div 
         style={{ y: orb2Y }} 
-        className="absolute bottom-10 right-[10%] w-[500px] h-[500px] bg-purple-400/10 rounded-full blur-[150px] -z-10 pointer-events-none" 
+        className="absolute bottom-10 right-[10%] w-[500px] h-[500px] bg-purple-400/10 rounded-full blur-[150px] -z-10 pointer-events-none hidden md:block" 
       />
 
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -506,7 +510,7 @@ export function EverythingYouGet() {
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">in one workspace.</span>
           </h2>
           <p className="text-xl md:text-2xl text-gray-500 font-medium max-w-2xl mx-auto leading-relaxed">
-            A complete suite of AI-powered learning tools built specifically to help you study smarter, not harder.
+            Science-backed study tools — from exam diagnostics to spaced repetition flashcards — built to help you remember what you study.
           </p>
         </motion.div>
 

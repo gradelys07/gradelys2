@@ -49,12 +49,15 @@
 
 html {
   color-scheme: light;
+  overflow-x: clip;
 }
 
 body {
   background-color: var(--bg-void);
   color: var(--text-primary);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: clip;
+  width: 100%;
 }
 
 ::selection {
@@ -303,6 +306,32 @@ body {
 
 .animate-carousel-vertical {
   animation: carousel-vertical 15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.will-change-transform {
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* ACCESSIBILITY — PREFERS REDUCED MOTION                         */
+/* ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-marquee,
+  .animate-marquee-reverse,
+  .animate-marquee-vertical,
+  .animate-carousel-vertical,
+  .skeleton {
+    animation: none !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════ */

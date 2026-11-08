@@ -21,7 +21,7 @@ export function FaqAccordion({ items }: { items: { q: string; a: string }[] }) {
               backgroundColor: isOpen ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.5)",
               borderColor: isOpen ? "rgba(59, 130, 246, 0.3)" : "rgba(229, 231, 235, 0.5)",
             }}
-            className="rounded-2xl border backdrop-blur-sm overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.02)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+            className="rounded-2xl border md:backdrop-blur-sm overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.02)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
           >
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}

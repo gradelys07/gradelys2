@@ -19,22 +19,25 @@ export function SiteHeader() {
   const user = useAuthStore((s) => s.user);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-subtle bg-void/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border-subtle bg-void md:bg-void/80 md:backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link href="/" className="flex items-center gap-2" aria-label="Accueil Gradelys">
+        <Link href="/" className="flex items-center gap-2" aria-label="Gradelys home">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
-            <img
-              src="/favicon.png"
-              alt="Logo officiel Gradelys"
-              width={32}
-              height={32}
-              className="h-full w-full object-contain"
-            />
+            <picture>
+              <source srcSet="/favicon.webp" type="image/webp" />
+              <img
+                src="/favicon.png"
+                alt="Gradelys official logo"
+                width={32}
+                height={32}
+                className="h-full w-full object-contain"
+              />
+            </picture>
           </div>
           <span className="text-heading-sm font-bold tracking-tight text-text-primary">Gradelys</span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Navigation principale">
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -65,7 +68,7 @@ export function SiteHeader() {
 
         <button
           type="button"
-          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-label={open ? "Close menu" : "Open menu"}
           className="md:hidden text-text-primary p-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
           onClick={() => setOpen(!open)}
         >

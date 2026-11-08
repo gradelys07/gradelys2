@@ -8,6 +8,7 @@ import { Input, Label } from "@/components/ui/input";
 import { dzdPricing } from "@/lib/config";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
+import { compressImage } from "@/lib/image-compression";
 
 interface BaridimobPaymentModalProps {
   open: boolean;
@@ -125,13 +126,25 @@ export function BaridimobPaymentModal({
     setTimeout(() => setCopied(false), 2500);
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
     if (!selected.type.startsWith("image/") && selected.type !== "application/pdf") {
       toast.error("Veuillez importer une image (PNG, JPG, WEBP) ou un PDF.");
       return;
+    }
+
+    if (selected.type.startsWith("image/")) {
+      try {
+        const compressed = await compressImage(selected);
+        setFile(compressed.file);
+        setPreviewUrl(compressed.dataUrl);
+        setError(null);
+        return;
+      } catch (err) {
+        console.error("Compression error:", err);
+      }
     }
 
     if (selected.size > 10 * 1024 * 1024) {
@@ -141,14 +154,7 @@ export function BaridimobPaymentModal({
 
     setFile(selected);
     setError(null);
-
-    if (selected.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = () => setPreviewUrl(reader.result as string);
-      reader.readAsDataURL(selected);
-    } else {
-      setPreviewUrl(null);
-    }
+    setPreviewUrl(null);
   }
 
   function handleRemoveFile() {

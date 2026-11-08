@@ -73,7 +73,7 @@ function ResetPasswordContent() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
             <img
               src="/favicon.png"
-              alt="Logo Gradelys"
+              alt="Gradelys logo"
               width={32}
               height={32}
               className="h-full w-full object-contain"

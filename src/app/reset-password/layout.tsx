@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Réinitialisation du mot de passe | Gradelys",
+  title: "Reset Password | Gradelys",
   robots: {
     index: false,
     follow: false,

@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/stores/ui-store";
 import { SpaceSourcesBar } from "@/components/space/space-sources-bar";
 import { useTranslation } from "@/i18n/locale-provider";
+import { compressImage } from "@/lib/image-compression";
 import type { SourceType } from "@/types";
 
 const SPACE_TOOLS = [
@@ -142,14 +143,26 @@ export default function SpaceDetailPage() {
     if (!file) return;
     setUploading(true);
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      await uploadSource.mutateAsync({ fileName: file.name, mimeType: file.type, fileBase64: base64 });
-      toast.success(`"${file.name}" analysé et ajouté`);
+      let base64: string;
+      let mimeType = file.type;
+      let fileName = file.name;
+
+      if (file.type.startsWith("image/")) {
+        const compressed = await compressImage(file);
+        base64 = compressed.base64;
+        mimeType = compressed.mimeType;
+        fileName = compressed.file.name;
+      } else {
+        base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      await uploadSource.mutateAsync({ fileName, mimeType, fileBase64: base64 });
+      toast.success(`"${fileName}" analysé et ajouté`);
       setOpen(false);
     } catch (err: any) {
       toast.error(err.message || "Upload failed");

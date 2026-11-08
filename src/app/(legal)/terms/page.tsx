@@ -1,18 +1,44 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Conditions Générales d'Utilisation | Gradelys",
+  title: {
+    absolute: "Terms of Service | Gradelys",
+  },
   description:
-    "Prenez connaissance des conditions générales d'utilisation de Gradelys : règles d'accès, intégrité académique, abonnements et responsabilités.",
+    "Review the Gradelys terms of service: platform access guidelines, academic integrity standards, subscriptions, and acceptable use policies.",
   alternates: {
-    canonical: "/terms",
+    canonical: "https://gradelys.com/terms",
   },
   openGraph: {
-    title: "Conditions Générales d'Utilisation | Gradelys",
+    title: "Terms of Service | Gradelys",
     description:
-      "Prenez connaissance des conditions générales d'utilisation de Gradelys : règles d'accès, intégrité académique, abonnements et responsabilités.",
+      "Review the Gradelys terms of service: platform access guidelines, academic integrity standards, subscriptions, and acceptable use policies.",
     url: "https://gradelys.com/terms",
     type: "article",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Terms of Service",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service | Gradelys",
+    description:
+      "Review the Gradelys terms of service: platform access guidelines, academic integrity standards, subscriptions, and acceptable use policies.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Terms of Service",
+      },
+    ],
   },
 };
 

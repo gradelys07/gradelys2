@@ -25,6 +25,7 @@ import { useFocusStore } from "@/stores/focus-store";
 
 import { detectChatIntent } from "@/lib/chat-intent";
 import { apiFetch } from "@/lib/api-fetch";
+import { compressImage } from "@/lib/image-compression";
 
 export default function ChatHomePage() {
   const router = useRouter();
@@ -148,13 +149,26 @@ export default function ChatHomePage() {
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
     if (files.length > 3) {
       toast.error(t("chat.moreThanThreeDocsToast"));
       return;
     }
-    setAttachedFiles(files);
+    const processedFiles: File[] = [];
+    for (const f of files) {
+      if (f.type.startsWith("image/")) {
+        try {
+          const compressed = await compressImage(f);
+          processedFiles.push(compressed.file);
+        } catch {
+          processedFiles.push(f);
+        }
+      } else {
+        processedFiles.push(f);
+      }
+    }
+    setAttachedFiles(processedFiles);
   }
 
   const firstName = user?.name?.split(" ")[0];

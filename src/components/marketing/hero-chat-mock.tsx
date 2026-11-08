@@ -8,11 +8,18 @@ import { useEffect, useState, useRef } from "react";
 export function HeroChatMock() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [startTyping, setStartTyping] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile, { passive: true });
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const { scrollYProgress } = useScroll({
@@ -23,7 +30,7 @@ export function HeroChatMock() {
   // 1. Zoom from a visible size to normal size quickly
   const scale = useTransform(scrollYProgress, [0, 0.2], [0.6, 1]);
   
-  // 2. Expand to dock perfectly to the screen
+  // 2. Expand to dock perfectly to the screen (Desktop only)
   const width = useTransform(scrollYProgress, [0, 0.2], ["75vw", "100vw"]);
   const minHeight = useTransform(scrollYProgress, [0, 0.2], ["60vh", "100vh"]); 
   const borderRadius = useTransform(scrollYProgress, [0, 0.2], ["32px", "0px"]);
@@ -103,24 +110,30 @@ export function HeroChatMock() {
   const aiText = "Gradelys uses an advanced SM-2 spaced repetition algorithm combined with AI. It analyzes your memory decay curve in real-time, scheduling reviews exactly when you're about to forget them. The result? 80% less study time with maximum retention.";
 
   return (
-    <div ref={containerRef} className="relative w-full h-[150vh]">
-      <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-gray-50/30">
+    <div ref={containerRef} className="relative w-full pb-16 md:pb-0 md:h-[150vh]">
+      <div className="relative md:sticky md:top-0 flex h-auto md:h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-gray-50/30 px-4 sm:px-6 md:px-0">
         <motion.div 
-          style={{ scale }}
-          className="relative flex w-full items-center justify-center perspective-[2000px]"
+          style={isMobile ? undefined : { scale }}
+          className="relative flex w-full items-center justify-center md:perspective-[2000px]"
         >
           
-          <motion.div style={{ width, minHeight }} className="relative flex flex-col">
-            {/* Outer Glow */}
-            <motion.div style={{ borderRadius }} className="absolute -inset-1 bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-indigo-500/30 blur-2xl opacity-60 pointer-events-none" />
+          <motion.div 
+            style={isMobile ? { width: "100%", maxWidth: "800px" } : { width, minHeight }} 
+            className="relative flex flex-col w-full"
+          >
+            {/* Outer Glow (Desktop only - heavy blur-2xl disabled on mobile) */}
+            <motion.div 
+              style={isMobile ? undefined : { borderRadius }} 
+              className="absolute -inset-1 bg-gradient-to-br from-blue-500/30 via-purple-500/30 to-indigo-500/30 blur-2xl opacity-60 pointer-events-none hidden md:block" 
+            />
 
             {/* Main Glass Container */}
             <motion.div
               variants={containerVars}
               initial="hidden"
               animate="visible"
-              style={{ borderRadius, borderWidth }}
-              className="relative w-full h-full flex flex-col bg-surface/80 backdrop-blur-2xl border border-border/40 shadow-xl overflow-hidden"
+              style={isMobile ? { borderRadius: "24px", borderWidth: "1px" } : { borderRadius, borderWidth }}
+              className="relative w-full h-full flex flex-col bg-surface border border-border/40 shadow-xl overflow-hidden md:bg-surface/80 md:backdrop-blur-2xl"
             >
         {/* Window Controls */}
         <div className="flex items-center justify-between border-b border-border/40 px-4 py-3 bg-surface">
@@ -142,7 +155,10 @@ export function HeroChatMock() {
             <div className="flex h-14 items-center px-4">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md overflow-hidden">
-                  <img src="/favicon.png" alt="Gradelys" className="h-full w-full object-contain" />
+                  <picture>
+                    <source srcSet="/favicon.webp" type="image/webp" />
+                    <img src="/favicon.png" alt="Gradelys logo" width={24} height={24} className="h-full w-full object-contain" />
+                  </picture>
                 </div>
                 <span className="text-sm font-bold text-text-primary">Gradelys</span>
               </div>
@@ -181,7 +197,7 @@ export function HeroChatMock() {
             <div className="p-3 border-t border-border/40">
               <div className="flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover">
                 <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                  <img src="https://i.pravatar.cc/100?img=11" alt="User" className="w-full h-full object-cover" />
+                  <img src="https://i.pravatar.cc/100?img=11" alt="Marc D. profile avatar" width={32} height={32} loading="lazy" className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0 flex-1 text-left">
                   <div className="truncate text-[13px] font-medium text-text-primary">Marc D.</div>
@@ -207,7 +223,7 @@ export function HeroChatMock() {
               {/* AI Response */}
               <motion.div variants={itemVars} className="flex gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-md animate-pulse" />
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-md animate-pulse hidden md:block" />
                   <div className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white shadow-md z-10 border border-white/20">
                     <Bot className="w-5 h-5" />
                   </div>
@@ -215,13 +231,17 @@ export function HeroChatMock() {
                 
                 <div className="flex flex-col gap-3 max-w-[85%] sm:max-w-[75%]">
                   <div className="p-5 rounded-2xl rounded-tl-sm bg-[var(--primary-subtle)] border border-primary/20 text-text-primary text-sm sm:text-[15px] leading-relaxed shadow-sm font-medium min-h-[100px]">
-                    <motion.div variants={ledContainer} initial="hidden" animate="visible">
-                      {aiText.split("").map((char, index) => (
-                        <motion.span key={index} variants={ledChar}>
-                          {char}
-                        </motion.span>
-                      ))}
-                    </motion.div>
+                    {isMobile ? (
+                      <p>{aiText}</p>
+                    ) : (
+                      <motion.div variants={ledContainer} initial="hidden" animate="visible">
+                        {aiText.split("").map((char, index) => (
+                          <motion.span key={index} variants={ledChar}>
+                            {char}
+                          </motion.span>
+                        ))}
+                      </motion.div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
@@ -246,7 +266,7 @@ export function HeroChatMock() {
             </div>
             
             {/* Input Field */}
-            <div className="p-4 border-t border-border/40 bg-surface/80 backdrop-blur-md">
+            <div className="p-4 border-t border-border/40 bg-surface md:bg-surface/80 md:backdrop-blur-md">
               <div className="max-w-4xl mx-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-surface border border-border-subtle focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
                 <Sparkles className="w-5 h-5 text-primary/60" />
                 <input

@@ -5,33 +5,53 @@ import { Mail, MessageCircle } from "lucide-react";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
-  title: "Contact & Assistance | Gradelys",
+  title: {
+    absolute: "Contact Gradelys Support | Gradelys",
+  },
   description:
-    "Une question, un retour ou un besoin d'assistance ? Contactez l'équipe Gradelys par email à support@gradelys.com. Nous vous répondons sous 24h.",
+    "Have questions about Gradelys or need help studying? Contact our support team directly at support@gradelys.com. We answer within 24 hours.",
   alternates: {
-    canonical: "/contact",
+    canonical: "https://gradelys.com/contact",
   },
   openGraph: {
-    title: "Contact & Assistance | Gradelys",
+    title: "Contact Gradelys Support | Gradelys",
     description:
-      "Une question, un retour ou un besoin d'assistance ? Contactez l'équipe Gradelys par email à support@gradelys.com. Nous vous répondons sous 24h.",
+      "Have questions about Gradelys or need help studying? Contact our support team directly at support@gradelys.com. We answer within 24 hours.",
     url: "https://gradelys.com/contact",
     type: "website",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Contact Gradelys Support",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Contact & Assistance | Gradelys",
+    title: "Contact Gradelys Support | Gradelys",
     description:
-      "Une question, un retour ou un besoin d'assistance ? Contactez l'équipe Gradelys par email à support@gradelys.com.",
+      "Have questions about Gradelys or need help studying? Contact our support team directly at support@gradelys.com.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Contact Gradelys Support",
+      },
+    ],
   },
 };
 
 const contactSchema = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
-  name: "Contactez Gradelys",
+  name: "Contact Gradelys",
   url: "https://gradelys.com/contact",
-  description: "Canaux de contact et assistance pour les utilisateurs et partenaires de Gradelys.",
+  description: "Contact and customer support channels for Gradelys students and educators.",
   mainEntity: {
     "@type": "Organization",
     name: "Gradelys",
@@ -41,13 +61,13 @@ const contactSchema = {
         "@type": "ContactPoint",
         contactType: "customer support",
         email: "support@gradelys.com",
-        availableLanguage: ["French", "English"],
+        availableLanguage: ["English", "French"],
       },
       {
         "@type": "ContactPoint",
         contactType: "general inquiries",
         email: "hello@gradelys.com",
-        availableLanguage: ["French", "English"],
+        availableLanguage: ["English", "French"],
       },
     ],
   },
@@ -60,7 +80,7 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       position: 1,
-      name: "Accueil",
+      name: "Home",
       item: "https://gradelys.com",
     },
     {
@@ -86,7 +106,7 @@ export default function ContactPage() {
           <a
             href="mailto:support@gradelys.com"
             className="rounded-lg border border-border bg-surface p-6 transition-colors hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Contacter le support par email à support@gradelys.com"
+            aria-label="Contact support by email at support@gradelys.com"
           >
             <Mail className="mx-auto h-6 w-6 text-primary" aria-hidden="true" />
             <p className="mt-3 text-heading-sm text-text-primary">Support</p>
@@ -95,7 +115,7 @@ export default function ContactPage() {
           <a
             href="mailto:hello@gradelys.com"
             className="rounded-lg border border-border bg-surface p-6 transition-colors hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Contact général par email à hello@gradelys.com"
+            aria-label="Contact general inquiries by email at hello@gradelys.com"
           >
             <MessageCircle className="mx-auto h-6 w-6 text-primary" aria-hidden="true" />
             <p className="mt-3 text-heading-sm text-text-primary">General inquiries</p>

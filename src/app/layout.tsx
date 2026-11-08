@@ -23,22 +23,24 @@ function getBaseUrl(): URL {
 export const metadata: Metadata = {
   metadataBase: getBaseUrl(),
   title: {
-    default: "Gradelys | Espace d'apprentissage & de révision interactif",
+    default: "Gradelys: Study Smarter, Remember More",
     template: "%s | Gradelys",
   },
   description:
-    "Révisez efficacement avec Gradelys : mémorisation espacée (SM-2), diagnostics d'exercices, fiches de révision et synthèses visuelles pour votre réussite académique.",
+    "Scan your graded exams, find exactly what you got wrong, and turn your notes into flashcards that stick. Free to start, no credit card.",
   keywords: [
-    "révision examen",
-    "fiches de révision",
-    "répétition espacée",
-    "algorithme SM-2",
-    "méthode de travail étudiant",
-    "synthèse de cours",
-    "diagnostic examen",
+    "study app",
+    "spaced repetition flashcards",
+    "exam revision",
+    "homework scanner",
+    "AI study tool",
+    "mind map maker",
     "active recall",
-    "apprentissage interactif",
-    "espace d'étude",
+    "SM-2",
+    "study notes generator",
+    "flashcard app",
+    "active recall study",
+    "exam prep",
   ],
   authors: [{ name: "Gradelys", url: "https://gradelys.com" }],
   creator: "Gradelys",
@@ -51,10 +53,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: "/",
+    canonical: "https://gradelys.com",
     languages: {
-      "fr": "https://gradelys.com",
-      "en": "https://gradelys.com",
+      "en-US": "https://gradelys.com",
       "x-default": "https://gradelys.com",
     },
   },
@@ -72,19 +73,35 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "fr_FR",
-    alternateLocale: ["en_US"],
+    locale: "en_US",
     url: "https://gradelys.com",
-    title: "Gradelys | Espace d'apprentissage & de révision interactif",
+    title: "Gradelys: Study Smarter, Remember More",
     description:
-      "Révisez efficacement avec Gradelys : mémorisation espacée (SM-2), diagnostics d'exercices, fiches de révision et synthèses visuelles pour votre réussite académique.",
+      "Scan your graded exams, find exactly what you got wrong, and turn your notes into flashcards that stick. Free to start, no credit card.",
     siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys — Study Smarter, Remember More",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gradelys | Espace d'apprentissage & de révision interactif",
+    title: "Gradelys: Study Smarter, Remember More",
     description:
-      "Révisez efficacement avec Gradelys : mémorisation espacée (SM-2), diagnostics d'exercices, fiches de révision et synthèses visuelles pour votre réussite académique.",
+      "Scan your graded exams, find exactly what you got wrong, and turn your notes into flashcards that stick. Free to start, no credit card.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys — Study Smarter, Remember More",
+      },
+    ],
   },
   robots: {
     index: true,
@@ -110,11 +127,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const missing = getMissingRequiredVars();
 
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-void font-sans antialiased">
         <Script
           id="whop-pixel"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `!function(w,d,s,u,n,a,b){if(w[n])return;a=w[n]={q:[],t:+new Date,s:[],o:u,track:function(){a.q.push([+new Date].concat([].slice.call(arguments)))},setScope:function(){a.s=[].slice.call(arguments).filter(function(x){return typeof x==="string"});a.q.push([+new Date,"setScope"].concat(a.s))},scope:function(){var c=[].slice.call(arguments);return{track:function(){a.q.push([+new Date].concat([].slice.call(arguments)).concat([{__scope:c}]))}}}};b=d.createElement(s);b.async=1;b.src=u+"/s.js";d.getElementsByTagName(s)[0].parentNode.insertBefore(b,d.getElementsByTagName(s)[0])}(window,document,"script","https://t.whop.tw","whop");whop.setScope("biz_qFdeP0qtndkr5o");whop.track("page");`
           }}

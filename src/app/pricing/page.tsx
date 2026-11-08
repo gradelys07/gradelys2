@@ -5,32 +5,53 @@ import { PricingClient } from "@/components/marketing/pricing-client";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
-  title: "Tarifs & Formules d'abonnement | Gradelys",
+  title: {
+    absolute: "Pricing: Free & Paid Study Plans | Gradelys",
+  },
   description:
-    "Découvrez les formules Gradelys : accès Gratuit pour débuter, offres Plus et Pro avec mémorisation espacée (SM-2), diagnostics et synthèses illimités.",
+    "Start studying for free with no credit card required, or upgrade to Plus and Pro for unlimited exam scans, spaced repetition flashcards, and mind maps.",
   alternates: {
-    canonical: "/pricing",
+    canonical: "https://gradelys.com/pricing",
   },
   openGraph: {
-    title: "Tarifs & Formules d'abonnement | Gradelys",
+    title: "Pricing: Free & Paid Study Plans | Gradelys",
     description:
-      "Découvrez les formules Gradelys : accès Gratuit pour débuter, offres Plus et Pro avec mémorisation espacée (SM-2), diagnostics et synthèses illimités.",
+      "Start studying for free with no credit card required, or upgrade to Plus and Pro for unlimited exam scans, spaced repetition flashcards, and mind maps.",
     url: "https://gradelys.com/pricing",
     type: "website",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Pricing: Free & Paid Study Plans",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tarifs & Formules d'abonnement | Gradelys",
+    title: "Pricing: Free & Paid Study Plans | Gradelys",
     description:
-      "Découvrez les formules Gradelys : accès Gratuit pour débuter, offres Plus et Pro avec mémorisation espacée (SM-2), diagnostics et synthèses illimités.",
+      "Start studying for free with no credit card required, or upgrade to Plus and Pro for unlimited exam scans, spaced repetition flashcards, and mind maps.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Pricing: Free & Paid Study Plans",
+      },
+    ],
   },
 };
 
 const pricingSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Gradelys Subscriptions",
-  description: "Plateforme d'apprentissage et de révision avec mémorisation espacée, diagnostics d'exercices et synthèses.",
+  name: "Gradelys Study Plans",
+  description:
+    "Active recall study app featuring spaced repetition (SM-2) flashcards, exam and homework scanning, and visual study diagrams.",
   brand: {
     "@type": "Brand",
     name: "Gradelys",
@@ -40,27 +61,27 @@ const pricingSchema = {
       "@type": "Offer",
       name: "Gradelys Free",
       price: "0",
-      priceCurrency: "EUR",
+      priceCurrency: "USD",
       availability: "https://schema.org/InStock",
-      description: "Accès essentiel aux outils d'apprentissage, fiches et chat d'étude.",
+      description: "Essential access to study chat, flashcards, 1 space, and 3 lifetime document scans. No credit card required.",
     },
     {
       "@type": "Offer",
       name: "Gradelys Plus",
       price: "6.99",
-      priceCurrency: "EUR",
+      priceCurrency: "USD",
       priceValidUntil: "2027-12-31",
       availability: "https://schema.org/InStock",
-      description: "Pour les étudiants qui révisent toute l'année. 100 scans/mois, 30 synthèses visuelles.",
+      description: "For active students. 100 scans per month, 30 visual syntheses, and unlimited study chat.",
     },
     {
       "@type": "Offer",
       name: "Gradelys Pro",
       price: "13.99",
-      priceCurrency: "EUR",
+      priceCurrency: "USD",
       priceValidUntil: "2027-12-31",
       availability: "https://schema.org/InStock",
-      description: "Accès illimité avec 300 scans/mois, synthèses et documents illimités.",
+      description: "Unlimited scans, unlimited mind maps, priority AI processing, and advanced exam revision.",
     },
   ],
 };
@@ -72,13 +93,13 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       position: 1,
-      name: "Accueil",
+      name: "Home",
       item: "https://gradelys.com",
     },
     {
       "@type": "ListItem",
       position: 2,
-      name: "Tarifs",
+      name: "Pricing",
       item: "https://gradelys.com/pricing",
     },
   ],
@@ -91,7 +112,7 @@ export default function PricingPage() {
     <>
       <JsonLd schema={[pricingSchema, breadcrumbSchema]} />
       <SiteHeader />
-      <Suspense fallback={<div className="mx-auto max-w-6xl px-5 py-24 text-center text-text-muted">Chargement des tarifs...</div>}>
+      <Suspense fallback={<div className="mx-auto max-w-6xl px-5 py-24 text-center text-text-muted">Loading pricing...</div>}>
         <PricingClient />
       </Suspense>
       <SiteFooter />

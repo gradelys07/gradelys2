@@ -43,10 +43,10 @@ export function HowItWorksScroll() {
     <section ref={containerRef} className="relative h-[400vh] bg-white border-y border-border-subtle z-10">
       
       {/* Sticky Container */}
-      <div className="sticky top-0 h-[100svh] w-full overflow-hidden flex items-center justify-center relative">
+      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden flex items-center justify-center relative">
         
-        {/* Background gradient */}
-        <div className="absolute inset-0 flex justify-center opacity-30 pointer-events-none z-0">
+        {/* Background gradient (Desktop only) */}
+        <div className="absolute inset-0 hidden md:flex justify-center opacity-30 pointer-events-none z-0">
           <div className="w-[1000px] h-[500px] bg-gradient-to-b from-blue-50/50 via-purple-50/20 to-transparent blur-3xl rounded-full" />
         </div>
 
@@ -79,8 +79,8 @@ export function HowItWorksScroll() {
         {/* We use w-full and translate in units of 100% to slide exactly one screen width at a time. */}
         <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">
           <motion.div 
-            style={{ x: cardsX }}
-            className="flex h-full w-[100%] pointer-events-auto"
+            style={{ x: cardsX, willChange: "transform" }}
+            className="flex h-full w-[100%] pointer-events-auto transform-gpu"
           >
             
             {/* STEP 1 - Wraps the card to take up 100% of the viewport width so translating -100% centers the next one */}

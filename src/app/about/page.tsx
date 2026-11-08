@@ -5,34 +5,54 @@ import { TrackPageView } from "@/components/track-page-view";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
-  title: "À propos de Gradelys | Notre Mission Éducative",
+  title: {
+    absolute: "About Gradelys: Science-Based Studying | Gradelys",
+  },
   description:
-    "Découvrez la mission de Gradelys : un espace d'apprentissage conçu pour aider chaque étudiant à réviser avec méthode grâce à la mémorisation espacée et au rappel actif.",
+    "Learn how Gradelys combines spaced repetition (SM-2) and active recall to help students diagnose exam mistakes, study faster, and remember more.",
   alternates: {
-    canonical: "/about",
+    canonical: "https://gradelys.com/about",
   },
   openGraph: {
-    title: "À propos de Gradelys | Notre Mission Éducative",
+    title: "About Gradelys: Science-Based Studying | Gradelys",
     description:
-      "Découvrez la mission de Gradelys : un espace d'apprentissage conçu pour aider chaque étudiant à réviser avec méthode grâce à la mémorisation espacée et au rappel actif.",
+      "Learn how Gradelys combines spaced repetition (SM-2) and active recall to help students diagnose exam mistakes, study faster, and remember more.",
     url: "https://gradelys.com/about",
     type: "website",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "About Gradelys: Science-Based Studying",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "À propos de Gradelys | Notre Mission Éducative",
+    title: "About Gradelys: Science-Based Studying | Gradelys",
     description:
-      "Découvrez la mission de Gradelys : un espace d'apprentissage conçu pour aider chaque étudiant à réviser avec méthode grâce à la mémorisation espacée et au rappel actif.",
+      "Learn how Gradelys combines spaced repetition (SM-2) and active recall to help students diagnose exam mistakes, study faster, and remember more.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "About Gradelys: Science-Based Studying",
+      },
+    ],
   },
 };
 
 const aboutSchema = {
   "@context": "https://schema.org",
   "@type": "AboutPage",
-  name: "À propos de Gradelys",
+  name: "About Gradelys",
   url: "https://gradelys.com/about",
   description:
-    "Mission, méthode et vision de Gradelys pour l'apprentissage et la réussite scolaire et universitaire.",
+    "Mission, science-backed learning methods, and active recall approach of Gradelys for academic success.",
   publisher: {
     "@type": "Organization",
     name: "Gradelys",
@@ -48,13 +68,13 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       position: 1,
-      name: "Accueil",
+      name: "Home",
       item: "https://gradelys.com",
     },
     {
       "@type": "ListItem",
       position: 2,
-      name: "À propos",
+      name: "About",
       item: "https://gradelys.com/about",
     },
   ],
@@ -70,7 +90,7 @@ export default function AboutPage() {
         <div className="h-8 w-8 rounded-lg overflow-hidden">
           <img
             src="/favicon.png"
-            alt="Logo officiel Gradelys"
+            alt="Gradelys official logo"
             width={32}
             height={32}
             className="h-full w-full object-contain"

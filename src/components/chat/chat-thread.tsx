@@ -25,6 +25,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown";
 import { trackChatSent, trackFlashcardsCreated, trackShare, trackHitLimit } from "@/lib/whop/tracking";
+import { compressImage } from "@/lib/image-compression";
 
 const MODELS = [
   { id: "auto", label: "Auto", description: "Best model for the task" },
@@ -310,14 +311,35 @@ export function ChatThread({
     }
   }
 
-  function attachFile(file: File) {
-    if (file.size > MAX_ATTACHMENT_BYTES) {
-      toast.error("Le fichier dépasse la limite maximale de 10 Mo.");
-      return;
-    }
+  async function attachFile(file: File) {
     const mimeType = guessMimeType(file);
     if (!isSupportedMime(mimeType)) {
       toast.error("Format non supporté. Formats acceptés : PDF, images, TXT, MD, CSV.");
+      return;
+    }
+
+    // Compression automatique des photos avant envoi
+    if (mimeType.startsWith("image/")) {
+      try {
+        const compressed = await compressImage(file);
+        setAttachedFile({
+          file: compressed.file,
+          name: compressed.file.name,
+          size: compressed.size,
+          mimeType: compressed.mimeType,
+          previewUrl: compressed.dataUrl,
+          base64: compressed.base64,
+        });
+        return;
+      } catch (err: any) {
+        console.error("Compression error:", err);
+        toast.error("Impossible de traiter la photo.");
+        return;
+      }
+    }
+
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      toast.error("Le fichier dépasse la limite maximale de 10 Mo.");
       return;
     }
     const reader = new FileReader();
@@ -329,7 +351,7 @@ export function ChatThread({
         name: file.name || "fichier",
         size: file.size,
         mimeType,
-        previewUrl: mimeType.startsWith("image/") ? result : undefined,
+        previewUrl: undefined,
         base64,
       });
     };

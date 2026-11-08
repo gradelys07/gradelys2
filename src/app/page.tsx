@@ -19,18 +19,42 @@ import { DemoFeedbackButton } from "@/components/marketing/demo-feedback-button"
 import { AiAdaptationSection } from "@/components/marketing/ai-adaptation-section";
 
 export const metadata: Metadata = {
-  title: "Gradelys | Espace d'apprentissage & de révision interactif",
+  title: "Gradelys: Study Smarter, Remember More",
   description:
-    "Chat d'étude, fiches de révision à répétition espacée (SM-2), diagnostic immédiat d'exercices et schémas visuels : tout pour réussir vos examens avec Gradelys.",
+    "Scan your graded exams, find exactly what you got wrong, and turn your notes into flashcards that stick. Free to start, no credit card.",
   alternates: {
-    canonical: "/",
+    canonical: "https://gradelys.com",
   },
   openGraph: {
-    title: "Gradelys | Espace d'apprentissage & de révision interactif",
+    title: "Gradelys: Study Smarter, Remember More",
     description:
-      "Chat d'étude, fiches de révision à répétition espacée (SM-2), diagnostic immédiat d'exercices et schémas visuels : tout pour réussir vos examens avec Gradelys.",
+      "Scan your graded exams, find exactly what you got wrong, and turn your notes into flashcards that stick. Free to start, no credit card.",
     url: "https://gradelys.com",
     type: "website",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys — Study Smarter, Remember More",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Gradelys: Study Smarter, Remember More",
+    description:
+      "Scan your graded exams, find exactly what you got wrong, and turn your notes into flashcards that stick. Free to start, no credit card.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys — Study Smarter, Remember More",
+      },
+    ],
   },
 };
 
@@ -241,7 +265,8 @@ const organizationSchema = {
   name: "Gradelys",
   url: "https://gradelys.com",
   logo: "https://gradelys.com/favicon.png",
-  description: "Plateforme éducative d'apprentissage et de révision avec mémorisation espacée (SM-2), diagnostics d'exercices et synthèses.",
+  description:
+    "Active recall study app featuring spaced repetition flashcards (SM-2), graded exam and homework scanning, and visual study notes.",
   contactPoint: {
     "@type": "ContactPoint",
     email: "support@gradelys.com",
@@ -256,24 +281,42 @@ const webSiteSchema = {
   url: "https://gradelys.com",
 };
 
-const webAppSchema = {
+const softwareAppSchema = {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
+  "@type": "SoftwareApplication",
   name: "Gradelys",
   url: "https://gradelys.com",
   applicationCategory: "EducationalApplication",
-  operatingSystem: "All",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "EUR",
-  },
+  operatingSystem: "Web, iOS, Android",
+  offers: [
+    {
+      "@type": "Offer",
+      name: "Free Plan",
+      price: "0",
+      priceCurrency: "USD",
+      description: "Daily AI study chat, 1 subject space, web search, and 3 lifetime document scans. No credit card required.",
+    },
+    {
+      "@type": "Offer",
+      name: "Plus Plan",
+      price: "6.99",
+      priceCurrency: "USD",
+      description: "For active students. 100 scans per month, 30 visual syntheses, and unlimited study chat.",
+    },
+    {
+      "@type": "Offer",
+      name: "Pro Plan",
+      price: "13.99",
+      priceCurrency: "USD",
+      description: "For demanding exam preparation. Unlimited scans, unlimited mind maps, and priority AI processing.",
+    },
+  ],
   featureList: [
-    "Fiches de révision et mémorisation espacée (SM-2)",
-    "Diagnostics de devoirs et examens",
-    "Synthèses de cours et cartes conceptuelles",
-    "Quiz personnalisés et examens blancs",
-    "Espaces d'étude organisés par matière",
+    "Spaced repetition flashcards with SM-2 algorithm",
+    "Graded exam and homework scanner with error diagnostic",
+    "Mind map maker and concept visualization diagrams",
+    "Interactive quiz and timed exam revision",
+    "Subject-based study spaces with source citations",
   ],
 };
 
@@ -324,13 +367,13 @@ const renderStar = (rating: number, index: number, cardId: string) => {
 export default function LandingPage() {
   return (
     <>
-      <JsonLd schema={[organizationSchema, webSiteSchema, webAppSchema, faqSchema]} />
+      <JsonLd schema={[organizationSchema, webSiteSchema, softwareAppSchema, faqSchema]} />
       <SiteHeader />
       <TrackPageView page="landing" />
       <main className="relative w-full [overflow-x:clip]">
         {/* ── GLOBAL BACKGROUND ─────────────────────────── */}
         <div className="pointer-events-none absolute inset-0 -z-10 h-full w-full bg-slate-50/20 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px]">
-          <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-blue-500 opacity-20 blur-[100px]"></div>
+          <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-blue-500 opacity-20 blur-[100px] hidden md:block"></div>
         </div>
 
         {/* ── HERO TEXT & ANIMATIONS ────────────────────── */}
@@ -355,15 +398,15 @@ export default function LandingPage() {
         <HowItWorksScroll />
 
         {/* ── TESTIMONIALS & TRUST BAR ────────────────────── */}
-        <section className="relative overflow-hidden bg-transparent pb-24 sm:pb-32 pt-0 -mt-10 lg:-mt-24 z-0">
-          {/* Subtle background effects */}
-          <div className="pointer-events-none absolute inset-0 flex justify-center opacity-30">
+        <section className="relative overflow-hidden bg-transparent pb-24 sm:pb-32 pt-0 -mt-10 lg:-mt-24 z-0 [content-visibility:auto] [contain-intrinsic-size:1px_600px]">
+          {/* Subtle background effects (Desktop only) */}
+          <div className="pointer-events-none absolute inset-0 hidden md:flex justify-center opacity-30">
             <div className="w-[800px] h-[400px] bg-gradient-to-b from-blue-50/80 via-purple-50/30 to-transparent blur-3xl rounded-full translate-y-[-20%]" />
           </div>
-          {/* Faint glowing orbs */}
-          <div className="absolute top-20 left-10 w-32 h-32 bg-purple-200/20 rounded-full blur-3xl" />
-          <div className="absolute top-40 right-20 w-48 h-48 bg-blue-200/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-24 h-24 bg-indigo-200/20 rounded-full blur-3xl" />
+          {/* Faint glowing orbs (Desktop only) */}
+          <div className="absolute top-20 left-10 w-32 h-32 bg-purple-200/20 rounded-full blur-3xl hidden md:block" />
+          <div className="absolute top-40 right-20 w-48 h-48 bg-blue-200/20 rounded-full blur-3xl hidden md:block" />
+          <div className="absolute bottom-10 right-10 w-24 h-24 bg-indigo-200/20 rounded-full blur-3xl hidden md:block" />
 
           {/* Decorative Sparkle (Left) & Squiggle (Right) */}
           <div className="absolute top-32 left-[15%] hidden lg:block opacity-50">
@@ -386,10 +429,10 @@ export default function LandingPage() {
             <div className="relative mb-20 flex flex-col gap-6 overflow-hidden w-full max-w-[100vw] -mx-5 px-5 lg:-mx-8 lg:px-8 py-4">
 
               {/* Row 1: Left to Right (Reverse) */}
-              <div className="flex w-max animate-marquee-reverse gap-6">
+              <div className="flex w-max animate-marquee-reverse gap-6 hover:[animation-play-state:paused] active:[animation-play-state:paused] will-change-transform transform-gpu">
                 {[...TESTIMONIAL_CARDS, ...TESTIMONIAL_CARDS].map((t, idx) => (
                   <div key={`row1-${idx}`} className="relative bg-white border border-gray-100 w-[350px] sm:w-[400px] rounded-[24px] p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col overflow-hidden shrink-0">
-                    <div className={`absolute bottom-0 right-0 w-32 h-32 rounded-full blur-2xl transform translate-x-1/2 translate-y-1/4 pointer-events-none ${t.color.glow}`} />
+                    <div className={`absolute bottom-0 right-0 w-32 h-32 rounded-full blur-2xl transform translate-x-1/2 translate-y-1/4 pointer-events-none hidden md:block ${t.color.glow}`} />
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex gap-1">
                         {Array.from({ length: 5 }).map((_, i) => renderStar(t.rating, i, `row1-${idx}`))}
@@ -399,7 +442,7 @@ export default function LandingPage() {
                     <p className="text-gray-600 text-sm leading-relaxed mb-8 flex-1 relative z-10">"{t.quote}"</p>
                     <div className="flex items-center gap-3 mb-6 relative z-10">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                        <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" />
+                        <img src={t.avatar} alt={`Avatar of ${t.name}`} width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <div className="text-sm font-bold text-gray-900 leading-tight">{t.name}</div>
@@ -414,10 +457,10 @@ export default function LandingPage() {
               </div>
 
               {/* Row 2: Right to Left (Normal) */}
-              <div className="flex w-max animate-marquee gap-6">
+              <div className="flex w-max animate-marquee gap-6 hover:[animation-play-state:paused] active:[animation-play-state:paused] will-change-transform transform-gpu">
                 {[...TESTIMONIAL_CARDS_ROW_2, ...TESTIMONIAL_CARDS_ROW_2].map((t, idx) => (
                   <div key={`row2-${idx}`} className="relative bg-white border border-gray-100 w-[350px] sm:w-[400px] rounded-[24px] p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col overflow-hidden shrink-0">
-                    <div className={`absolute bottom-0 right-0 w-32 h-32 rounded-full blur-2xl transform translate-x-1/2 translate-y-1/4 pointer-events-none ${t.color.glow}`} />
+                    <div className={`absolute bottom-0 right-0 w-32 h-32 rounded-full blur-2xl transform translate-x-1/2 translate-y-1/4 pointer-events-none hidden md:block ${t.color.glow}`} />
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex gap-1">
                         {Array.from({ length: 5 }).map((_, i) => renderStar(t.rating, i, `row2-${idx}`))}
@@ -427,7 +470,7 @@ export default function LandingPage() {
                     <p className="text-gray-600 text-sm leading-relaxed mb-8 flex-1 relative z-10">"{t.quote}"</p>
                     <div className="flex items-center gap-3 mb-6 relative z-10">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                        <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" />
+                        <img src={t.avatar} alt={`Avatar of ${t.name}`} width={40} height={40} loading="lazy" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <div className="text-sm font-bold text-gray-900 leading-tight">{t.name}</div>
@@ -482,9 +525,9 @@ export default function LandingPage() {
         <EverythingYouGet />
 
         {/* ── FAQ ──────────────────────────────────────────── */}
-        <section id="faq" className="border-t border-gray-100 bg-white/40 backdrop-blur-3xl py-32 relative overflow-hidden">
-          {/* Subtle background glow */}
-          <div className="absolute top-0 right-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <section id="faq" className="border-t border-gray-100 bg-white/95 md:bg-white/40 md:backdrop-blur-3xl py-32 relative overflow-hidden [content-visibility:auto] [contain-intrinsic-size:1px_700px]">
+          {/* Subtle background glow (Desktop only) */}
+          <div className="absolute top-0 right-0 w-full h-full overflow-hidden -z-10 pointer-events-none hidden md:block">
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-[100px]" />
           </div>
 
@@ -513,14 +556,14 @@ export default function LandingPage() {
         </section>
 
         {/* ── FINAL CTA ────────────────────────────────────── */}
-        <section className="relative overflow-hidden py-32 mt-12 mb-12 mx-5 lg:mx-8 rounded-[40px] bg-blue-600 shadow-[0_20px_80px_rgba(37,99,235,0.25)]">
+        <section className="relative overflow-hidden py-32 mt-12 mb-12 mx-5 lg:mx-8 rounded-[40px] bg-blue-600 shadow-[0_20px_80px_rgba(37,99,235,0.25)] [content-visibility:auto] [contain-intrinsic-size:1px_450px]">
           {/* Animated Background Gradients */}
           <div className="absolute inset-0 z-0">
             {/* Grain overlay */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-            {/* Glowing animated orbs */}
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500 rounded-full blur-[120px] opacity-40 animate-pulse" style={{ animationDuration: '4s' }}></div>
-            <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400 rounded-full blur-[120px] opacity-30 animate-pulse" style={{ animationDuration: '5s' }}></div>
+            {/* Glowing animated orbs (Desktop only - heavy blur-120 pulse disabled on mobile) */}
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500 rounded-full blur-[120px] opacity-40 animate-pulse hidden md:block" style={{ animationDuration: '4s' }}></div>
+            <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400 rounded-full blur-[120px] opacity-30 animate-pulse hidden md:block" style={{ animationDuration: '5s' }}></div>
           </div>
 
           <div className="relative z-10 mx-auto max-w-5xl px-5 text-center flex flex-col items-center">

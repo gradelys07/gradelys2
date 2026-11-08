@@ -11,6 +11,7 @@ import { useRecordActivity } from "@/hooks/use-gamification";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { trackScanUploaded, trackViewContent } from "@/lib/whop/tracking";
+import { compressImage } from "@/lib/image-compression";
 
 export default function ScanPage() {
   const { data: scans, isLoading } = useScans();
@@ -29,29 +30,36 @@ export default function ScanPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [uploadTarget, setUploadTarget] = React.useState<"work" | "subject" | "correction" | null>(null);
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     
-    files.forEach((f) => {
-      if (!f.type.startsWith("image/")) {
-        toast.error("Veuillez n'ajouter que des images.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        const newFile = { preview: result, base64: result.split(",")[1], mimeType: f.type };
-        if (uploadTarget === "work") setWorkFiles(p => [...p, newFile]);
-        if (uploadTarget === "subject") setSubjectFiles(p => [...p, newFile]);
-        if (uploadTarget === "correction") setCorrectionFiles(p => [...p, newFile]);
-      };
-      reader.readAsDataURL(f);
-    });
-    
+    const target = uploadTarget;
     // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = "";
     setUploadTarget(null);
+
+    for (const f of files) {
+      if (!f.type.startsWith("image/")) {
+        toast.error("Veuillez n'ajouter que des images.");
+        continue;
+      }
+
+      try {
+        const compressed = await compressImage(f);
+        const newFile = {
+          preview: compressed.dataUrl,
+          base64: compressed.base64,
+          mimeType: compressed.mimeType,
+        };
+        if (target === "work") setWorkFiles((p) => [...p, newFile]);
+        if (target === "subject") setSubjectFiles((p) => [...p, newFile]);
+        if (target === "correction") setCorrectionFiles((p) => [...p, newFile]);
+      } catch (err: any) {
+        console.error("Erreur compression scan:", err);
+        toast.error("Impossible de traiter cette photo.");
+      }
+    }
   }
 
   function removeFile(target: "work" | "subject" | "correction", index: number) {

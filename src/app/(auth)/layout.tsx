@@ -3,9 +3,13 @@ import Link from "next/link";
 import { GraduationCap, MessageSquare, Brain, ScanLine } from "lucide-react";
 
 export const metadata: Metadata = {
+  title: {
+    default: "Account",
+    template: "%s | Gradelys",
+  },
   robots: {
     index: false,
-    follow: true,
+    follow: false,
   },
 };
 
@@ -17,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
             <img
               src="/favicon.png"
-              alt="Logo officiel Gradelys"
+              alt="Gradelys official logo"
               width={32}
               height={32}
               className="h-full w-full object-contain"

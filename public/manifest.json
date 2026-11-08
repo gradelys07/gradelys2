@@ -1,10 +1,10 @@
 {
-  "name": "Gradelys — Espace d'apprentissage & de révision",
+  "name": "Gradelys: Study Smarter, Remember More",
   "short_name": "Gradelys",
-  "description": "Espace d'apprentissage et de révision avec mémorisation espacée (SM-2), diagnostics d'exercices et synthèses.",
+  "description": "Active recall study app featuring spaced repetition flashcards (SM-2), graded exam scanning, and visual study notes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "background_color": "#0B0F17",
   "theme_color": "#0EA5E9",
   "orientation": "portrait-primary",
   "icons": [

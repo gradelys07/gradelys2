@@ -68,11 +68,11 @@ export function FeaturesBentoDynamic() {
   return (
     <section ref={containerRef} id="features" className="relative h-auto lg:h-[400vh] bg-white border-y border-border-subtle py-24 lg:py-0">
       
-      {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-to-tr from-blue-50/40 to-purple-50/40 blur-[100px] rounded-full pointer-events-none -z-10" />
+      {/* Background glow (Desktop only - heavy 100px blur disabled on mobile) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-to-tr from-blue-50/40 to-purple-50/40 blur-[100px] rounded-full pointer-events-none -z-10 hidden lg:block" />
 
       {/* Sticky Container */}
-      <div className="lg:sticky lg:top-0 lg:h-screen w-full lg:overflow-hidden flex items-center">
+      <div className="lg:sticky lg:top-0 lg:h-[100dvh] w-full lg:overflow-hidden flex items-center">
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 w-full h-full flex flex-col lg:block items-center">
           
           {/* Animated Title Container */}
@@ -105,7 +105,7 @@ export function FeaturesBentoDynamic() {
                   </div>
                   <span className="text-xs font-bold uppercase tracking-wider">AI Chat</span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight group-hover:text-blue-600 transition-colors duration-300">Your personal AI study companion.</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight group-hover:text-blue-600 transition-colors duration-300">Targeted study answers from your course notes.</h3>
                 <p className="text-gray-500 leading-relaxed text-sm mb-8">
                   Ask questions, upload your course material, or paste a YouTube link. Get clear, contextual explanations grounded in what you're studying.
                 </p>
@@ -339,7 +339,7 @@ export function FeaturesBentoDynamic() {
                     
                     <motion.div 
                       variants={{ hidden: { y: 40, opacity: 0 }, hover: { y: 0, opacity: 1 } }}
-                      className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 backdrop-blur border border-gray-200 rounded-full p-1.5 shadow-xl w-max"
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white lg:bg-white/90 lg:backdrop-blur border border-gray-200 rounded-full p-1.5 shadow-xl w-max"
                     >
                       <button className="bg-violet-600 text-white text-[9px] font-medium px-4 py-2 rounded-full shadow-md hover:bg-violet-700">Create flashcards</button>
                     </motion.div>

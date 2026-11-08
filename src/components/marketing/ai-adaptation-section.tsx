@@ -45,12 +45,12 @@ export function AiAdaptationSection() {
     <section ref={containerRef} className="relative bg-white h-[300vh]">
       
       {/* Sticky Container for the "Video" effect */}
-      <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+      <div className="sticky top-0 h-[100dvh] w-full flex items-center justify-center overflow-hidden">
         
-        {/* Dynamic Background Decor */}
+        {/* Dynamic Background Decor (Desktop only - heavy blur and mix-blend disabled on mobile) */}
         <motion.div 
           style={{ opacity: bgGlowOpacity, scale: bgGlowScale }}
-          className="pointer-events-none absolute inset-0 -z-10 flex justify-center items-center"
+          className="pointer-events-none absolute inset-0 -z-10 hidden md:flex justify-center items-center"
         >
           <div className="w-[800px] h-[500px] bg-gradient-to-br from-indigo-200 via-purple-100 to-transparent blur-[100px] rounded-full mix-blend-multiply" />
         </motion.div>
@@ -95,13 +95,13 @@ export function AiAdaptationSection() {
             style={{ opacity, scale }}
             className="relative"
           >
-            {/* Glow backdrop */}
+            {/* Glow backdrop (Desktop only) */}
             <motion.div 
               style={{ opacity: bgGlowOpacity }}
-              className="absolute -inset-4 bg-gradient-to-r from-purple-300 to-indigo-300 blur-3xl rounded-full" 
+              className="absolute -inset-4 bg-gradient-to-r from-purple-300 to-indigo-300 blur-3xl rounded-full hidden md:block" 
             />
             
-            <div className="relative rounded-3xl border border-white/60 bg-white/70 backdrop-blur-xl p-5 md:p-8 shadow-2xl overflow-hidden min-h-[300px] md:min-h-[400px]">
+            <div className="relative rounded-3xl border border-gray-100 md:border-white/60 bg-white md:bg-white/70 md:backdrop-blur-xl p-5 md:p-8 shadow-2xl overflow-hidden min-h-[300px] md:min-h-[400px]">
               {/* Decorative top bar */}
               <div className="flex items-center gap-2 mb-4 md:mb-8">
                 <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-400/80" />

@@ -1,18 +1,44 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politique relative aux cookies | Gradelys",
+  title: {
+    absolute: "Cookie Policy | Gradelys",
+  },
   description:
-    "Découvrez l'utilisation des cookies techniques et de préférences sur la plateforme Gradelys : gestion de session, sécurité et respect de votre vie privée.",
+    "Learn about cookie usage on Gradelys: essential session cookies, user preferences, security, and how to manage your privacy settings.",
   alternates: {
-    canonical: "/cookies",
+    canonical: "https://gradelys.com/cookies",
   },
   openGraph: {
-    title: "Politique relative aux cookies | Gradelys",
+    title: "Cookie Policy | Gradelys",
     description:
-      "Découvrez l'utilisation des cookies techniques et de préférences sur la plateforme Gradelys : gestion de session, sécurité et respect de votre vie privée.",
+      "Learn about cookie usage on Gradelys: essential session cookies, user preferences, security, and how to manage your privacy settings.",
     url: "https://gradelys.com/cookies",
     type: "article",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Cookie Policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cookie Policy | Gradelys",
+    description:
+      "Learn about cookie usage on Gradelys: essential session cookies, user preferences, security, and how to manage your privacy settings.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Cookie Policy",
+      },
+    ],
   },
 };
 

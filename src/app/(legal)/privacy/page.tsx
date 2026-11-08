@@ -1,18 +1,44 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politique de confidentialité | Gradelys",
+  title: {
+    absolute: "Privacy Policy | Gradelys",
+  },
   description:
-    "Consultez la politique de confidentialité de Gradelys : protection de vos données personnelles, sécurité du chiffrement et respect des droits des utilisateurs.",
+    "Read the Gradelys privacy policy: how we safeguard your study data, notes, and uploaded exam documents with strict encryption and privacy controls.",
   alternates: {
-    canonical: "/privacy",
+    canonical: "https://gradelys.com/privacy",
   },
   openGraph: {
-    title: "Politique de confidentialité | Gradelys",
+    title: "Privacy Policy | Gradelys",
     description:
-      "Consultez la politique de confidentialité de Gradelys : protection de vos données personnelles, sécurité du chiffrement et respect des droits des utilisateurs.",
+      "Read the Gradelys privacy policy: how we safeguard your study data, notes, and uploaded exam documents with strict encryption and privacy controls.",
     url: "https://gradelys.com/privacy",
     type: "article",
+    locale: "en_US",
+    siteName: "Gradelys",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Privacy Policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | Gradelys",
+    description:
+      "Read the Gradelys privacy policy: how we safeguard your study data, notes, and uploaded exam documents with strict encryption and privacy controls.",
+    images: [
+      {
+        url: "https://gradelys.com/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Gradelys Privacy Policy",
+      },
+    ],
   },
 };
 
