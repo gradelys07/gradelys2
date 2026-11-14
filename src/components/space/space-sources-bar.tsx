@@ -159,7 +159,7 @@ export function SpaceSourcesBar({
                   <Icon className="h-4 w-4" />
                 </div>
 
-                <div className="flex flex-col min-w-0 pr-1">
+                <div className="flex flex-col min-w-0 pr-1 rtl:pr-0 rtl:pl-1">
                   <span className="truncate text-label-xs sm:text-label-sm font-medium text-text-primary max-w-[110px] xs:max-w-[140px] sm:max-w-[170px]">
                     {source.name}
                   </span>
@@ -174,7 +174,7 @@ export function SpaceSourcesBar({
               </div>
 
               {/* Quick Actions (View / Delete) */}
-              <div className="flex items-center gap-0.5 pl-1 border-l border-border-subtle/60">
+              <div className="flex items-center gap-0.5 pl-1 rtl:pl-0 rtl:pr-1 border-l rtl:border-l-0 rtl:border-r border-border-subtle/60">
                 <button
                   type="button"
                   onClick={() => setSelectedSourceForViewer(source)}

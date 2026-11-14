@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { trackScanUploaded, trackViewContent } from "@/lib/whop/tracking";
 import { compressImage } from "@/lib/image-compression";
+import { SpeakMessageButton, VoiceDictationButton } from "@/components/ui/voice-controls";
 
 export default function ScanPage() {
   const { data: scans, isLoading } = useScans();
@@ -134,7 +135,7 @@ export default function ScanPage() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); removeFile("work", i); }}
-                    className="absolute top-2 right-2 bg-black/60 hover:bg-red p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 rtl:right-auto rtl:left-2 bg-black/60 hover:bg-red p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -154,13 +155,13 @@ export default function ScanPage() {
            {subjectFiles.length > 0 && (
              <div className="flex items-center gap-2 text-label-sm text-text-secondary">
                <span className="font-medium">Sujet de l'exercice :</span> {subjectFiles.length} fichier(s) attaché(s)
-               <button type="button" onClick={() => setSubjectFiles([])} className="text-red hover:underline ml-2">Retirer</button>
+               <button type="button" onClick={() => setSubjectFiles([])} className="text-red hover:underline ml-2 rtl:ml-0 rtl:mr-2">Retirer</button>
              </div>
            )}
            {correctionFiles.length > 0 && (
              <div className="flex items-center gap-2 text-label-sm text-text-secondary">
                <span className="font-medium">Copie du professeur :</span> {correctionFiles.length} fichier(s) attaché(s)
-               <button type="button" onClick={() => setCorrectionFiles([])} className="text-red hover:underline ml-2">Retirer</button>
+               <button type="button" onClick={() => setCorrectionFiles([])} className="text-red hover:underline ml-2 rtl:ml-0 rtl:mr-2">Retirer</button>
              </div>
            )}
            <div className="flex flex-wrap gap-4 mt-1">
@@ -263,23 +264,28 @@ function QuestionChat({ scanId, question }: { scanId: string, question: any }) {
 
   return (
     <div className="mt-4 border-t border-border-subtle pt-4">
-      <div className="space-y-3 mb-3 max-h-64 overflow-y-auto pr-2">
+      <div className="space-y-3 mb-3 max-h-64 overflow-y-auto pr-2 rtl:pr-0 rtl:pl-2">
         {messages.map((m, i) => (
-          <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-            <div className={cn("max-w-[85%] rounded-xl px-4 py-2 text-body-sm", m.role === "user" ? "bg-primary text-white rounded-br-none" : "bg-elevated text-text-primary border border-border-subtle rounded-bl-none")}>
+          <div key={i} className={cn("flex flex-col", m.role === "user" ? "items-end" : "items-start")}>
+            <div className={cn("max-w-[85%] rounded-xl px-4 py-2 text-body-sm", m.role === "user" ? "bg-primary text-white rounded-br-none rtl:rounded-br-xl rtl:rounded-bl-none" : "bg-elevated text-text-primary border border-border-subtle rounded-bl-none rtl:rounded-bl-xl rtl:rounded-br-none")}>
               {m.content}
             </div>
+            <SpeakMessageButton
+              text={m.content}
+              messageId={`scan-${scanId}-${question?.id || "q"}-${i}`}
+              className="mt-1"
+            />
           </div>
         ))}
         {sending && (
           <div className="flex justify-start">
-            <div className="max-w-[85%] rounded-xl px-4 py-2 text-body-sm bg-elevated text-text-muted border border-border-subtle rounded-bl-none animate-pulse">
+            <div className="max-w-[85%] rounded-xl px-4 py-2 text-body-sm bg-elevated text-text-muted border border-border-subtle rounded-bl-none rtl:rounded-bl-xl rtl:rounded-br-none animate-pulse">
               Réflexion...
             </div>
           </div>
         )}
       </div>
-      <form onSubmit={handleChatSubmit} className="flex gap-2">
+      <form onSubmit={handleChatSubmit} className="flex items-center gap-2">
         <Input 
           value={chatInput} 
           onChange={e => setChatInput(e.target.value)} 
@@ -287,6 +293,7 @@ function QuestionChat({ scanId, question }: { scanId: string, question: any }) {
           disabled={sending}
           className="flex-1 h-9 text-body-sm"
         />
+        <VoiceDictationButton value={chatInput} onChange={setChatInput} disabled={sending} variant="icon" />
         <Button type="submit" size="sm" disabled={!chatInput.trim() || sending}>
           Envoyer
         </Button>
@@ -353,7 +360,10 @@ function ScanResult({ scan, onBack }: { scan: any; onBack: () => void }) {
         </div>
       </div>
 
-      <p className="mt-4 rounded-lg border border-border-subtle bg-base p-4 text-body-sm text-text-secondary">{diagnostic.globalFeedback}</p>
+      <div className="mt-4 flex items-start justify-between gap-3 rounded-lg border border-border-subtle bg-base p-4 text-body-sm text-text-secondary">
+        <p className="flex-1">{diagnostic.globalFeedback}</p>
+        <SpeakMessageButton text={diagnostic.globalFeedback} messageId={`scan-feedback-${scan.id}`} className="shrink-0" />
+      </div>
 
       <h3 className="mt-6 text-heading-md text-text-primary">Correction Détaillée</h3>
       <div className="mt-4 space-y-4">

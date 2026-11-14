@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { VoiceDictationButton } from "@/components/ui/voice-controls";
 
 export function ToolDashboard({ kind, title, description, spaceId }: { kind: ToolKind; title: string; description: string; spaceId?: string | null }) {
   const router = useRouter();
@@ -172,7 +173,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute bottom-[calc(100%+12px)] left-4 w-72 rounded-2xl border border-white/40 bg-white/90 p-4 shadow-xl backdrop-blur-2xl z-50"
+                    className="absolute bottom-[calc(100%+12px)] left-4 rtl:left-auto rtl:right-4 w-72 rounded-2xl border border-white/40 bg-white/90 p-4 shadow-xl backdrop-blur-2xl z-50"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-label-sm font-semibold uppercase tracking-wider text-text-muted">{t("tool.space") || "Select Space"}</span>
@@ -180,7 +181,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                         <X className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                    <div className="max-h-56 space-y-1 overflow-y-auto pr-1 rtl:pr-0 rtl:pl-1">
                       {spaces?.map((s: any) => (
                         <button
                           key={s.id}
@@ -190,13 +191,13 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                             setAttachOpen(false);
                           }}
                           className={cn(
-                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-body-sm transition-all",
+                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-body-sm text-left rtl:text-right transition-all",
                             localSpaceId === s.id ? "bg-primary text-white shadow-md" : "text-text-secondary hover:bg-black/5"
                           )}
                         >
                           <span className="text-base">{s.emoji}</span> 
                           <span className="truncate font-medium">{s.name}</span>
-                          {localSpaceId === s.id && <Check className="ml-auto h-4 w-4" />}
+                          {localSpaceId === s.id && <Check className="ml-auto rtl:ml-0 rtl:mr-auto h-4 w-4" />}
                         </button>
                       ))}
                       {(!spaces || spaces.length === 0) && (
@@ -239,15 +240,18 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                   </button>
                 )}
               </div>
-              <Button 
-                type="submit" 
-                size="icon" 
-                disabled={(!input.trim() && !loading)} 
-                loading={loading} 
-                className="h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
-              >
-                <ArrowUp className="h-5 w-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <VoiceDictationButton value={input} onChange={setInput} disabled={loading} variant="pill" />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={(!input.trim() && !loading)} 
+                  loading={loading} 
+                  className="h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+                >
+                  <ArrowUp className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </motion.form>
@@ -256,7 +260,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
           <h2 className="text-heading-sm font-semibold text-text-primary">
             {t("tool.quickStarts") || "Quick Starts"}
           </h2>
-          <div className="h-[1px] flex-1 ml-6 bg-gradient-to-r from-border-strong/50 to-transparent" />
+          <div className="h-[1px] flex-1 ml-6 rtl:ml-0 rtl:mr-6 bg-gradient-to-r rtl:bg-gradient-to-l from-border-strong/50 to-transparent" />
         </motion.div>
 
         <motion.div variants={containerVariants} className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -269,7 +273,7 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
               type="button"
               onClick={() => startChat(preset.prompt, preset)}
               className={cn(
-                "group relative flex flex-col items-start gap-5 rounded-[2rem] border border-white/60 bg-white/40 p-7 text-left shadow-xl shadow-black/5 backdrop-blur-2xl transition-all duration-500 hover:border-primary/40 hover:bg-white/60 hover:shadow-2xl hover:shadow-primary/20 overflow-hidden",
+                "group relative flex flex-col items-start gap-5 rounded-[2rem] border border-white/60 bg-white/40 p-7 text-left rtl:text-right shadow-xl shadow-black/5 backdrop-blur-2xl transition-all duration-500 hover:border-primary/40 hover:bg-white/60 hover:shadow-2xl hover:shadow-primary/20 overflow-hidden",
                 preset.id === "auto" && kind === "visualize" && "sm:col-span-2 lg:col-span-3 lg:flex-row lg:items-center lg:p-10"
               )}
             >
@@ -288,14 +292,14 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
                   )} />
                 </div>
                 {preset.id !== "auto" || kind !== "visualize" ? (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/60 text-text-muted shadow-sm ring-1 ring-black/5 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:bg-primary group-hover:text-white group-hover:ring-primary group-hover:-translate-x-1">
-                    <ChevronRight className="h-5 w-5" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/60 text-text-muted shadow-sm ring-1 ring-black/5 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:bg-primary group-hover:text-white group-hover:ring-primary group-hover:-translate-x-1 rtl:group-hover:translate-x-1">
+                    <ChevronRight className="h-5 w-5 rtl:rotate-180" />
                   </div>
                 ) : null}
               </div>
               
               {/* Bottom Section: Text */}
-              <div className={cn("relative z-10", preset.id === "auto" && kind === "visualize" ? "mt-0 flex-1 lg:ml-6" : "mt-2")}>
+              <div className={cn("relative z-10", preset.id === "auto" && kind === "visualize" ? "mt-0 flex-1 lg:ml-6 lg:rtl:ml-0 lg:rtl:mr-6" : "mt-2")}>
                 <h3 className={cn("font-bold text-text-primary transition-colors duration-300 group-hover:text-primary", preset.id === "auto" && kind === "visualize" ? "text-heading-lg" : "text-heading-sm")}>
                   {(() => {
                     if (preset.id === "auto") return t("preset.auto.title");
@@ -334,8 +338,8 @@ export function ToolDashboard({ kind, title, description, spaceId }: { kind: Too
 
               {/* Arrow for horizontal card */}
               {preset.id === "auto" && kind === "visualize" && (
-                <div className="hidden lg:flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/60 text-text-muted shadow-sm ring-1 ring-black/5 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:bg-primary group-hover:text-white group-hover:ring-primary group-hover:-translate-x-2">
-                  <ChevronRight className="h-7 w-7" />
+                <div className="hidden lg:flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/60 text-text-muted shadow-sm ring-1 ring-black/5 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:bg-primary group-hover:text-white group-hover:ring-primary group-hover:-translate-x-2 rtl:group-hover:translate-x-2">
+                  <ChevronRight className="h-7 w-7 rtl:rotate-180" />
                 </div>
               )}
             </motion.button>

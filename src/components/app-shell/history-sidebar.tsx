@@ -2,7 +2,8 @@
 
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronRight, Plus, Pin, PinOff, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Pin, PinOff, Trash2, FileStack, Brain } from "lucide-react";
+import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useConversations, useCreateConversation, useDeleteConversation, useUpdateConversation } from "@/hooks/use-chat";
@@ -23,21 +24,38 @@ export function HistorySidebar() {
   else if (pathname.startsWith("/studio")) kind = "studio";
   else if (pathname.startsWith("/practice")) kind = "practice";
 
-  const { data: sessions, isLoading } = useConversations(kind || "chat");
+  const [filter, setFilter] = React.useState<"all" | "studio" | "visualize" | "practice">("all");
+  React.useEffect(() => {
+    setFilter("all");
+  }, [kind]);
+
+  const { data: sessions, isLoading } = useConversations(kind === "studio" ? "all-tools" : (kind || "chat"));
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
   const updateConversation = useUpdateConversation();
 
+  const visibleSessions = React.useMemo(() => {
+    if (!sessions) return [];
+    if (kind !== "studio" || filter === "all") return sessions;
+    return sessions.filter((s) => s.kind === filter);
+  }, [sessions, kind, filter]);
+
   async function handleNewSession() {
     if (!kind) return;
+    if (kind === "studio") {
+      router.push("/studio");
+      setHistorySidebarOpen(false);
+      return;
+    }
     const res = await createConversation.mutateAsync({ kind });
     router.push(`?c=${res.conversation.id}`);
     // Close sidebar to maximize workspace on new session creation
     setHistorySidebarOpen(false);
   }
 
-  function handleSelect(id: string) {
-    router.push(`?c=${id}`);
+  function handleSelect(s: { id: string; kind?: string }) {
+    const targetKind = s.kind && ["studio", "visualize", "practice"].includes(s.kind) ? s.kind : kind;
+    router.push(`/${targetKind}?c=${s.id}`);
     // Close sidebar to maximize workspace when a session is selected
     setHistorySidebarOpen(false);
   }
@@ -71,8 +89,8 @@ export function HistorySidebar() {
       />
       <aside
         className={cn(
-          "fixed lg:static h-[calc(100vh-1rem)] w-[280px] lg:w-[230px] shrink-0 flex-col border border-border/40 bg-surface/90 lg:bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 flex shadow-2xl lg:shadow-lg transition-transform duration-300 ease-in-out z-50 lg:z-20",
-          historySidebarOpen ? "translate-x-0 lg:relative" : "-translate-x-[120%] lg:-translate-x-[110%] lg:absolute"
+          "fixed lg:static left-0 rtl:left-auto rtl:right-0 h-[calc(100vh-1rem)] w-[280px] lg:w-[230px] shrink-0 flex-col border border-border/40 bg-surface/90 lg:bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 flex shadow-2xl lg:shadow-lg transition-transform duration-300 ease-in-out z-50 lg:z-20",
+          historySidebarOpen ? "translate-x-0 lg:relative" : "-translate-x-[120%] lg:-translate-x-[110%] rtl:translate-x-[120%] lg:rtl:translate-x-[110%] lg:absolute"
         )}
       >
         <div className="flex h-16 items-center justify-between px-4 pt-2">
@@ -81,7 +99,7 @@ export function HistorySidebar() {
           onClick={() => setHistorySidebarOpen(false)}
           className="text-text-muted hover:text-text-primary"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 rtl:rotate-180" />
         </button>
       </div>
 
@@ -94,6 +112,31 @@ export function HistorySidebar() {
         </button>
       </div>
 
+      {kind === "studio" && (
+        <div className="px-2 mt-3 flex flex-wrap gap-1">
+          {[
+            { id: "all" as const, label: t("studio.modal.tabAll") },
+            { id: "studio" as const, label: t("studio.modal.tabDocuments") },
+            { id: "visualize" as const, label: t("studio.modal.tabVisuals") },
+            { id: "practice" as const, label: t("studio.modal.tabPractice") },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setFilter(tab.id)}
+              className={cn(
+                "rounded-lg px-2 py-1 text-[11px] font-medium transition-colors",
+                filter === tab.id
+                  ? "bg-primary text-white shadow-xs"
+                  : "bg-hover/60 text-text-muted hover:text-text-primary hover:bg-hover"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-2 pb-4 mt-5">
         <div className="px-2.5 text-label-sm uppercase text-text-muted mb-2">
           {t("nav.recentChats") || "Recent Sessions"}
@@ -102,36 +145,43 @@ export function HistorySidebar() {
         {isLoading && <p className="px-2.5 py-1 text-label-md text-text-muted">Loading…</p>}
         
         <nav className="space-y-0.5">
-          {sessions?.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => handleSelect(s.id)}
-              className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-[13px] transition-colors text-text-secondary hover:bg-hover hover:text-text-primary text-left"
-            >
-              {s.pinned && <Pin className="h-3 w-3 shrink-0 text-primary" />}
-              <div className="min-w-0 flex-1 flex flex-col">
-                <span className="truncate">{s.title || "Untitled Session"}</span>
-                <span className="text-[10px] text-text-muted truncate">{formatRelativeDate(s.updatedAt)}</span>
-              </div>
-              <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                <div
-                  onClick={(e) => handlePin(e, s.id, s.pinned)}
-                  className="rounded p-1 text-text-muted hover:bg-hover hover:text-primary"
-                  title={s.pinned ? "Unpin" : "Pin"}
-                >
-                  {s.pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+          {visibleSessions.map((s) => {
+            const KindIcon = s.kind === "visualize" ? Sparkles : s.kind === "practice" ? Brain : FileStack;
+            const dateIso = (s as any).updated_at || s.updatedAt || (s as any).created_at || s.createdAt;
+            return (
+              <button
+                key={s.id}
+                onClick={() => handleSelect(s)}
+                className="group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-[13px] transition-colors text-text-secondary hover:bg-hover hover:text-text-primary text-left rtl:text-right"
+              >
+                {s.pinned && <Pin className="h-3 w-3 shrink-0 text-primary" />}
+                <KindIcon className="h-3.5 w-3.5 shrink-0 text-text-muted group-hover:text-primary transition-colors" />
+                <div className="min-w-0 flex-1 flex flex-col">
+                  <span className="truncate">{s.title || "Untitled Session"}</span>
+                  {dateIso && (
+                    <span className="text-[10px] text-text-muted truncate">{formatRelativeDate(dateIso)}</span>
+                  )}
                 </div>
-                <div
-                  onClick={(e) => handleDelete(e, s.id)}
-                  className="rounded p-1 text-text-muted hover:bg-hover hover:text-red"
-                  title="Delete"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </div>
-              </span>
-            </button>
-          ))}
-          {(!sessions || sessions.length === 0) && !isLoading && (
+                <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
+                  <div
+                    onClick={(e) => handlePin(e, s.id, s.pinned)}
+                    className="rounded p-1 text-text-muted hover:bg-hover hover:text-primary"
+                    title={s.pinned ? "Unpin" : "Pin"}
+                  >
+                    {s.pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+                  </div>
+                  <div
+                    onClick={(e) => handleDelete(e, s.id)}
+                    className="rounded p-1 text-text-muted hover:bg-hover hover:text-red"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </div>
+                </span>
+              </button>
+            );
+          })}
+          {visibleSessions.length === 0 && !isLoading && (
             <p className="px-2.5 py-1 text-label-md text-text-muted">No sessions yet</p>
           )}
         </nav>

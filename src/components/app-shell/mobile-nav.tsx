@@ -147,7 +147,7 @@ export function MobileNav() {
   return (
     <div className="fixed inset-0 z-50 lg:hidden flex">
       <div className="absolute inset-0 bg-black/70 transition-opacity" onClick={() => setOpen(false)} />
-      <div className="absolute inset-y-0 left-0 w-[280px] animate-slide-in-right bg-surface flex flex-col shadow-2xl">
+      <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 w-[280px] animate-slide-in-right bg-surface flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <Link href="/chat" className="flex items-center gap-2" onClick={() => setOpen(false)}>
             <div className="flex h-7 w-7 items-center justify-center rounded-md overflow-hidden">
@@ -298,7 +298,7 @@ export function MobileNav() {
                 className="mt-6 flex w-full items-center justify-between px-2.5 text-label-sm uppercase text-text-muted"
               >
                 {t("nav.spaces")}
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !spacesOpen && "-rotate-90")} />
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !spacesOpen && "-rotate-90 rtl:rotate-90")} />
               </button>
               {spacesOpen && (
                 <nav className="mt-1 space-y-0.5">
@@ -377,7 +377,7 @@ export function MobileNav() {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <div className="w-full flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover text-left cursor-pointer">
+                <div className="w-full flex items-center gap-2.5 rounded-md p-1.5 hover:bg-hover text-left rtl:text-right cursor-pointer">
                   <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
@@ -387,22 +387,22 @@ export function MobileNav() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[240px]" align="start" side="top">
                 <DropdownMenuItem onClick={() => { setOpen(false); router.push("/settings"); }}>
-                  <Settings className="mr-2 h-4 w-4" /> Settings
+                  <Settings className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => { setOpen(false); router.push("/settings?tab=subscription"); }}>
-                  <CreditCard className="mr-2 h-4 w-4" /> Billing & plans
+                  <CreditCard className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4" /> Billing & plans
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => { setOpen(false); setFeedbackModalOpen(true); }}>
-                  <MessageSquareHeart className="mr-2 h-4 w-4" /> Add a feedback
+                  <MessageSquareHeart className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4" /> Add a feedback
                 </DropdownMenuItem>
                 {user?.role === "admin" && (
                   <DropdownMenuItem onClick={() => { setOpen(false); router.push("/admin"); }}>
-                    <Shield className="mr-2 h-4 w-4" /> Admin
+                    <Shield className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4" /> Admin
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} danger>
-                  <LogOut className="mr-2 h-4 w-4" /> Log out
+                  <LogOut className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4" /> Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -424,7 +424,7 @@ export function MobileNav() {
                     type="button"
                     onClick={() => setTemplate(t)}
                     className={cn(
-                      "rounded-md border px-3 py-2.5 text-left text-[13px] transition-colors",
+                      "rounded-md border px-3 py-2.5 text-left rtl:text-right text-[13px] transition-colors",
                       template.id === t.id ? "border-primary bg-[var(--primary-subtle)] text-primary" : "border-border text-text-secondary hover:bg-hover"
                     )}
                   >

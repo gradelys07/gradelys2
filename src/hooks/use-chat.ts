@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-fetch";
 import type { ChatMessage, Conversation } from "@/types";
 
-export function useConversations(kind: "chat" | "visualize" | "studio" | "practice" = "chat", spaceId?: string) {
+export function useConversations(kind: "chat" | "visualize" | "studio" | "practice" | "all-tools" = "chat", spaceId?: string) {
   const params = new URLSearchParams();
   if (kind) params.set("kind", kind);
   if (spaceId) params.set("spaceId", spaceId);

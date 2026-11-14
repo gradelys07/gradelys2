@@ -2,7 +2,7 @@
 
 import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import * as React from "react";
-import { ArrowUp, Paperclip, Globe, ThumbsUp, ThumbsDown, Copy, Brain, X, ChevronDown, Check, NotebookPen, FolderPlus, Folder, FileText } from "lucide-react";
+import { ArrowUp, Paperclip, Globe, ThumbsUp, ThumbsDown, Copy, Brain, X, ChevronDown, Check, NotebookPen, FolderPlus, Folder, FileText, PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMessages, useSetMessageFeedback, useUpdateConversation, useConversations, useCreateConversation } from "@/hooks/use-chat";
@@ -11,6 +11,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { SaveToSpaceDialog } from "@/components/chat/save-to-space-dialog";
+import { ChatCanvasPanel } from "@/components/chat/chat-canvas-panel";
+import { useChatCanvasStore } from "@/stores/chat-canvas-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, authFetch } from "@/lib/api-fetch";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,7 @@ import {
 } from "@/components/ui/dropdown";
 import { trackChatSent, trackFlashcardsCreated, trackShare, trackHitLimit } from "@/lib/whop/tracking";
 import { compressImage } from "@/lib/image-compression";
+import { SpeakMessageButton, VoiceDictationButton } from "@/components/ui/voice-controls";
 
 const MODELS = [
   { id: "auto", label: "Auto", description: "Best model for the task" },
@@ -113,6 +116,16 @@ export function ChatThread({
   const [attachedFile, setAttachedFile] = React.useState<AttachedFile | null>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const isCanvasOpen = useChatCanvasStore((s) => s.isOpen);
+  const setCanvasOpen = useChatCanvasStore((s) => s.setOpen);
+  const canvasArtifactsCount = useChatCanvasStore(
+    (s) => s.artifacts.filter((a) => !a.conversationId || a.conversationId === conversationId).length
+  );
+
+  React.useEffect(() => {
+    setCanvasOpen(false);
+  }, [conversationId, setCanvasOpen]);
 
   React.useEffect(() => {
     if (serverMessages) {
@@ -403,6 +416,25 @@ export function ChatThread({
         </div>
 
         <div className="flex items-center gap-2">
+          {canvasArtifactsCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCanvasOpen(!isCanvasOpen)}
+              className="gap-1.5 text-label-md"
+              title={isCanvasOpen ? "Fermer le panneau visuel" : "Ouvrir le panneau visuel"}
+            >
+              {isCanvasOpen ? (
+                <PanelRightClose className="h-3.5 w-3.5 text-primary rtl:rotate-180" />
+              ) : (
+                <PanelRightOpen className="h-3.5 w-3.5 text-primary rtl:rotate-180" />
+              )}
+              <span className="hidden sm:inline">Canvas</span>
+              <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary/15 px-1 text-[10px] font-semibold text-primary">
+                {canvasArtifactsCount}
+              </span>
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="sm"
@@ -415,27 +447,33 @@ export function ChatThread({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-4 py-6">
-          {localMessages.length === 0 && (
-            <div className="py-10 text-center text-body-sm text-text-muted">
-              {linkedSpace
-                ? t("chat.header.emptyPromptSpace").replace("{name}", `${linkedSpace.emoji || "📚"} ${linkedSpace.name}`)
-                : t("chat.header.emptyPromptGeneral")}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-1 min-w-0 flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-4xl px-4 py-6">
+              {localMessages.length === 0 && (
+                <div className="py-10 text-center text-body-sm text-text-muted">
+                  {linkedSpace
+                    ? t("chat.header.emptyPromptSpace").replace("{name}", `${linkedSpace.emoji || "📚"} ${linkedSpace.name}`)
+                    : t("chat.header.emptyPromptGeneral")}
+                </div>
+              )}
+              {localMessages.map((m, idx) => (
+                <MessageBubble
+                  key={m.id}
+                  message={m}
+                  conversationId={conversationId}
+                  isStreaming={Boolean(
+                    m.pending || (sending && idx === localMessages.length - 1 && m.role === "assistant")
+                  )}
+                  onFeedback={(fb) => setFeedback.mutate({ id: m.id, feedback: fb })}
+                />
+              ))}
+              <div ref={bottomRef} />
             </div>
-          )}
-          {localMessages.map((m) => (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              onFeedback={(fb) => setFeedback.mutate({ id: m.id, feedback: fb })}
-            />
-          ))}
-          <div ref={bottomRef} />
-        </div>
-      </div>
+          </div>
 
-      <div className="border-t border-border-subtle bg-void px-4 py-4">
+          <div className="border-t border-border-subtle bg-void px-4 py-4">
         <div className="mx-auto max-w-4xl">
           {attachedFile && (
             <div className="mb-2 flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2 text-body-sm text-text-secondary">
@@ -532,16 +570,23 @@ export function ChatThread({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <button
-                type="submit"
-                disabled={(!input.trim() && !attachedFile) || sending}
-                className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
-              >
-                <ArrowUp className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <VoiceDictationButton value={input} onChange={setInput} disabled={sending} variant="toolbar" />
+                <button
+                  type="submit"
+                  disabled={(!input.trim() && !attachedFile) || sending}
+                  className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </form>
         </div>
+      </div>
+        </div>
+
+        <ChatCanvasPanel conversationId={conversationId} />
       </div>
 
       <SaveToSpaceDialog
@@ -557,9 +602,13 @@ export function ChatThread({
 
 function MessageBubble({
   message,
+  conversationId,
+  isStreaming,
   onFeedback,
 }: {
   message: LocalMessage;
+  conversationId: string;
+  isStreaming?: boolean;
   onFeedback: (fb: "up" | "down") => void;
 }) {
   const createDeck = useCreateDeck();
@@ -615,9 +664,14 @@ function MessageBubble({
               {att.meta && <span className="text-label-md text-text-muted">{att.meta}</span>}
             </div>
           ))}
-          <div className="rounded-lg rounded-tr-sm bg-primary px-4 py-2.5 text-body-md text-white">
+          <div className="rounded-lg rounded-tr-sm rtl:rounded-tr-lg rtl:rounded-tl-sm bg-primary px-4 py-2.5 text-body-md text-white">
             {message.content}
           </div>
+          <SpeakMessageButton
+            text={message.content}
+            messageId={message.id}
+            className="opacity-70 hover:opacity-100"
+          />
         </div>
       </div>
     );
@@ -646,8 +700,8 @@ function MessageBubble({
             </motion.span>
           </div>
         ) : (
-          <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            <Markdown content={message.content} />
+          <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
+            <Markdown content={message.content} conversationId={conversationId} isStreaming={isStreaming} />
           </div>
         )}
 
@@ -681,6 +735,7 @@ function MessageBubble({
             >
               <Copy className="h-3.5 w-3.5" />
             </button>
+            <SpeakMessageButton text={message.content} messageId={message.id} />
             <button onClick={() => onFeedback("up")} className="rounded-md p-1.5 text-text-muted hover:bg-hover hover:text-text-primary" title="Good response">
               <ThumbsUp className="h-3.5 w-3.5" />
             </button>
@@ -690,7 +745,7 @@ function MessageBubble({
             <button
               onClick={handleSaveNote}
               disabled={savingNote}
-              className="ml-1 flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-label-lg text-text-secondary hover:border-border-strong hover:text-text-primary disabled:opacity-50"
+              className="ml-1 rtl:ml-0 rtl:mr-1 flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-label-lg text-text-secondary hover:border-border-strong hover:text-text-primary disabled:opacity-50"
             >
               <NotebookPen className="h-3.5 w-3.5 text-primary" /> {savingNote ? "Saving…" : "Save as note"}
             </button>

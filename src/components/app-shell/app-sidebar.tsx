@@ -144,7 +144,7 @@ export function AppSidebar() {
     <aside className={cn(
       "hidden h-[calc(100vh-1rem)] shrink-0 flex-col border border-border/40 bg-surface/40 backdrop-blur-xl rounded-2xl my-2 mx-2 lg:flex shadow-lg transition-all duration-300 ease-in-out z-40 relative",
       collapsed ? "w-[68px] items-center py-4" : "w-[230px]",
-      historySidebarOpen ? (collapsed ? "-translate-x-[150%] absolute" : "-translate-x-[110%] absolute") : "translate-x-0 relative"
+      historySidebarOpen ? (collapsed ? "-translate-x-[150%] rtl:translate-x-[150%] left-0 rtl:left-auto rtl:right-0 absolute" : "-translate-x-[110%] rtl:translate-x-[110%] left-0 rtl:left-auto rtl:right-0 absolute") : "translate-x-0 relative"
     )}>
       {collapsed ? (
         <>
@@ -244,7 +244,7 @@ export function AppSidebar() {
                     )}
           
                     <button onClick={toggleSidebar} className="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-hover transition-colors" title="Expand Sidebar">
-                      <ChevronsRight className="h-4 w-4" />
+                      <ChevronsRight className="h-4 w-4 rtl:rotate-180" />
                     </button>
                   </div>
         </>
@@ -258,7 +258,7 @@ export function AppSidebar() {
                     <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
                   </Link>
                   <button onClick={toggleSidebar} className="text-text-muted hover:text-text-primary">
-                    <ChevronsLeft className="h-4 w-4" />
+                    <ChevronsLeft className="h-4 w-4 rtl:rotate-180" />
                   </button>
                 </div>
           
@@ -397,7 +397,7 @@ export function AppSidebar() {
                         className="mt-6 flex w-full items-center justify-between px-2.5 text-label-sm uppercase text-text-muted"
                       >
                         {t("nav.spaces")}
-                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !spacesOpen && "-rotate-90")} />
+                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", !spacesOpen && "-rotate-90 rtl:rotate-90")} />
                       </button>
                       {spacesOpen && (
                         <nav className="mt-1 space-y-0.5">
@@ -469,9 +469,9 @@ export function AppSidebar() {
                   ) : (
                     <DropdownMenu>
                       <DropdownMenuTrigger>
-                        <button className="flex w-full items-center gap-2.5 rounded-md p-1.5 hover:bg-hover cursor-pointer outline-none text-left">
+                        <button className="flex w-full items-center gap-2.5 rounded-md p-1.5 hover:bg-hover cursor-pointer outline-none text-left rtl:text-right">
                           <Avatar name={user?.name || "?"} src={user?.avatarUrl || undefined} size="sm" />
-                          <div className="min-w-0 flex-1 text-left">
+                          <div className="min-w-0 flex-1 text-left rtl:text-right">
                             <div className="truncate text-[13px] font-medium text-text-primary">{user?.name}</div>
                             <div className="truncate text-label-md text-text-muted">{user?.email}</div>
                           </div>
@@ -516,7 +516,7 @@ export function AppSidebar() {
                             type="button"
                             onClick={() => setTemplate(t)}
                             className={cn(
-                              "rounded-md border px-3 py-2.5 text-left text-[13px] transition-colors",
+                              "rounded-md border px-3 py-2.5 text-left rtl:text-right text-[13px] transition-colors",
                               template.id === t.id ? "border-primary bg-[var(--primary-subtle)] text-primary" : "border-border text-text-secondary hover:bg-hover"
                             )}
                           >

@@ -26,6 +26,7 @@ import { useFocusStore } from "@/stores/focus-store";
 import { detectChatIntent } from "@/lib/chat-intent";
 import { apiFetch } from "@/lib/api-fetch";
 import { compressImage } from "@/lib/image-compression";
+import { VoiceDictationButton } from "@/components/ui/voice-controls";
 
 export default function ChatHomePage() {
   const router = useRouter();
@@ -215,10 +216,10 @@ export default function ChatHomePage() {
         {!isRightPanelOpen && (
           <button
             onClick={() => setIsRightPanelOpen(true)}
-            className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white/50 backdrop-blur-md text-text-muted hover:bg-white/80 hover:text-text-primary shadow-sm transition-all"
+            className="absolute top-6 right-6 rtl:right-auto rtl:left-6 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white/50 backdrop-blur-md text-text-muted hover:bg-white/80 hover:text-text-primary shadow-sm transition-all"
             title="Open side panel"
           >
-            <PanelRightOpen className="h-4.5 w-4.5" />
+            <PanelRightOpen className="h-4.5 w-4.5 rtl:rotate-180" />
           </button>
         )}
         <motion.div 
@@ -234,7 +235,7 @@ export default function ChatHomePage() {
             onClick={() => router.push("/progress")}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/40 bg-white/40 px-4 py-1.5 text-label-sm font-medium text-text-secondary shadow-sm hover:bg-white/60 hover:shadow-md transition-all backdrop-blur-md"
           >
-            <span className="text-orange-500 drop-shadow-sm">🔥</span> {currentStreak} {t("chat.studyStreak")} <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+            <span className="text-orange-500 drop-shadow-sm">🔥</span> {currentStreak} {t("chat.studyStreak")} <ChevronRight className="h-3.5 w-3.5 text-text-muted rtl:rotate-180" />
           </motion.button>
 
           <motion.div variants={itemVariants} className="mt-32 text-center">
@@ -269,7 +270,7 @@ export default function ChatHomePage() {
                       <button
                         type="button"
                         onClick={() => setAttachedFiles((prev) => prev.filter((_, index) => index !== i))}
-                        className="ml-1 rounded-full p-0.5 text-text-muted hover:bg-hover hover:text-text-primary"
+                        className="ml-1 rtl:ml-0 rtl:mr-1 rounded-full p-0.5 text-text-muted hover:bg-hover hover:text-text-primary"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -314,7 +315,7 @@ export default function ChatHomePage() {
                       >
                         <Globe2 className="h-4 w-4" /> 
                         Web + Documents 
-                        <ChevronRight className="h-3.5 w-3.5" />
+                        <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-72 p-4 rounded-2xl border border-white/40 bg-white/90 shadow-xl backdrop-blur-2xl" side="top" align="start">
@@ -334,7 +335,7 @@ export default function ChatHomePage() {
                           className="w-full text-xs h-9 rounded-xl border-border bg-white hover:bg-hover" 
                           onClick={() => document.getElementById("hidden-file-input")?.click()}
                         >
-                          <Plus className="h-4 w-4 mr-2" /> {t("chat.addFiles")}
+                          <Plus className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" /> {t("chat.addFiles")}
                         </Button>
                         <p className="text-[10px] text-text-muted mt-2 text-center leading-tight">
                           {t("chat.moreThanThreeDocs")}
@@ -344,15 +345,18 @@ export default function ChatHomePage() {
                   </DropdownMenu>
                   <input id="hidden-file-input" type="file" multiple className="hidden" onChange={handleFileChange} />
                 </div>
-                <Button 
-                  type="submit" 
-                  size="icon" 
-                  disabled={!input.trim()} 
-                  loading={loading} 
-                  className="h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
-                >
-                  <ArrowUp className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <VoiceDictationButton value={input} onChange={setInput} disabled={loading} variant="pill" />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    disabled={!input.trim()} 
+                    loading={loading} 
+                    className="h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+                  >
+                    <ArrowUp className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.form>
@@ -366,7 +370,7 @@ export default function ChatHomePage() {
                 whileTap={{ scale: 0.98 }}
                 key={s.title}
                 onClick={() => startChat(s.title)}
-                className="group relative flex items-start gap-4 rounded-2xl border border-white/40 bg-white/50 p-6 text-left shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:border-primary/30 hover:bg-white/70 hover:shadow-[0_8px_40px_rgba(14,165,233,0.12)] overflow-hidden"
+                className="group relative flex items-start gap-4 rounded-2xl border border-white/40 bg-white/50 p-6 text-left rtl:text-right shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:border-primary/30 hover:bg-white/70 hover:shadow-[0_8px_40px_rgba(14,165,233,0.12)] overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                 
@@ -380,7 +384,7 @@ export default function ChatHomePage() {
                 </div>
                 
                 <div className="relative mt-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:bg-primary/10">
-                  <ChevronRight className="h-4 w-4 text-primary" />
+                  <ChevronRight className="h-4 w-4 text-primary rtl:rotate-180" />
                 </div>
               </motion.button>
             ))}
@@ -388,7 +392,7 @@ export default function ChatHomePage() {
 
           {/* Quick Create shortcuts — always available */}
           <motion.div variants={itemVariants} className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-body-xs text-text-muted/60 font-medium mr-1">Créer directement →</span>
+            <span className="text-body-xs text-text-muted/60 font-medium mr-1 rtl:mr-0 rtl:ml-1">Créer directement →</span>
             {[
               { label: "📑 Présentation", prompt: "Crée une présentation sur " },
               { label: "🗺️ Mind map", prompt: "Crée un mind map sur " },
@@ -436,13 +440,13 @@ export default function ChatHomePage() {
                 {spaces?.map((s) => (
                   <DropdownMenuItem key={s.id} onClick={() => handleSpaceChange(s.id)} className="flex items-center justify-between rounded-xl px-3 py-2 text-body-sm hover:bg-black/5">
                     <div className="flex items-center">
-                      <span className="mr-2 text-base">{s.emoji}</span> {s.name}
+                      <span className="mr-2 rtl:mr-0 rtl:ml-2 text-base">{s.emoji}</span> {s.name}
                     </div>
                     {spaceId === s.id && <Check className="h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuItem onClick={() => setNewSpaceOpen(true)} className="rounded-xl px-3 py-2 text-body-sm text-primary hover:bg-primary/10">
-                  <Plus className="h-4 w-4 mr-2" /> Create Space
+                  <Plus className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" /> Create Space
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -452,7 +456,7 @@ export default function ChatHomePage() {
 
       {isRightPanelOpen && (
         <div 
-          className="hidden w-80 shrink-0 flex-col overflow-y-auto border-l border-slate-200/60 bg-slate-100/80 p-5 backdrop-blur-xl xl:flex z-10 relative shadow-inner"
+          className="hidden w-80 shrink-0 flex-col overflow-y-auto border-l rtl:border-l-0 rtl:border-r border-slate-200/60 bg-slate-100/80 p-5 backdrop-blur-xl xl:flex z-10 relative shadow-inner"
           style={{ backgroundImage: 'radial-gradient(rgba(14, 165, 233, 0.12) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
         >
           
@@ -465,7 +469,7 @@ export default function ChatHomePage() {
                 className="rounded-full p-1.5 text-text-muted hover:bg-black/5 hover:text-text-primary transition-colors"
                 title="Hide side panel"
               >
-                <PanelRightClose className="h-4 w-4" />
+                <PanelRightClose className="h-4 w-4 rtl:rotate-180" />
               </button>
             </div>
             <div className="space-y-3">
@@ -485,7 +489,7 @@ export default function ChatHomePage() {
                       </div>
                       <p className="mt-1 text-body-xs text-text-muted/80 truncate font-medium">{t("chat.openConversation")}</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-text-muted/40 self-center group-hover:text-primary transition-colors" />
+                    <ChevronRight className="h-4 w-4 text-text-muted/40 self-center group-hover:text-primary transition-colors rtl:rotate-180" />
                   </div>
                 ))
               ) : (
@@ -507,7 +511,7 @@ export default function ChatHomePage() {
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/50 text-2xl shadow-sm">
                         {selectedSpace.emoji}
                       </div>
-                      <div className="flex-1 min-w-0 text-left">
+                      <div className="flex-1 min-w-0 text-left rtl:text-right">
                         <h4 className="text-label-md font-bold text-text-primary truncate">{selectedSpace.name}</h4>
                         <p className="mt-0.5 text-body-xs text-text-muted font-medium">
                           {sources?.length || 0} documents
@@ -516,7 +520,7 @@ export default function ChatHomePage() {
                           <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></div> Active
                         </div>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-text-muted group-hover:text-primary transition-colors" />
+                      <ChevronRight className="h-5 w-5 text-text-muted group-hover:text-primary transition-colors rtl:rotate-180" />
                     </>
                   ) : (
                     <div className="flex w-full items-center justify-between">
@@ -530,16 +534,16 @@ export default function ChatHomePage() {
                 {spaces?.map((s: any) => (
                   <DropdownMenuItem key={s.id} onClick={() => handleSpaceChange(s.id)} className="flex items-center justify-between rounded-xl px-3 py-2 hover:bg-black/5 cursor-pointer">
                     <div className="flex items-center truncate">
-                      <span className="mr-2 text-base">{s.emoji}</span> <span className="truncate">{s.name}</span>
+                      <span className="mr-2 rtl:mr-0 rtl:ml-2 text-base">{s.emoji}</span> <span className="truncate">{s.name}</span>
                     </div>
-                    {spaceId === s.id && <Check className="h-4 w-4 text-primary ml-2 flex-shrink-0" />}
+                    {spaceId === s.id && <Check className="h-4 w-4 text-primary ml-2 rtl:ml-0 rtl:mr-2 flex-shrink-0" />}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuItem onClick={() => handleSpaceChange(null)} className="rounded-xl px-3 py-2 hover:bg-black/5 cursor-pointer mt-1">
                   Clear selection
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewSpaceOpen(true)} className="rounded-xl px-3 py-2 text-primary hover:bg-primary/10 cursor-pointer mt-1">
-                  <Plus className="h-4 w-4 mr-2" /> Create Space
+                  <Plus className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" /> Create Space
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

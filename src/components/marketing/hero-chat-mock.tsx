@@ -4,6 +4,7 @@ import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { FileText, Brain, Bot, CheckCircle2, Send, Search, ScanLine, NotebookPen, TrendingUp, Settings, LogOut, Plus } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { SpeakMessageButton, VoiceDictationButton } from "@/components/ui/voice-controls";
 
 export function HeroChatMock() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -260,6 +261,12 @@ export function HeroChatMock() {
                     >
                       <FileText className="w-4 h-4 text-blue-500" /> Save to Flashcards
                     </motion.button>
+                    <SpeakMessageButton
+                      text={aiText}
+                      messageId="hero-ai-msg"
+                      showLabel
+                      className="px-4 py-2 rounded-xl bg-surface-subtle hover:bg-hover border border-border-subtle text-text-secondary hover:text-text-primary text-sm font-medium"
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -275,6 +282,12 @@ export function HeroChatMock() {
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Ask anything, or attach a PDF, image, or YouTube link..."
                   className="flex-1 bg-transparent text-text-primary text-sm placeholder:text-text-muted outline-none"
+                />
+                <VoiceDictationButton
+                  value={inputValue}
+                  onChange={setInputValue}
+                  variant="icon"
+                  className="h-8 w-8 border-border-subtle"
                 />
                 <button 
                   className="p-1.5 rounded-lg bg-primary hover:bg-primary-hover transition-colors text-white disabled:opacity-50 disabled:hover:bg-primary"

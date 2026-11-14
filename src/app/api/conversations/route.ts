@@ -12,7 +12,11 @@ export async function GET(req: NextRequest) {
   const spaceId = searchParams.get("spaceId");
 
   let query = supabase.from("conversations").select("*").eq("user_id", user!.id);
-  query = query.eq("kind", kind || "chat");
+  if (kind === "all-tools") {
+    query = query.in("kind", ["studio", "visualize", "practice"]);
+  } else {
+    query = query.eq("kind", kind || "chat");
+  }
   if (spaceId) query = query.eq("space_id", spaceId);
 
   const { data, error } = await query

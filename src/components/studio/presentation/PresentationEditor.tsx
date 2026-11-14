@@ -194,7 +194,7 @@ export function PresentationEditor({
 
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col w-full h-[100dvh] bg-gray-50 overflow-hidden">
+    <div dir="ltr" className="fixed inset-0 z-[100] flex flex-col w-full h-[100dvh] bg-gray-50 overflow-hidden">
       {/* Top Toolbar */}
       <div className="h-14 border-b bg-white flex items-center justify-between px-4 shrink-0 shadow-sm relative z-10">
         <div className="flex items-center gap-2">

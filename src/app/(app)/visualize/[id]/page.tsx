@@ -180,7 +180,7 @@ export default function VisualizePage() {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col w-full h-[100dvh] bg-[#121212] overflow-hidden font-sans text-gray-200">
+    <div dir="ltr" className="fixed inset-0 z-[100] flex flex-col w-full h-[100dvh] bg-[#121212] overflow-hidden font-sans text-gray-200">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-[#2a2a2a] bg-[#181818] px-4 z-20">
         <div className="flex items-center gap-3">
           <Link href="/visualize" className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-[#2a2a2a] hover:text-white transition-colors">

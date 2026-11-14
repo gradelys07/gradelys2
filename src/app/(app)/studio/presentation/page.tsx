@@ -99,6 +99,20 @@ export default function PresentationBridgePage() {
           return;
         }
 
+        if (conversationId) {
+          await supabase.from("messages").insert({
+            conversation_id: conversationId,
+            role: "assistant",
+            content: "Generated Presentation Outline",
+            structured: {
+              kind: "studio",
+              documentId: docData.id,
+              title: docData.title || "New Presentation",
+              docType: "slides",
+            },
+          });
+        }
+
         // Build redirect URL with conversation context
         let redirectUrl = `/studio/documents/${docData.id}`;
         const params = new URLSearchParams();

@@ -366,19 +366,19 @@ export function StudioCapabilitiesModal({
 
               {/* Minimal search */}
               <div className="relative sm:w-56">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+                <Search className="absolute left-2.5 rtl:left-auto rtl:right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t("studio.modal.filterPlaceholder")}
-                  className="w-full rounded-lg border border-border-default bg-elevated pl-8 pr-6 py-1 text-body-xs text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
+                  className="w-full rounded-lg border border-border-default bg-elevated pl-8 pr-6 rtl:pl-6 rtl:pr-8 py-1 text-body-xs text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                    className="absolute right-2 rtl:right-auto rtl:left-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
                   >
                     <X className="h-3 w-3" />
                   </button>

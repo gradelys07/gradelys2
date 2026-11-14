@@ -56,6 +56,8 @@ export async function middleware(request: NextRequest) {
       ? RATE_LIMITS.admin
       : pathname.startsWith("/api/auth")
       ? RATE_LIMITS.auth
+      : pathname.startsWith("/api/media")
+      ? RATE_LIMITS.aiPlus
       : RATE_LIMITS.aiFree;
     const result = rateLimit(`${pathname}:${ip}`, tier.limit, tier.windowSeconds);
     if (!result.allowed) {

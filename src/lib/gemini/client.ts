@@ -7,7 +7,12 @@
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
-export type GeminiModel = "gemini-3.7-flash" | "gemini-3.1-pro-preview" | "gemini-3.1-flash";
+export type GeminiModel =
+  | "gemini-3.8-flash"
+  | "gemini-3.7-flash"
+  | "gemini-3.1-pro-preview"
+  | "gemini-3.1-flash"
+  | (string & {});
 
 export function resolveModel(modelId?: string): GeminiModel {
   if (modelId === "pro") return "gemini-3.1-pro-preview";

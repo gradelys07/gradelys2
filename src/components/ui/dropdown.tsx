@@ -63,12 +63,14 @@ export function DropdownMenuContent({
 
   const positionClasses = isHorizontal
     ? cn(
-        side === "right" ? "left-full ml-1.5" : "right-full mr-1.5",
+        side === "right"
+          ? "left-full ml-1.5 rtl:left-auto rtl:right-full rtl:ml-0 rtl:mr-1.5"
+          : "right-full mr-1.5 rtl:right-auto rtl:left-full rtl:mr-0 rtl:ml-1.5",
         align === "end" ? "bottom-0" : "top-0"
       )
     : cn(
         side === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
-        align === "end" ? "right-0" : "left-0"
+        align === "end" ? "right-0 rtl:right-auto rtl:left-0" : "left-0 rtl:left-auto rtl:right-0"
       );
 
   return (
@@ -111,7 +113,7 @@ export function DropdownMenuItem({
         ctx?.setOpen(false);
       }}
       className={cn(
-        "flex w-full items-center gap-2 px-3 py-2 text-body-sm text-left transition-colors",
+        "flex w-full items-center gap-2 px-3 py-2 text-body-sm text-left rtl:text-right transition-colors",
         danger ? "text-red hover:bg-[var(--accent-red-subtle)]" : "text-text-secondary hover:bg-hover hover:text-text-primary",
         className
       )}

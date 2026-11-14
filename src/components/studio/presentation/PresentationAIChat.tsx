@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Send, Wand2, X } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { toast } from "sonner";
+import { SpeakMessageButton, VoiceDictationButton } from "@/components/ui/voice-controls";
 
 interface Message {
   role: "user" | "assistant";
@@ -241,6 +242,13 @@ export function PresentationAIChat({ onClose }: { onClose: () => void }) {
                 </div>
               )}
             </div>
+            {(!isLoading || i < messages.length - 1) && m.content && (
+              <SpeakMessageButton
+                text={m.content}
+                messageId={`pres-${i}`}
+                className="mt-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+              />
+            )}
           </div>
         ))}
         {isLoading && (
@@ -255,13 +263,20 @@ export function PresentationAIChat({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="p-3 border-t shrink-0">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <Input 
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Ask AI to modify..."
             className="flex-1 text-sm rounded-full"
             disabled={isLoading}
+          />
+          <VoiceDictationButton
+            value={input}
+            onChange={setInput}
+            disabled={isLoading}
+            variant="icon"
+            className="bg-white border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
           />
           <Button 
             type="submit" 

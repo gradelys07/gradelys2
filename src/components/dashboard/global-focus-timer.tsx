@@ -80,7 +80,7 @@ export function GlobalFocusTimer() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 50 }}
         className={cn(
-          "pointer-events-auto absolute bottom-6 right-6 flex flex-col overflow-hidden rounded-2xl border bg-elevated shadow-2xl backdrop-blur-xl transition-all duration-300",
+          "pointer-events-auto absolute bottom-6 right-6 rtl:right-auto rtl:left-6 flex flex-col overflow-hidden rounded-2xl border bg-elevated shadow-2xl backdrop-blur-xl transition-all duration-300",
           isMinimized ? "w-32 border-primary/30" : "w-72 border-primary/20",
           isActive ? "shadow-primary/20" : "shadow-black/5"
         )}
@@ -127,7 +127,7 @@ export function GlobalFocusTimer() {
                     : "bg-primary text-white hover:bg-primary-hover hover:shadow-primary/30"
                 )}
               >
-                {isActive ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current ml-0.5" />}
+                {isActive ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current ml-0.5 rtl:ml-0 rtl:mr-0.5 rtl:rotate-180" />}
               </button>
               
               <AnimatePresence>

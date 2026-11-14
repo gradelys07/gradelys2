@@ -37,9 +37,6 @@ const VISUALIZE_KEYWORDS = [
   "canvas",
   "tableau blanc",
   "whiteboard",
-  "dessin",
-  "graphique",
-  "chart",
   "flowchart",
   "flow chart",
   "organigramme",
@@ -150,6 +147,25 @@ const CREATION_VERBS = [
 
 export function detectChatIntent(text: string): ChatIntentResult {
   const lower = text.toLowerCase().trim();
+
+  // Keep Python plotting, in-chat graphs/charts, photo galleries, and YouTube explanations in /chat
+  const stayInChatKeywords = [
+    "python",
+    "matplotlib",
+    "dans le chat",
+    "in chat",
+    "courbe",
+    "plot",
+    "tracer",
+    "trace",
+    "photo",
+    "vidéo",
+    "video",
+    "youtube",
+  ];
+  if (stayInChatKeywords.some((k) => lower.includes(k))) {
+    return { type: "chat" };
+  }
 
   const hasCreationVerb = CREATION_VERBS.some((v) => lower.includes(v));
 

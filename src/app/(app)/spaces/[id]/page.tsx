@@ -183,9 +183,9 @@ export default function SpaceDetailPage() {
 
       {/* En-tête de l'espace */}
       <div className={cn("flex items-center justify-between w-full max-w-3xl mx-auto z-10 relative transition-all duration-500", isFullScreen ? "h-0 mb-0 opacity-0 overflow-hidden" : "h-14 mb-3 sm:mb-4 opacity-100")}>
-        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 pr-2">
+        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 pr-2 rtl:pr-0 rtl:pl-2">
           <button onClick={() => router.push("/chat")} className="flex items-center justify-center rounded-full p-2 text-text-muted hover:bg-hover hover:text-text-primary transition-colors touch-manipulation active:scale-95">
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
           </button>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl text-lg sm:text-xl shadow-sm border border-border-subtle" style={{ backgroundColor: `${space?.color}15` }}>
@@ -268,7 +268,7 @@ export default function SpaceDetailPage() {
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-body-sm text-text-muted">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Préparation de l'espace…
+                  <Loader2 className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4 animate-spin" /> Préparation de l'espace…
                 </div>
               )}
             </div>
@@ -521,7 +521,7 @@ function SpaceToolTab({
   if (!conversationId) {
     return (
       <div className="flex h-full items-center justify-center text-body-sm text-text-muted">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Configuration de l'outil…
+        <Loader2 className="mr-2 rtl:mr-0 rtl:ml-2 h-4 w-4 animate-spin" /> Configuration de l'outil…
       </div>
     );
   }

@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useTranslation } from "@/i18n/locale-provider";
 import { trackVisualizationCreated, trackStudioDocCreated, trackQuizCompleted, trackFlashcardsCreated } from "@/lib/whop/tracking";
 import type { QuizQuestion } from "@/types";
+import { SpeakMessageButton, VoiceDictationButton } from "@/components/ui/voice-controls";
 
 export type ToolKind = "visualize" | "studio" | "practice";
 
@@ -210,7 +211,7 @@ export function ToolChatThread({
       if (kind === "visualize") trackVisualizationCreated(preset?.visualType || "auto");
       else if (kind === "studio") trackStudioDocCreated(preset?.visualType || "notes");
       else if (kind === "practice" && preset?.subKind === "flashcards") trackFlashcardsCreated();
-      qc.invalidateQueries({ queryKey: ["conversations", kind] });
+      qc.invalidateQueries({ queryKey: ["conversations"] });
     } catch (err: any) {
       toast.error(err.message || "Generation failed");
       setLocalMessages((prev) => prev.filter((m) => m.id !== assistantMsgId && m.id !== userMsgId));
@@ -264,19 +265,19 @@ export function ToolChatThread({
               <p className="text-body-md text-text-secondary">
                 {selectedSpace ? `${t("tool.readyToGenerate")} ${selectedSpace.emoji} ${selectedSpace.name}.` : t("tool.pickSpace")}
               </p>
-              <div className="mx-auto mt-6 max-w-md space-y-2 text-left">
+              <div className="mx-auto mt-6 max-w-md space-y-2 text-left rtl:text-right">
                 {presets.map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => handlePresetClick(preset)}
-                    className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 text-left transition-colors hover:border-primary hover:bg-[var(--primary-subtle)]"
+                    className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 text-left rtl:text-right transition-colors hover:border-primary hover:bg-[var(--primary-subtle)]"
                   >
                     <preset.icon className="h-4.5 w-4.5 shrink-0 text-primary" />
                     <div className="flex-1">
                       <p className="text-body-sm font-semibold text-text-primary">{preset.title}</p>
                       <p className="text-label-md text-text-muted">{preset.subtitle}</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-text-muted" />
+                    <ChevronRight className="h-4 w-4 text-text-muted rtl:rotate-180" />
                   </button>
                 ))}
               </div>
@@ -286,7 +287,10 @@ export function ToolChatThread({
           {localMessages.map((m) =>
             m.role === "user" ? (
               <div key={m.id} className="mb-6 flex justify-end">
-                <div className="max-w-[80%] rounded-lg rounded-tr-sm bg-primary px-4 py-2.5 text-body-md text-white">{m.content}</div>
+                <div className="flex max-w-[80%] flex-col items-end gap-1">
+                  <div className="rounded-lg rounded-tr-sm rtl:rounded-tr-lg rtl:rounded-tl-sm bg-primary px-4 py-2.5 text-body-md text-white">{m.content}</div>
+                  <SpeakMessageButton text={m.content} messageId={m.id} className="opacity-70 hover:opacity-100" />
+                </div>
               </div>
             ) : (
               <ToolMessageBubble
@@ -306,7 +310,7 @@ export function ToolChatThread({
       <div className="border-t border-border-subtle bg-void px-4 py-4">
         <div className="relative mx-auto max-w-4xl">
           {attachOpen && (
-            <div className="absolute bottom-full left-0 mb-2 w-full max-w-sm rounded-lg border border-border-strong bg-elevated p-3 shadow-l3">
+            <div className="absolute bottom-full left-0 rtl:left-auto rtl:right-0 mb-2 w-full max-w-sm rounded-lg border border-border-strong bg-elevated p-3 shadow-l3">
               {!lockSpace && (
                 <>
                   <div className="flex items-center justify-between">
@@ -323,12 +327,12 @@ export function ToolChatThread({
                           updateConversation.mutate({ id: conversationId, spaceId: s.id });
                         }}
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-body-sm",
+                          "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left rtl:text-right text-body-sm",
                           spaceId === s.id ? "bg-[var(--primary-subtle)] text-primary" : "text-text-secondary hover:bg-hover"
                         )}
                       >
                         <span>{s.emoji}</span> <span className="truncate">{s.name}</span>
-                        {spaceId === s.id && <Check className="ml-auto h-3.5 w-3.5" />}
+                        {spaceId === s.id && <Check className="ml-auto rtl:ml-0 rtl:mr-auto h-3.5 w-3.5" />}
                       </button>
                     ))}
                     {(!spaces || spaces.length === 0) && (
@@ -345,7 +349,7 @@ export function ToolChatThread({
                       <button
                         key={preset.id}
                         onClick={() => handlePresetClick(preset)}
-                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-body-sm text-text-secondary hover:bg-hover"
+                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left rtl:text-right text-body-sm text-text-secondary hover:bg-hover"
                       >
                         <preset.icon className="h-3.5 w-3.5 shrink-0 text-primary" /> {preset.title}
                       </button>
@@ -396,13 +400,16 @@ export function ToolChatThread({
                 </button>
                 {renderInputToolbar && renderInputToolbar()}
               </div>
-              <button
-                type="submit"
-                disabled={!input.trim() || sending}
-                className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
-              >
-                <ArrowUp className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <VoiceDictationButton value={input} onChange={setInput} disabled={sending} variant="toolbar" />
+                <button
+                  type="submit"
+                  disabled={!input.trim() || sending}
+                  className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -427,6 +434,25 @@ function ToolMessageBubble({
   const [startedQuiz, setStartedQuiz] = React.useState(false);
   const structured = message.structured;
 
+  const speakableText = React.useMemo(() => {
+    if (structured?.kind === "exam-result") {
+      const details = Array.isArray(structured.perQuestion)
+        ? structured.perQuestion.map((q: any) => `${q.question || ""}. ${q.feedback || ""}`).join(". ")
+        : "";
+      return [structured.overallFeedback, details].filter(Boolean).join(". ");
+    }
+    if (structured?.kind === "visualize" || structured?.kind === "image") {
+      return structured.title || message.content || "";
+    }
+    if (
+      structured?.kind === "studio" &&
+      (structured.docType === "slides" || (message.content.includes('"slides"') && message.content.includes("{")))
+    ) {
+      return structured.title || "";
+    }
+    return message.content || "";
+  }, [message.content, structured]);
+
   return (
     <div className="mb-6 flex gap-3">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple">
@@ -450,7 +476,7 @@ function ToolMessageBubble({
             </motion.span>
           </div>
         ) : structured?.kind === "visualize" || structured?.kind === "image" ? (
-          <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
+          <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
             <p className="text-body-md font-medium text-text-primary mb-3">{structured.title}</p>
             {structured.imageUrl && (
               <div className="relative overflow-hidden rounded-lg border border-border-subtle mb-3">
@@ -494,11 +520,11 @@ function ToolMessageBubble({
             </div>
           </div>
         ) : structured?.kind === "studio" ? (
-          <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
+          <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
             {structured.docType === "slides" || (message.content.includes('"slides"') && message.content.includes('{')) ? (
               <p className="text-body-md font-medium text-text-primary">{structured.title}</p>
             ) : (
-              <Markdown content={message.content} />
+              <Markdown content={message.content} conversationId={conversationId} isStreaming={Boolean(message.pending)} />
             )}
             <Link
               href={`/studio/documents/${structured.documentId}`}
@@ -508,7 +534,7 @@ function ToolMessageBubble({
             </Link>
           </div>
         ) : structured?.kind === "flashcards" ? (
-          <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
+          <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
             <p className="text-body-md text-text-primary">{message.content}</p>
             <Link
               href={`/practice/decks/${structured.deckId}`}
@@ -528,7 +554,7 @@ function ToolMessageBubble({
               />
             </div>
           ) : (
-            <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
+            <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
               <p className="text-body-md text-text-primary">{message.content}</p>
               <button
                 onClick={() => setStartedQuiz(true)}
@@ -539,7 +565,7 @@ function ToolMessageBubble({
             </div>
           )
         ) : structured?.kind === "exam" ? (
-          <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
+          <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
             <p className="text-body-md text-text-primary">{message.content}</p>
             <Link
               href={`/practice/exam/${structured.examId}?conversationId=${conversationId}`}
@@ -551,8 +577,14 @@ function ToolMessageBubble({
         ) : structured?.kind === "exam-result" ? (
           <ExamResult structured={structured} />
         ) : (
-          <div className="rounded-lg rounded-tl-sm border border-border-subtle bg-elevated px-4 py-3">
-            <Markdown content={message.content} />
+          <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-subtle bg-elevated px-4 py-3">
+            <Markdown content={message.content} conversationId={conversationId} isStreaming={Boolean(message.pending)} />
+          </div>
+        )}
+
+        {!(message.pending && !message.content) && speakableText.trim() && (
+          <div className="mt-1.5 flex items-center gap-1">
+            <SpeakMessageButton text={speakableText} messageId={message.id} />
           </div>
         )}
       </div>
@@ -572,7 +604,7 @@ function ExamResult({
 }) {
   const pct = (structured.totalScore / Math.max(structured.maxScore, 1)) * 100;
   return (
-    <div className="rounded-lg rounded-tl-sm border border-border-strong bg-elevated p-5">
+    <div className="rounded-lg rounded-tl-sm rtl:rounded-tl-lg rtl:rounded-tr-sm border border-border-strong bg-elevated p-5">
       <div className="flex items-center gap-4">
         <div
           className={cn(

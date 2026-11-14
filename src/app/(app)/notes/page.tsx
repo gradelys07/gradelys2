@@ -128,8 +128,8 @@ export default function NotesPage() {
     <div className="flex h-full flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle px-4 py-3 sm:px-6">
         <div className="relative flex-1 min-w-[180px]">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
-          <Input value={search} onChange={(e) => { setSearch(e.target.value); setIndex(0); }} placeholder={t("notes.searchPlaceholder")} className="h-9 pl-8" />
+          <Search className="pointer-events-none absolute left-2.5 rtl:left-auto rtl:right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+          <Input value={search} onChange={(e) => { setSearch(e.target.value); setIndex(0); }} placeholder={t("notes.searchPlaceholder")} className="h-9 pl-8 rtl:pl-3 rtl:pr-8" />
         </div>
         <div className="flex rounded-md border border-border p-0.5">
           <button
@@ -166,14 +166,14 @@ export default function NotesPage() {
               disabled={index === 0}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text-secondary hover:bg-hover disabled:opacity-30"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
             </button>
 
             <div
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
               className="relative flex-1 rounded-2xl border border-border-strong bg-white p-6 shadow-l2 sm:p-8"
-              style={{ minHeight: "60vh", borderLeft: "4px solid var(--primary)" }}
+              style={{ minHeight: "60vh", borderInlineStart: "4px solid var(--primary)" }}
             >
               <input
                 value={title}
@@ -207,7 +207,7 @@ export default function NotesPage() {
               disabled={index === filtered.length - 1}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text-secondary hover:bg-hover disabled:opacity-30"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5 rtl:rotate-180" />
             </button>
           </div>
 
@@ -227,8 +227,8 @@ export default function NotesPage() {
                   setIndex(i);
                   setView("notebook");
                 }}
-                className="group relative rounded-lg border border-border bg-white p-4 text-left shadow-l1 hover:border-border-strong"
-                style={{ borderLeft: "3px solid var(--primary)" }}
+                className="group relative rounded-lg border border-border bg-white p-4 text-left rtl:text-right shadow-l1 hover:border-border-strong"
+                style={{ borderInlineStart: "3px solid var(--primary)" }}
               >
                 <p className="truncate text-body-md font-medium text-text-primary">{note.title || "Untitled note"}</p>
                 <p className="mt-1 text-body-sm text-text-muted">{truncate(note.content.replace(/[#*_`]/g, ""), 80) || "Empty note"}</p>
@@ -238,7 +238,7 @@ export default function NotesPage() {
                     e.stopPropagation();
                     handleDelete(note.id);
                   }}
-                  className="absolute right-3 top-3 rounded p-1 text-text-muted opacity-0 hover:bg-hover hover:text-red group-hover:opacity-100"
+                  className="absolute right-3 rtl:right-auto rtl:left-3 top-3 rounded p-1 text-text-muted opacity-0 hover:bg-hover hover:text-red group-hover:opacity-100"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </span>

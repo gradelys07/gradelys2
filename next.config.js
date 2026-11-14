@@ -2,12 +2,12 @@
 
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://eu.i.posthog.com https://eu-assets.i.posthog.com https://cdn.jsdelivr.net;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://eu.i.posthog.com https://eu-assets.i.posthog.com https://cdn.jsdelivr.net;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: https: blob:;
   font-src 'self' data:;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.whop.com https://api.resend.com https://google.serper.dev https://eu.i.posthog.com;
-  frame-src 'none';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://api.whop.com https://api.resend.com https://google.serper.dev https://eu.i.posthog.com https://cdn.jsdelivr.net;
+  frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -20,7 +20,7 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-XSS-Protection", value: "1; mode=block" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
+  { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
   {
     key: "Strict-Transport-Security",
     value: "max-age=31536000; includeSubDomains; preload",

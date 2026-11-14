@@ -85,32 +85,30 @@ export function ToolPage({ kind, title, description }: { kind: ToolKind; title: 
 
   return (
     <div className="flex h-full flex-col">
-      {(!activeId && kind === "studio") ? null : (
-        <div className="flex items-center justify-between border-b border-border-subtle px-4 py-4 sm:px-6">
-          <div>
-            <h1 className="text-heading-xl text-text-primary">{activeSession?.title || title}</h1>
-            <p className="mt-1 text-body-sm text-text-muted">{description}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {kind === "studio" && (
-              <button
-                type="button"
-                onClick={() => setGuideOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-border-default bg-elevated px-3.5 py-2 text-label-md text-text-secondary hover:border-primary/40 hover:text-text-primary hover:bg-hover transition-colors"
-              >
-                <span>{t("studio.whatCanICreate")}</span>
-              </button>
-            )}
-            <button
-              onClick={() => setHistorySidebarOpen(true)}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border-strong bg-elevated px-4 py-2 text-label-lg text-text-secondary hover:bg-hover transition-colors"
-            >
-              <History className="h-4 w-4" />
-              {t("studio.history")}
-            </button>
-          </div>
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-4 sm:px-6">
+        <div>
+          <h1 className="text-heading-xl text-text-primary">{activeSession?.title || title}</h1>
+          <p className="mt-1 text-body-sm text-text-muted">{description}</p>
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          {kind === "studio" && (
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border-default bg-elevated px-3.5 py-2 text-label-md text-text-secondary hover:border-primary/40 hover:text-text-primary hover:bg-hover transition-colors"
+            >
+              <span>{t("studio.whatCanICreate")}</span>
+            </button>
+          )}
+          <button
+            onClick={() => setHistorySidebarOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border-strong bg-elevated px-4 py-2 text-label-lg text-text-secondary hover:bg-hover transition-colors"
+          >
+            <History className="h-4 w-4" />
+            {t("studio.history")}
+          </button>
+        </div>
+      </div>
 
       <div className="flex-1 overflow-hidden">
         {activeId ? (
