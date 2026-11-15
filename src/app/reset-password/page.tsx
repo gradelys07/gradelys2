@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
+import { DesktopSafeBrandLink } from "@/components/desktop-safe-brand-link";
 import { GraduationCap, Lock, Check, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -69,7 +70,7 @@ function ResetPasswordContent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-void px-6">
       <div className="w-full max-w-sm">
-        <Link href="/" className="mb-10 flex items-center justify-center gap-2">
+        <DesktopSafeBrandLink className="mb-10 flex items-center justify-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
             <img
               src="/favicon.png"
@@ -80,7 +81,7 @@ function ResetPasswordContent() {
             />
           </div>
           <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
-        </Link>
+        </DesktopSafeBrandLink>
 
         {!ready ? (
           <div className="flex flex-col items-center text-body-sm text-text-muted">

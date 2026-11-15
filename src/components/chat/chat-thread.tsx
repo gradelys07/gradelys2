@@ -2,7 +2,7 @@
 
 import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import * as React from "react";
-import { ArrowUp, Paperclip, Globe, ThumbsUp, ThumbsDown, Copy, Brain, X, ChevronDown, Check, NotebookPen, FolderPlus, Folder, FileText, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { ArrowUp, Square, Paperclip, Globe, ThumbsUp, ThumbsDown, Copy, Brain, X, ChevronDown, Check, NotebookPen, FolderPlus, Folder, FileText, PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMessages, useSetMessageFeedback, useUpdateConversation, useConversations, useCreateConversation } from "@/hooks/use-chat";
@@ -116,6 +116,17 @@ export function ChatThread({
   const [attachedFile, setAttachedFile] = React.useState<AttachedFile | null>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  function cancelSend() {
+    abortControllerRef.current?.abort();
+  }
 
   const isCanvasOpen = useChatCanvasStore((s) => s.isOpen);
   const setCanvasOpen = useChatCanvasStore((s) => s.setOpen);
@@ -153,8 +164,8 @@ export function ChatThread({
   }, [conversation?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [localMessages]);
+    bottomRef.current?.scrollIntoView({ behavior: sending ? "auto" : "smooth" });
+  }, [localMessages, sending]);
 
   // Auto-send a message queued from the /chat landing page.
   React.useEffect(() => {
@@ -184,6 +195,9 @@ export function ChatThread({
     // and links the tool session to the space! ──
     const intent = detectChatIntent(text);
     if (intent.type !== "chat") {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       setSending(true);
       setInput("");
       const toastId = toast.loading("Création de l'espace et synthèse du contenu avec l'IA...");
@@ -200,6 +214,7 @@ export function ChatThread({
           userPrompt: string;
         }>("/api/chat/prepare-tool", {
           method: "POST",
+          signal: controller.signal,
           body: JSON.stringify({
             conversationId,
             userPrompt: text,
@@ -221,13 +236,23 @@ export function ChatThread({
         return;
       } catch (err: any) {
         toast.dismiss(toastId);
+        if (err?.name === "AbortError" || controller.signal.aborted) {
+          toast.info("Envoi annulé");
+          return;
+        }
         toast.error(err.message || "Erreur lors de la redirection vers l'outil");
       } finally {
-        setSending(false);
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+          setSending(false);
+        }
       }
       return;
     }
 
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setSending(true);
     setInput("");
     const userMsgId = `local-${Date.now()}`;
@@ -253,8 +278,8 @@ export function ChatThread({
 
     setAttachedFile(null);
 
+    let sources: any[] | undefined;
     try {
-      let sources: any[] | undefined;
       let buffer = "";
       const fullText = await (async () => {
         let effectiveActiveSources = activeSourceIds;
@@ -267,6 +292,7 @@ export function ChatThread({
 
         const res = await authFetch("/api/chat", {
           method: "POST",
+          signal: controller.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             conversationId,
@@ -315,12 +341,25 @@ export function ChatThread({
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", conversationId] });
     } catch (err: any) {
+      if (err?.name === "AbortError" || controller.signal.aborted) {
+        // Keep partial streamed response if any arrived; otherwise drop the empty placeholder
+        setLocalMessages((prev) =>
+          prev
+            .filter((m) => !(m.id === assistantMsgId && !m.content.trim()))
+            .map((m) => (m.id === assistantMsgId ? { ...m, sources, pending: false } : m))
+        );
+        toast.info("Réponse interrompue");
+        return;
+      }
       const msg = err.message || "Something went wrong";
       if (msg.includes("Upgrade")) trackHitLimit("chat");
       toast.error(msg);
       setLocalMessages((prev) => prev.filter((m) => m.id !== assistantMsgId));
     } finally {
-      setSending(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+        setSending(false);
+      }
     }
   }
 
@@ -572,13 +611,27 @@ export function ChatThread({
               </div>
               <div className="flex items-center gap-1.5">
                 <VoiceDictationButton value={input} onChange={setInput} disabled={sending} variant="toolbar" />
-                <button
-                  type="submit"
-                  disabled={(!input.trim() && !attachedFile) || sending}
-                  className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </button>
+                {sending ? (
+                  <button
+                    type="button"
+                    onClick={cancelSend}
+                    title="Arrêter la réponse"
+                    aria-label="Arrêter la réponse"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-800 text-white transition-colors hover:bg-slate-900"
+                  >
+                    <Square className="h-3.5 w-3.5 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!input.trim() && !attachedFile}
+                    title="Envoyer"
+                    aria-label="Envoyer"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </form>

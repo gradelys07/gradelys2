@@ -19,6 +19,7 @@ import { getCheckoutUrl } from "@/lib/whop/client";
 import { trackClickUpgrade, trackInitiateCheckout } from "@/lib/whop/tracking";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/locale-provider";
+import { isDesktopAppClient, notifyDesktopAuthChanged } from "@/lib/desktop-client";
 
 function SettingsContent() {
   const { t } = useTranslation();
@@ -332,7 +333,8 @@ function SecurityTab() {
       await supabase.from("profiles").update({ status: "deleted" }).eq("id", user.id);
     }
     await supabase.auth.signOut();
-    router.push("/");
+    notifyDesktopAuthChanged();
+    router.push(isDesktopAppClient() ? "/login" : "/");
   }
 
   return (

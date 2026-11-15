@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { GraduationCap, MessageSquare, Brain, ScanLine } from "lucide-react";
+import { DesktopSafeBrandLink } from "@/components/desktop-safe-brand-link";
 
 export const metadata: Metadata = {
   title: {
@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20">
-        <Link href="/" className="mb-10 flex items-center gap-2">
+        <DesktopSafeBrandLink className="mb-10 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
             <img
               src="/favicon.png"
@@ -28,7 +28,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             />
           </div>
           <span className="text-heading-sm font-bold text-text-primary">Gradelys</span>
-        </Link>
+        </DesktopSafeBrandLink>
         <div className="mx-auto w-full max-w-sm">{children}</div>
       </div>
 

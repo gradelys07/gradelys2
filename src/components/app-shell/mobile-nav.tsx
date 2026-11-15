@@ -23,6 +23,7 @@ import { SPACE_TEMPLATES, type SpaceTemplateOption } from "@/lib/space-templates
 import { useTranslation } from "@/i18n/locale-provider";
 import { toast } from "sonner";
 import { FeedbackModal } from "@/components/feedback-modal";
+import { isDesktopAppClient, notifyDesktopAuthChanged } from "@/lib/desktop-client";
 
 const TOP_ITEMS = [
   { href: "/scan", key: "nav.scan", icon: ScanLine },
@@ -70,8 +71,9 @@ export function MobileNav() {
     document.cookie = "gradelys_demo=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     const supabase = createClient();
     await supabase.auth.signOut();
+    notifyDesktopAuthChanged();
     setOpen(false);
-    router.push("/");
+    router.push(isDesktopAppClient() ? "/login" : "/");
     router.refresh();
   }
 

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:;"
+    />
+    <title>Autoriser la capture d'écran — Gradelys</title>
+    <link rel="stylesheet" href="./onboarding.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <div class="icon-badge" aria-hidden="true">🖥️</div>
+        <h1>Autoriser Gradelys à voir ton écran</h1>
+        <p class="subtitle">
+          Sur macOS, une autorisation est nécessaire pour que l'assistant puisse regarder ton écran et dessiner dessus quand tu le demandes.
+        </p>
+      </header>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <div class="step-body">
+            <strong>Ouvre les Réglages Système</strong>
+            <span>Clique sur le bouton « Ouvrir les Réglages » ci-dessous pour accéder directement à la page Enregistrement de l'écran.</span>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <div class="step-body">
+            <strong>Active Gradelys</strong>
+            <span>Dans <em>Confidentialité et sécurité → Enregistrement de l'écran</em>, coche l'interrupteur à côté de <strong>Gradelys</strong>.</span>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <div class="step-body">
+            <strong>Redémarre Gradelys</strong>
+            <span>macOS demande un redémarrage de l'application pour appliquer l'autorisation.</span>
+          </div>
+        </li>
+      </ol>
+
+      <div class="actions">
+        <button id="open-settings-btn" type="button" class="btn btn-primary">
+          Ouvrir les Réglages
+        </button>
+        <button id="relaunch-btn" type="button" class="btn btn-secondary">
+          Redémarrer Gradelys
+        </button>
+        <button id="later-btn" type="button" class="btn btn-ghost">
+          Plus tard
+        </button>
+      </div>
+    </main>
+    <script type="module" src="./onboarding.ts"></script>
+  </body>
+</html>
+

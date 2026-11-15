@@ -4,7 +4,7 @@ import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
-import { NotebookPen, Brain, FileStack, ScanLine, ChevronsLeft, ChevronsRight, ChevronDown, Plus, GraduationCap, LogOut, CreditCard, Search, Settings, TrendingUp, Shield, Trash2, Pin, PinOff, LayoutGrid, MessageSquare, MessageSquareHeart } from "lucide-react";
+import { NotebookPen, Brain, FileStack, ScanLine, ChevronsLeft, ChevronsRight, ChevronDown, Plus, GraduationCap, LogOut, CreditCard, Search, Settings, TrendingUp, Shield, Trash2, Pin, PinOff, LayoutGrid, MessageSquare, MessageSquareHeart, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -22,6 +22,7 @@ import { SPACE_TEMPLATES, type SpaceTemplateOption } from "@/lib/space-templates
 import { useTranslation } from "@/i18n/locale-provider";
 import { toast } from "sonner";
 import { FeedbackModal } from "@/components/feedback-modal";
+import { getDesktopBridge, notifyDesktopAuthChanged } from "@/lib/desktop-client";
 
 const TOP_ITEMS = [
   { href: "/scan", key: "nav.scan", icon: ScanLine },
@@ -59,6 +60,17 @@ export function AppSidebar() {
   const [spaceName, setSpaceName] = React.useState("");
   const [template, setTemplate] = React.useState<SpaceTemplateOption>(SPACE_TEMPLATES[0]);
   const [activeTab, setActiveTab] = React.useState<"browse" | "chat">("browse");
+  const [isDesktopApp, setIsDesktopApp] = React.useState(false);
+
+  React.useEffect(() => {
+    if (getDesktopBridge()?.isDesktop) {
+      setIsDesktopApp(true);
+    }
+  }, []);
+
+  const handleOpenQuickAssistant = () => {
+    getDesktopBridge()?.openQuickAssistant?.();
+  };
 
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -80,7 +92,8 @@ export function AppSidebar() {
     document.cookie = "gradelys_demo=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/");
+    notifyDesktopAuthChanged();
+    router.push(isDesktopApp ? "/login" : "/");
     router.refresh();
   }
 
@@ -160,6 +173,18 @@ export function AppSidebar() {
                     <button onClick={handleNewChat} className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm hover:bg-primary-hover transition-colors" title="New Chat">
                       <Plus className="h-4.5 w-4.5" />
                     </button>
+
+                    {isDesktopApp && (
+                      <button
+                        type="button"
+                        onClick={handleOpenQuickAssistant}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-sky-200 bg-sky-50 text-sky-600 shadow-xs hover:bg-sky-100 transition-colors"
+                        title="Assistant écran (voir et guider)"
+                        aria-label="Assistant écran"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
           
                   <div className="mt-6 flex flex-col items-center gap-3 w-full">
@@ -276,6 +301,22 @@ export function AppSidebar() {
                       <span className="text-[10px]">⌘</span>K
                     </kbd>
                   </button>
+
+                  {isDesktopApp && (
+                    <button
+                      type="button"
+                      onClick={handleOpenQuickAssistant}
+                      className="mt-2.5 flex w-full items-center justify-between rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[12px] font-medium text-sky-700 transition-colors hover:bg-sky-100"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>Assistant écran</span>
+                      </span>
+                      <kbd className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-[9px] text-sky-600">
+                        ⌘⇧␣
+                      </kbd>
+                    </button>
+                  )}
                 </div>
           
                 {/* Segmented Control */}

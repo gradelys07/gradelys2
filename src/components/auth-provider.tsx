@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { getDesktopBridge } from "@/lib/desktop-client";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { planLimits } from "@/lib/config";
@@ -10,19 +11,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setSession = useAuthStore((s) => s.setSession);
   const setInitialized = useAuthStore((s) => s.setInitialized);
   const clear = useAuthStore((s) => s.clear);
+  const inFlightRef = React.useRef<Promise<void> | null>(null);
+  const lastSnapshotRef = React.useRef<string | null>(null);
+  const initializedOnceRef = React.useRef(false);
 
   React.useEffect(() => {
     const supabase = createClient();
 
-    async function loadSession() {
+    async function loadSessionImpl() {
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser();
 
       if (!authUser) {
-        const isDemo = typeof document !== 'undefined' && document.cookie.includes("gradelys_demo=true");
+        const isDemo = typeof document !== "undefined" && document.cookie.includes("gradelys_demo=true");
         if (isDemo) {
-          const cachedEdu = typeof window !== 'undefined' ? localStorage.getItem("gradelys_education_system") : null;
+          const cachedEdu =
+            typeof window !== "undefined" ? localStorage.getItem("gradelys_education_system") : null;
           const user: User = {
             id: "00000000-0000-0000-0000-000000000000",
             email: "demo@gradelys.com",
@@ -48,13 +53,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentPeriodEnd: new Date().toISOString(),
             whopSubscriptionId: undefined,
           };
-          setSession(user, sub);
-          setInitialized(true);
+          const demoKey = `demo:${cachedEdu || "Standard"}`;
+          if (lastSnapshotRef.current !== demoKey) {
+            lastSnapshotRef.current = demoKey;
+            setSession(user, sub);
+          }
+          if (!initializedOnceRef.current) {
+            initializedOnceRef.current = true;
+            setInitialized(true);
+          }
           return;
         }
 
-        clear();
-        setInitialized(true);
+        if (lastSnapshotRef.current !== "signed-out") {
+          lastSnapshotRef.current = "signed-out";
+          clear();
+        }
+        if (!initializedOnceRef.current) {
+          initializedOnceRef.current = true;
+          setInitialized(true);
+        }
         return;
       }
 
@@ -64,10 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       if (profile) {
-        const cachedEdu = typeof window !== 'undefined' ? localStorage.getItem("gradelys_education_system") : null;
+        const cachedEdu =
+          typeof window !== "undefined" ? localStorage.getItem("gradelys_education_system") : null;
         const finalEduSystem = profile.education_system || cachedEdu || "Standard";
 
-        if (typeof window !== 'undefined' && profile.education_system) {
+        if (typeof window !== "undefined" && profile.education_system) {
           localStorage.setItem("gradelys_education_system", profile.education_system);
         }
 
@@ -104,20 +123,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               whopSubscriptionId: subscription.whop_subscription_id,
             }
           : null;
-        setSession(user, sub);
+
+        const nextKey = JSON.stringify({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          level: user.level,
+          avatarUrl: user.avatarUrl,
+          lang: user.lang,
+          educationSystem: user.educationSystem,
+          role: user.role,
+          status: user.status,
+          isAnonymous: user.isAnonymous,
+          learningProfile: user.learningProfile,
+          sub,
+        });
+        if (lastSnapshotRef.current !== nextKey) {
+          lastSnapshotRef.current = nextKey;
+          setSession(user, sub);
+        }
       }
-      setInitialized(true);
+      if (!initializedOnceRef.current) {
+        initializedOnceRef.current = true;
+        setInitialized(true);
+      }
     }
 
-    loadSession();
+    function loadSession() {
+      if (inFlightRef.current) return inFlightRef.current;
+      const task = loadSessionImpl().finally(() => {
+        if (inFlightRef.current === task) {
+          inFlightRef.current = null;
+        }
+      });
+      inFlightRef.current = task;
+      return task;
+    }
+
+    void loadSession();
 
     const {
       data: { subscription: authListener },
-    } = supabase.auth.onAuthStateChange((_event, _session) => {
-      loadSession();
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Skip redundant initial/refresh broadcasts for the already-loaded user to avoid UI re-renders & focus/resize jitter
+      if (event === "INITIAL_SESSION") return;
+      const currentUser = useAuthStore.getState().user;
+      if (event === "TOKEN_REFRESHED" && currentUser?.id && currentUser.id === session?.user?.id) {
+        return;
+      }
+      void loadSession();
     });
 
-    return () => authListener.unsubscribe();
+    const unsubDesktopAuth = getDesktopBridge()?.onAuthChanged?.(() => {
+      void loadSession();
+    });
+
+    return () => {
+      authListener.unsubscribe();
+      unsubDesktopAuth?.();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

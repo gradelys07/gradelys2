@@ -2,8 +2,8 @@
 
 import { MagicStar as Sparkles } from "@/components/ui/magic-star";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { ArrowUp, Paperclip, FileText, Calculator, Globe2, Folder, FileUp, Youtube, LayoutGrid, MessageSquare, Plus, Activity, Star, ClipboardList, GraduationCap, ChevronRight, MessageCircle, Check, PanelRightClose, PanelRightOpen, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowUp, Square, Paperclip, FileText, Calculator, Globe2, Folder, FileUp, Youtube, LayoutGrid, MessageSquare, Plus, Activity, Star, ClipboardList, GraduationCap, ChevronRight, MessageCircle, Check, PanelRightClose, PanelRightOpen, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCreateConversation } from "@/hooks/use-chat";
@@ -36,6 +36,18 @@ export default function ChatHomePage() {
   const { data: spaces } = useSpaces();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  function cancelStart() {
+    abortControllerRef.current?.abort();
+    setLoading(false);
+  }
   const activeSpaceId = useUIStore((s) => s.activeSpaceId);
   const setActiveSpaceId = useUIStore((s) => s.setActiveSpaceId);
   const [spaceId, setSpaceId] = useState<string | null>(activeSpaceId);
@@ -81,6 +93,9 @@ export default function ChatHomePage() {
     const intent = detectChatIntent(text);
 
     if (intent.type !== "chat") {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       setLoading(true);
       const toastId = toast.loading("Création de l'espace et synthèse du contenu avec l'IA...");
       try {
@@ -94,6 +109,7 @@ export default function ChatHomePage() {
           userPrompt: string;
         }>("/api/chat/prepare-tool", {
           method: "POST",
+          signal: controller.signal,
           body: JSON.stringify({
             userPrompt: text,
             intent,
@@ -111,22 +127,44 @@ export default function ChatHomePage() {
         router.push(`/${res.targetKind}?c=${res.toolConversationId}&spaceId=${res.spaceId}`);
       } catch (err: any) {
         toast.dismiss(toastId);
+        if (err?.name === "AbortError" || controller.signal.aborted) {
+          toast.info("Envoi annulé");
+          return;
+        }
         toast.error(err.message || "Erreur lors de la redirection vers l'outil");
       } finally {
-        setLoading(false);
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+          setLoading(false);
+        }
       }
       return;
     }
     // ── End intent detection ─────────────────────────────────────────────────
 
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setLoading(true);
     try {
       const res = await createConversation.mutateAsync({ title: text.slice(0, 48), spaceId });
+      if (controller.signal.aborted) {
+        toast.info("Envoi annulé");
+        return;
+      }
       sessionStorage.setItem(`gradelys:pending-message:${res.conversation.id}`, text);
       router.push(`/chat/${res.conversation.id}`);
     } catch (error: any) {
+      if (error?.name === "AbortError" || controller.signal.aborted) {
+        toast.info("Envoi annulé");
+        return;
+      }
       toast.error(error.message || "Failed to start chat");
       setLoading(false);
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }
 
@@ -347,15 +385,29 @@ export default function ChatHomePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <VoiceDictationButton value={input} onChange={setInput} disabled={loading} variant="pill" />
-                  <Button 
-                    type="submit" 
-                    size="icon" 
-                    disabled={!input.trim()} 
-                    loading={loading} 
-                    className="h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
-                  >
-                    <ArrowUp className="h-5 w-5" />
-                  </Button>
+                  {loading ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={cancelStart}
+                      title="Annuler l'envoi"
+                      aria-label="Annuler l'envoi"
+                      className="h-12 w-12 rounded-full bg-slate-800 text-white shadow-lg transition-all hover:scale-105 hover:bg-slate-900 active:scale-95"
+                    >
+                      <Square className="h-4 w-4 fill-current" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="submit" 
+                      size="icon" 
+                      disabled={!input.trim()} 
+                      className="h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
+                      title="Envoyer"
+                      aria-label="Envoyer"
+                    >
+                      <ArrowUp className="h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

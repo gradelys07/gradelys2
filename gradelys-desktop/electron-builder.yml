@@ -1,0 +1,73 @@
+appId: com.gradelys.desktop
+productName: Gradelys
+copyright: Copyright © 2026 Gradelys
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
+
+asarUnpack:
+  - node_modules/sharp/**/*
+  - node_modules/@img/**/*
+
+extraResources:
+  - from: build/icon.png
+    to: build/icon.png
+  - from: build/trayTemplate.png
+    to: build/trayTemplate.png
+  - from: build/trayTemplate@2x.png
+    to: build/trayTemplate@2x.png
+  - from: build/tray.ico
+    to: build/tray.ico
+
+mac:
+  category: public.app-category.education
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: true
+  minimumSystemVersion: "12.0"
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  extendInfo:
+    NSScreenCaptureUsageDescription: "Gradelys a besoin de voir ton écran pour t'expliquer ce que tu vois et te guider."
+    NSMicrophoneUsageDescription: "Gradelys utilise ton microphone uniquement quand tu lances la dictée vocale."
+
+dmg:
+  artifactName: "${productName}-${version}-${arch}.${ext}"
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: false
+  artifactName: "${productName}-Setup-${version}-${arch}.${ext}"
+
+publish:
+  provider: github
+  owner: A_RENSEIGNER_OWNER_GITHUB
+  repo: A_RENSEIGNER_REPO_GITHUB
+  releaseType: release
+

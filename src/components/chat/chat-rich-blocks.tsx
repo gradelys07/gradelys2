@@ -814,11 +814,15 @@ export function ChatImageGallery({
   id,
   conversationId,
   isStreaming = false,
+  showCanvasAction = true,
+  compact = false,
 }: {
   raw: string;
   id: string;
   conversationId?: string;
   isStreaming?: boolean;
+  showCanvasAction?: boolean;
+  compact?: boolean;
 }) {
   const upsertArtifact = useChatCanvasStore((s) => s.upsertArtifact);
   const openArtifact = useChatCanvasStore((s) => s.openArtifact);
@@ -842,16 +846,18 @@ export function ChatImageGallery({
     if (cached && cached.length > 0) {
       setItems(cached);
       setLoading(false);
-      upsertArtifact(
-        {
-          id,
-          conversationId,
-          type: "images",
-          title: specs[0]?.caption || specs[0]?.query || "Galerie photos",
-          mediaItems: cached,
-        },
-        false
-      );
+      if (showCanvasAction) {
+        upsertArtifact(
+          {
+            id,
+            conversationId,
+            type: "images",
+            title: specs[0]?.caption || specs[0]?.query || "Galerie photos",
+            mediaItems: cached,
+          },
+          false
+        );
+      }
       return;
     }
 
@@ -904,16 +910,18 @@ export function ChatImageGallery({
 
           imageSearchCache.set(cacheKey, built);
           setItems(built);
-          upsertArtifact(
-            {
-              id,
-              conversationId,
-              type: "images",
-              title: spec.caption || spec.query,
-              mediaItems: built,
-            },
-            false
-          );
+          if (showCanvasAction) {
+            upsertArtifact(
+              {
+                id,
+                conversationId,
+                type: "images",
+                title: spec.caption || spec.query,
+                mediaItems: built,
+              },
+              false
+            );
+          }
           return;
         }
 
@@ -963,16 +971,18 @@ export function ChatImageGallery({
         if (built.length > 0) {
           imageSearchCache.set(cacheKey, built);
           setItems(built);
-          upsertArtifact(
-            {
-              id,
-              conversationId,
-              type: "images",
-              title: specs![0]?.caption || "Galerie photos",
-              mediaItems: built,
-            },
-            false
-          );
+          if (showCanvasAction) {
+            upsertArtifact(
+              {
+                id,
+                conversationId,
+                type: "images",
+                title: specs![0]?.caption || "Galerie photos",
+                mediaItems: built,
+              },
+              false
+            );
+          }
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -983,13 +993,23 @@ export function ChatImageGallery({
     return () => {
       cancelled = true;
     };
-  }, [isReadyToFetch, specs, cacheKey, id, conversationId, upsertArtifact]);
+  }, [isReadyToFetch, specs, cacheKey, id, conversationId, upsertArtifact, showCanvasAction]);
+
+  const gridClass = compact
+    ? "grid grid-cols-2 gap-2"
+    : "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3";
 
   if (!isReadyToFetch || (!specs && loading)) {
     return (
-      <div className="my-3 not-prose grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="h-40 animate-pulse rounded-xl border border-border-subtle bg-base" />
+      <div className={cn("my-3 not-prose", gridClass)}>
+        {(compact ? [0, 1] : [0, 1, 2]).map((i) => (
+          <div
+            key={i}
+            className={cn(
+              "animate-pulse rounded-xl border border-border-subtle bg-base",
+              compact ? "h-28" : "h-40"
+            )}
+          />
         ))}
       </div>
     );
@@ -1013,7 +1033,7 @@ export function ChatImageGallery({
             Illustrations ({loading ? "…" : items.length})
           </span>
         </div>
-        {items.length > 0 && (
+        {showCanvasAction && items.length > 0 && (
           <motion.button
             whileTap={{ scale: 0.95 }}
             type="button"
@@ -1026,15 +1046,18 @@ export function ChatImageGallery({
         )}
       </div>
 
-      <div className="p-3">
+      <div className={compact ? "p-2" : "p-3"}>
         {loading ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-40 animate-pulse rounded-xl bg-base" />
+          <div className={gridClass}>
+            {(compact ? [0, 1] : [0, 1, 2]).map((i) => (
+              <div
+                key={i}
+                className={cn("animate-pulse rounded-xl bg-base", compact ? "h-28" : "h-40")}
+              />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+          <div className={gridClass}>
             {items.map((item, idx) => (
               <FallbackImageCard
                 key={`${item.url}-${idx}`}
@@ -1103,11 +1126,15 @@ export function ChatYouTubeEmbed({
   id,
   conversationId,
   isStreaming = false,
+  showCanvasAction = true,
+  compact = false,
 }: {
   raw: string;
   id: string;
   conversationId?: string;
   isStreaming?: boolean;
+  showCanvasAction?: boolean;
+  compact?: boolean;
 }) {
   const upsertArtifact = useChatCanvasStore((s) => s.upsertArtifact);
   const openArtifact = useChatCanvasStore((s) => s.openArtifact);
@@ -1131,16 +1158,18 @@ export function ChatYouTubeEmbed({
     if (cached && cached.length > 0) {
       setVideos(cached);
       setLoading(false);
-      upsertArtifact(
-        {
-          id,
-          conversationId,
-          type: "youtube",
-          title: cached[0].title,
-          youtubeVideos: cached,
-        },
-        false
-      );
+      if (showCanvasAction) {
+        upsertArtifact(
+          {
+            id,
+            conversationId,
+            type: "youtube",
+            title: cached[0].title,
+            youtubeVideos: cached,
+          },
+          false
+        );
+      }
       return;
     }
 
@@ -1189,7 +1218,7 @@ export function ChatYouTubeEmbed({
         setVideos(limited);
         setActiveIdx(0);
 
-        if (limited.length > 0) {
+        if (showCanvasAction && limited.length > 0) {
           upsertArtifact(
             {
               id,
@@ -1210,7 +1239,7 @@ export function ChatYouTubeEmbed({
     return () => {
       cancelled = true;
     };
-  }, [isReadyToFetch, specs, cacheKey, id, conversationId, upsertArtifact]);
+  }, [isReadyToFetch, specs, cacheKey, id, conversationId, upsertArtifact, showCanvasAction]);
 
   if (!isReadyToFetch || (!specs && loading)) {
     return (
@@ -1254,15 +1283,17 @@ export function ChatYouTubeEmbed({
                 <span className="hidden sm:inline">YouTube</span>
               </a>
             )}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => openArtifact(id)}
-              className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
-            >
-              <PanelRightOpen className="h-3.5 w-3.5 rtl:rotate-180" />
-              <span>Panneau droite</span>
-            </motion.button>
+            {showCanvasAction && (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={() => openArtifact(id)}
+                className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+              >
+                <PanelRightOpen className="h-3.5 w-3.5 rtl:rotate-180" />
+                <span>Panneau droite</span>
+              </motion.button>
+            )}
           </div>
         )}
       </div>
@@ -1270,7 +1301,7 @@ export function ChatYouTubeEmbed({
       {loading ? (
         <div className="aspect-video w-full animate-pulse bg-slate-200" />
       ) : active ? (
-        <div className="p-3 space-y-2.5">
+        <div className={compact ? "p-2 space-y-2" : "p-3 space-y-2.5"}>
           <AnimatePresence mode="wait">
             <motion.div
               key={active.videoId}

@@ -48,6 +48,8 @@ export async function middleware(request: NextRequest) {
   const user = authUser || (isDemo ? { id: "00000000-0000-0000-0000-000000000000", is_anonymous: true } : null);
 
   const { pathname } = request.nextUrl;
+  const userAgent = request.headers.get("user-agent") || "";
+  const isDesktopClient = /GradelysDesktop\/|Electron\//i.test(userAgent);
 
   // API rate limiting (per-IP, tiered by route sensitivity)
   if (pathname.startsWith("/api/")) {
@@ -92,10 +94,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (pathname === "/" && user && !user.is_anonymous) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/chat";
-    return NextResponse.redirect(url);
+  if (pathname === "/") {
+    if (user && !user.is_anonymous) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/chat";
+      return NextResponse.redirect(url);
+    }
+    if (isDesktopClient) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
   }
 
   if ((pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) && user) {

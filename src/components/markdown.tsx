@@ -9,6 +9,7 @@ import rehypeKatex from "rehype-katex";
 import "highlight.js/styles/github-dark.css";
 import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
+import { normalizeMathMarkdown } from "@/lib/markdown-math";
 import {
   ChatPythonBlock,
   ChatChartBlock,
@@ -83,7 +84,7 @@ export function Markdown({
     <div className={cn("prose-gradelys", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeHighlight, rehypeKatex]}
+        rehypePlugins={[rehypeHighlight, [rehypeKatex, { strict: false, throwOnError: false }]]}
         components={{
           pre({ node, children, ...props }) {
             const codeEl = Array.isArray(node?.children)
@@ -156,7 +157,7 @@ export function Markdown({
           },
         }}
       >
-        {content}
+        {normalizeMathMarkdown(content)}
       </ReactMarkdown>
     </div>
   );
