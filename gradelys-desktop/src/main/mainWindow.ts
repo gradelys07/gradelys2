@@ -2,6 +2,10 @@ import { app, BrowserWindow, Menu, nativeImage, session } from 'electron';
 import { join } from 'path';
 import log from 'electron-log/main';
 import {
+  shouldSwitchToAccessoryOnMainHide,
+  shouldUseAccessoryForQuickOverlay,
+} from '../../shared/windowPolicy';
+import {
   attachChatWindowSecurity,
   configureSessionSecurity,
   getGradelysBaseUrl,
@@ -9,6 +13,8 @@ import {
 
 let mainWindow: BrowserWindow | null = null;
 let isAppQuitting = false;
+let isExplicitlyHidden = false;
+let currentActivationPolicy: 'regular' | 'accessory' = 'regular';
 
 export function markAppQuitting(): void {
   isAppQuitting = true;
@@ -46,19 +52,38 @@ export function getMainWindow(): BrowserWindow | null {
   return mainWindow && !mainWindow.isDestroyed() ? mainWindow : null;
 }
 
-export function restoreRegularDockPolicy(): void {
-  if (process.platform === 'darwin') {
-    app.setActivationPolicy('regular');
+function setMacActivationPolicy(next: 'regular' | 'accessory'): void {
+  if (process.platform !== 'darwin' || currentActivationPolicy === next) {
+    return;
+  }
+  currentActivationPolicy = next;
+  app.setActivationPolicy(next);
+  if (next === 'regular') {
+    const dockIcon = nativeImage.createFromPath(getAppIconPath());
+    if (!dockIcon.isEmpty()) {
+      app.dock?.setIcon(dockIcon);
+    }
     void app.dock?.show();
+  } else {
+    app.dock?.hide();
   }
 }
 
+export function restoreRegularDockPolicy(): void {
+  setMacActivationPolicy('regular');
+}
+
 export function prepareQuickOverlayPolicy(): void {
-  if (process.platform !== 'darwin') return;
   const win = getMainWindow();
-  if (!win || !win.isVisible() || !win.isFocused()) {
-    // Keep macOS from switching Spaces back to Desktop 1 / main window when opening floating UI over other apps
-    app.setActivationPolicy('accessory');
+  if (
+    shouldUseAccessoryForQuickOverlay({
+      platform: process.platform,
+      hasMainWindow: Boolean(win),
+      isMainVisible: win ? win.isVisible() : false,
+      isMainMinimized: win ? win.isMinimized() : false,
+    })
+  ) {
+    setMacActivationPolicy('accessory');
   }
 }
 
@@ -78,6 +103,7 @@ export function createMainWindow(subPath?: string): BrowserWindow {
     height: 840,
     minWidth: 900,
     minHeight: 620,
+    fullscreenable: true,
     title: 'Gradelys',
     icon: icon.isEmpty() ? undefined : icon,
     backgroundColor: '#ffffff',
@@ -97,7 +123,10 @@ export function createMainWindow(subPath?: string): BrowserWindow {
 
   win.once('ready-to-show', () => {
     if (!win.isDestroyed()) {
+      isExplicitlyHidden = false;
+      restoreRegularDockPolicy();
       win.show();
+      win.focus();
     }
   });
 
@@ -115,25 +144,59 @@ export function createMainWindow(subPath?: string): BrowserWindow {
   win.on('close', (event) => {
     if (!isAppQuitting) {
       event.preventDefault();
-      if (win.isFullScreen()) {
+      isExplicitlyHidden = true;
+      if (process.platform === 'darwin' && win.isFullScreen()) {
+        win.once('leave-full-screen', () => {
+          if (!isAppQuitting && isExplicitlyHidden && !win.isDestroyed()) {
+            win.hide();
+            setMacActivationPolicy('accessory');
+          }
+        });
         win.setFullScreen(false);
+        return;
       }
       win.hide();
+      setMacActivationPolicy('accessory');
     }
   });
 
-  win.on('focus', () => {
+  win.on('show', () => {
+    isExplicitlyHidden = false;
     restoreRegularDockPolicy();
   });
 
+  win.on('focus', () => {
+    isExplicitlyHidden = false;
+    restoreRegularDockPolicy();
+  });
+
+  win.on('enter-full-screen', () => {
+    isExplicitlyHidden = false;
+    restoreRegularDockPolicy();
+  });
+
+  win.on('leave-full-screen', () => {
+    if (!isExplicitlyHidden) {
+      restoreRegularDockPolicy();
+    }
+  });
+
   win.on('hide', () => {
-    if (!isAppQuitting && process.platform === 'darwin') {
-      app.dock?.hide();
-      app.setActivationPolicy('accessory');
+    if (
+      shouldSwitchToAccessoryOnMainHide({
+        platform: process.platform,
+        isAppQuitting,
+        isExplicitlyHidden,
+        isVisible: win.isVisible(),
+        isFullScreen: win.isFullScreen(),
+      })
+    ) {
+      setMacActivationPolicy('accessory');
     }
   });
 
   win.on('closed', () => {
+    isExplicitlyHidden = false;
     mainWindow = null;
   });
 
@@ -143,6 +206,7 @@ export function createMainWindow(subPath?: string): BrowserWindow {
 }
 
 export function showMainWindow(subPath?: string): void {
+  isExplicitlyHidden = false;
   restoreRegularDockPolicy();
   const sanitized = subPath ? sanitizeMainSubPath(subPath) : null;
   const existing = getMainWindow();
